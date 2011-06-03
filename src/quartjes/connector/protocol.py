@@ -1,4 +1,4 @@
-__author__="rob"
+__author__="Rob van der Most"
 __date__ ="$May 27, 2011 8:53:12 PM$"
 
 from twisted.internet.protocol import Protocol
@@ -9,8 +9,13 @@ from twisted.internet import threads
 from twisted.python import failure
 from xml.dom import minidom
 import uuid
+from quartjes.connector.messages import ServerRequest
 
 class QuartjesServerProtocol(NetstringReceiver):
+    """
+    Protocol implementation for the Quartjes server. For now we are using a basic
+    Netstring receiver to listen for xml messages encoded as netstrings.
+    """
 
     def __init(self):
         self.id = uuid.uuid4()
@@ -30,6 +35,9 @@ class QuartjesServerProtocol(NetstringReceiver):
 
 
 class QuartjesServerFactory(ServerFactory):
+    """
+    Protocol factory to handle incoming connections for the Quartjes server.
+    """
 
     protocol = QuartjesServerProtocol
 
@@ -44,15 +52,45 @@ class QuartjesServerFactory(ServerFactory):
 
     def handleIncomingMessage(self, client, message):
         d = threads.deferToThread(self.parseMessage, message, client)
-        d.addCallbacks(callback=self.parseMessage, errback=self.parseFailed, callbackArgs=(client,), errbackArgs=(client,))
         d.addCallbacks(callback=self.sendResult, errback=self.sendError, callbackArgs=(client,), errbackArgs=(client,))
 
-    def parseMessage(self, message, client):
-        doc = minidom.parseString(message)
+    def parseMessage(self, string, client):
+        doc = minidom.parseString(string)
         if not doc.documentElement == "serverRequest":
             raise MessageHandleError(RESULT_XML_INVALID)
 
-    def parseFailed(self, result, client):
+        node = doc.firstChild
+        if node == None or not node.localName == "id":
+            raise MessageHandleError(RESULT_XML_INVALID)
+        id = node.firstChild.nodeValue
+
+        node = node.nextSibling
+        if node == None or not node.localName == "module":
+            raise MessageHandleError(RESULT_XML_INVALID)
+        module = node.firstChild.nodeValue
+        
+        node = node.nextSibling
+        if node == None or not node.localName == "action":
+            raise MessageHandleError(RESULT_XML_INVALID)
+        action = node.firstChild.nodeValue
+
+        node = node.nextSibling
+        params = {}
+        if node != None and node.localName == "parameterList":
+            params = self.parseParameters(node)
+
+        msg = ServerRequest(id, module, action, params)
+
+        return self.performAction(msg)
+
+
+    def parseParameters(self, node):
+        params = {}
+
+
+        return params
+
+    def performAction(self, msg):
         pass
 
     def sendResult(self, result, client):
