@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://quartjes.virgiel.nl/ServerRequest"
+	elementFormDefault="qualified" xmlns="http://www.w3.org/2001/XMLSchema"
+	xmlns:tns="http://quartjes.virgiel.nl/ServerRequest">
+
+
+
+
+
+	<complexType name="serverRequest">
+		<sequence>
+			<element name="id" type="string" maxOccurs="1" minOccurs="1"></element>
+			<element name="module" type="string" maxOccurs="1" minOccurs="1"></element>
+			<element name="action" type="string" maxOccurs="1" minOccurs="1"></element>
+			<element name="parameterList" type="tns:parameterList" maxOccurs="1" minOccurs="0"></element>
+		</sequence>
+	</complexType>
+
+
+
+
+	<complexType name="object">
+		<sequence>
+			<element name="id" type="string" maxOccurs="1"
+				minOccurs="1">
+			</element>
+			<element name="type" type="string" maxOccurs="1"
+				minOccurs="1">
+			</element>
+			<element name="parameterList" type="tns:parameterList" maxOccurs="1" minOccurs="0"></element>
+		</sequence>
+	</complexType>
+
+
+	<element name="serverRequest" type="tns:serverRequest"></element>
+
+	<complexType name="parameter">
+		<sequence>
+			<element name="name" type="string"></element>
+			<choice>
+				<element name="value" type="string"></element>
+				<element name="object" type="tns:object"></element>
+			</choice>
+
+		</sequence>
+	</complexType>
+
+	<complexType name="parameterList">
+		<sequence>
+			<element name="parameter" type="tns:parameter" maxOccurs="unbounded" minOccurs="0"></element>
+		</sequence>
+	</complexType>
+
+	<element name="serverResponse" type="tns:serverResponse"></element>
+
+	<complexType name="serverResponse">
+		<sequence>
+			<element name="resultCode" type="int" maxOccurs="1" minOccurs="1"></element>
+			<element name="results" type="tns:parameterList" maxOccurs="1" minOccurs="0"></element>
+		</sequence>
+	</complexType>
+</schema>
