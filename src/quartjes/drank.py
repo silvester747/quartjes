@@ -4,15 +4,19 @@
 __author__="piet"
 __date__ ="$5-jun-2011 12:34:35$"
 
+import uuid
+
 class Drank():
     """
-    Protocol implementation for the Quartjes server. For now we are using a basic
-    Netstring receiver to listen for xml messages encoded as netstrings.
+    Drank class
     """
 
-    def __init(self,dranknaam):
+    def __init__(self,dranknaam):
         self.id = uuid.uuid4()
         self.dranknaam = dranknaam
+        self.alc_perc = 0
+        self.color = [0,0,0,0]
+        self.prijs = 0
 
 if __name__ == "__main__":
     print "Hello World"

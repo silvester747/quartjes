@@ -4,15 +4,21 @@
 __author__="piet"
 __date__ ="$5-jun-2011 12:34:42$"
 
-class Mix():
+class Mix(drank):
     """
-    Protocol implementation for the Quartjes server. For now we are using a basic
-    Netstring receiver to listen for xml messages encoded as netstrings.
+    Mix class
     """
 
-    def __init(self,dranken):
-        self.id = uuid.uuid4()
-        self.dranken = dranken
+    def __init__(self,mixnaam):
+        self.__init__(mixnaam)
+
+    def insert_drank(self):
+        update_properties()
+    def remove_drank(self):
+        update_properties()
+    def update_properties(self):
+        pass
+    
 
 if __name__ == "__main__":
     print "Hello World"
