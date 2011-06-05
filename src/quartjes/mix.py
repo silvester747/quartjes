@@ -4,20 +4,27 @@
 __author__="piet"
 __date__ ="$5-jun-2011 12:34:42$"
 
-class Mix(drank):
+class Mix(drink):
     """
     Mix class
     """
 
-    def __init__(self,mixnaam):
-        self.__init__(mixnaam)
+    def __init__(self,mixname):
+        self.__init__(mixname)
+        self.drinks = []
 
-    def insert_drank(self):
+    def insert_drank(self,drink):
+        self.drinks.append(drink)
         update_properties()
     def remove_drank(self):
         update_properties()
     def update_properties(self):
-        pass
+        parts = len(self.drinks)
+        if parts > 0:
+            for d in self.drinks:
+                self.alc_perc.add(d.alc_perc / parts)
+                #self.color
+                self.realprice.add = (d.realprice / parts)
     
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ import uuid
 
 class Drink():
     """
-    Drank class
+    Drink class
     """
 
     def __init__(self,name):
@@ -16,7 +16,12 @@ class Drink():
         self.name = name
         self.alc_perc = 0
         self.color = [0,0,0,0]
-        self.price = 0
+        self.realprice = 0
+        self.price_factor = 1
+
+    def sellprice(self):
+        price = self.realprice * self.price_factor
+        return price
 
 if __name__ == "__main__":
     print "Hello World"
