@@ -6,17 +6,17 @@ __date__ ="$5-jun-2011 12:34:35$"
 
 import uuid
 
-class Drank():
+class Drink():
     """
     Drank class
     """
 
-    def __init__(self,dranknaam):
+    def __init__(self,name):
         self.id = uuid.uuid4()
-        self.dranknaam = dranknaam
+        self.name = name
         self.alc_perc = 0
         self.color = [0,0,0,0]
-        self.prijs = 0
+        self.price = 0
 
 if __name__ == "__main__":
     print "Hello World"
