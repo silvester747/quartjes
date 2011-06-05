@@ -5,4 +5,6 @@ __author__="rob"
 __date__ ="$May 27, 2011 8:52:01 PM$"
 
 if __name__ == "__main__":
-    print "Hello World"
+    from drinks import *
+    print Drinks
+

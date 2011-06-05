@@ -3,8 +3,9 @@
 
 __author__="piet"
 __date__ ="$5-jun-2011 12:34:42$"
+from drink import Drink
 
-class Mix(drink):
+class Mix(Drink):
     """
     Mix class
     """
