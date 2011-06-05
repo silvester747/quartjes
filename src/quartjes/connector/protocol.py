@@ -6,10 +6,8 @@ from twisted.internet.protocol import ReconnectingClientFactory
 from twisted.internet.protocol import ServerFactory
 from twisted.protocols.basic import NetstringReceiver
 from twisted.internet import threads
-from twisted.python import failure
-from xml.dom import minidom
 import uuid
-from quartjes.connector.messages import ServerRequest
+from quartjes.connector.messages import MessageHandleError, ServerRequestMessage
 
 class QuartjesServerProtocol(NetstringReceiver):
     """
@@ -43,6 +41,7 @@ class QuartjesServerFactory(ServerFactory):
 
     def __init__(self):
         self.clients = {}
+        self.services = {}
 
     def clientConnected(self, client):
         self.clients[client.id] = client
@@ -50,48 +49,32 @@ class QuartjesServerFactory(ServerFactory):
     def clientDisconnected(self, client):
         self.clients.remove(client.id)
 
+    def registerService(self, service):
+        self.services[service.name] = service
+
+    def unregisterService(self, service):
+        self.services.remove(service.name)
+
     def handleIncomingMessage(self, client, message):
         d = threads.deferToThread(self.parseMessage, message, client)
         d.addCallbacks(callback=self.sendResult, errback=self.sendError, callbackArgs=(client,), errbackArgs=(client,))
 
     def parseMessage(self, string, client):
-        doc = minidom.parseString(string)
-        if not doc.documentElement == "serverRequest":
-            raise MessageHandleError(RESULT_XML_INVALID)
 
-        node = doc.firstChild
-        if node == None or not node.localName == "id":
-            raise MessageHandleError(RESULT_XML_INVALID)
-        id = node.firstChild.nodeValue
+        msg = messages.parseMessageString(string)
 
-        node = node.nextSibling
-        if node == None or not node.localName == "module":
-            raise MessageHandleError(RESULT_XML_INVALID)
-        module = node.firstChild.nodeValue
-        
-        node = node.nextSibling
-        if node == None or not node.localName == "action":
-            raise MessageHandleError(RESULT_XML_INVALID)
-        action = node.firstChild.nodeValue
-
-        node = node.nextSibling
-        params = {}
-        if node != None and node.localName == "parameterList":
-            params = self.parseParameters(node)
-
-        msg = ServerRequest(id, module, action, params)
-
-        return self.performAction(msg)
-
-
-    def parseParameters(self, node):
-        params = {}
-
-
-        return params
+        if isinstance(msg, ServerRequestMessage):
+            return self.performAction(msg)
+        else:
+            raise MessageHandleError(MessageHandleError.RESULT_UNEXPECTED_MESSAGE)
 
     def performAction(self, msg):
-        pass
+
+        service = self.services[msg.serviceName]
+        if service == None:
+            raise MessageHandleError(MessageHandleError.RESULT_UNKNOWN_SERVICE)
+
+        return service.call(msg.action, msg.params)
 
     def sendResult(self, result, client):
         pass
@@ -108,7 +91,7 @@ class QuartjesClientFactory(ReconnectingClientFactory):
     protocol = QuartjesClientProtocol
 
 
-class EndPoint():
+class EndPoint(object):
     pass
 
 class ServerEndPoint(EndPoint):
@@ -118,12 +101,14 @@ class ClientEndPoint(EndPoint):
     def __init__(self, id=None):
         self.id = id
 
-class MessageHandleError(Exception):
-    
-    def __init__(self, errorCode=RESULT_UNKNOWN_ERROR):
-        self.errorCode = errorCode
+class Service(object):
+    """
+    Base class to be implemented by services using the protocol.
+    """
 
-RESULT_OK = 0
-RESULT_XML_PARSE_FAILED = 1
-RESULT_XML_INVALID = 2
-RESULT_UNKNOWN_ERROR = 99
+    def __init__(self, name="Unnamed"):
+        self.name = name
+
+    def call(self, action, params):
+        pass
+    
