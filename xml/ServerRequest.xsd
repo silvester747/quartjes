@@ -38,8 +38,10 @@
 		<sequence>
 			<element name="name" type="string"></element>
 			<choice>
-				<element name="value" type="string"></element>
-				<element name="object" type="tns:object"></element>
+				<element name="stringValue" type="string"></element>
+				<element name="objectValue" type="tns:object"></element>
+				<element name="intValue" type="int"></element>
+				<element name="doubleValue" type="double"></element>
 			</choice>
 
 		</sequence>

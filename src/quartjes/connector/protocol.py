@@ -15,7 +15,7 @@ class QuartjesServerProtocol(NetstringReceiver):
     Netstring receiver to listen for xml messages encoded as netstrings.
     """
 
-    def __init(self):
+    def __init__(self):
         self.id = uuid.uuid4()
 
     def connectionMade(self):
