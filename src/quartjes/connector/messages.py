@@ -24,10 +24,10 @@ class ServerRequestMessage(Message):
         self.params = params
 
     def __eq__(self, other):
-        return self.id == other.id and self.serviceName == other.serviceName and self.action == other.action and self.params == other.params
+        return other != None and self.id == other.id and self.serviceName == other.serviceName and self.action == other.action and self.params == other.params
 
     def __ne__(self, other):
-        return self.id != other.id or self.serviceName != other.serviceName or self.action != other.action or self.params != other.params
+        return other == None or self.id != other.id or self.serviceName != other.serviceName or self.action != other.action or self.params != other.params
 
     def createXml(self):
         """
@@ -68,20 +68,16 @@ class ServerRequestMessage(Message):
         node = root.find("parameterList")
         params = None
         if node != None:
-            params = parseParameters(node)
+            params = parseParameterList(node)
 
         return ServerRequestMessage(id, serviceName, action, params)
 
 
-class Parameter(AttrDisplay):
-    def __init__(self, name="Unnamed", value=None):
-        self.name = name
-        self.value = value
-
-
 def createParameterList(root, params):
     """
-    Construct an XML paramter list for the given dictionary containing parameters
+    Construct an XML parameter list for the given dictionary containing parameters.
+    Always starts adding a tag <parameterList> to the given parent.
+    Returns the <parameterList> tag.
     """
     paramList = addElement("parameterList", parent=root)
 
@@ -101,7 +97,7 @@ def createParameterList(root, params):
         elif isinstance(value, str):
             fieldName = "stringValue"
             strValue = value
-        elif isinstance(value, object):
+        elif getattr(object, "__serialize__", None) != None:
             serializeObject(param, value)
             continue
         else:
@@ -109,11 +105,39 @@ def createParameterList(root, params):
             strValue = str(value)
 
         addElement(fieldName, text = strValue, parent=param)
-        
+
+    return paramList
 
 
-def serializeObject(root, obj):
-    pass
+def serializeObject(obj=None, root=None, tagName="object"):
+    """
+    Create an XML representation of an object. All variables are stored in a
+    parameter list. Returns the root element of the object.
+    root can be None, in that case the object will have no parent.
+    obj can be None, in that case a None value is stored.
+    tagName can be used to override the default <object> tag.
+    """
+
+    objNode = addElement(tagName, parent=root)
+
+    if obj == None:
+        return objNode
+
+    objName = "%s.%s" % (obj.__class__.__module__, obj.__class__.__name__)
+
+    addElement("id", parent=objNode, text=obj.id.urn)
+    addElement("type", parent=objNode, text=objName)
+
+    attrs = {}
+
+    for attrName in obj.__serialize__:
+        attrs[attrName] = getattr(obj, attrName, None)
+
+    createParameterList(objNode, attrs)
+
+    return objNode
+
+
 
 def parseMessageString(string):
     """
@@ -128,14 +152,72 @@ def parseMessageString(string):
     else:
         raise MessageHandleError(RESULT_UNKNOWN_MESSAGE)
 
-def parseParameters(node):
+def parseParameterList(node):
+    """
+    Parse a <parameterList> tag and return the contents as a dictionary.
+    Accepts a parameterList element or searches the given node for a
+    parameterList tag.
+    """
     params = {}
+
+    if node.tag != "parameterList":
+        node = node.find("parameterList")
+
+    paramElements = node.findall("parameter")
+
+    for param in paramElements:
+
+        key = None
+        value = None
+
+        for e in param:
+            if e.tag == "name":
+                key = e.text
+            elif e.tag == "stringValue":
+                value = e.text
+            elif e.tag == "objectValue":
+                value = parseObject(e)
+            elif e.tag == "intValue":
+                value = int(e.text)
+            elif e.tag == "doubleValue":
+                value = float(e.text)
+
+        if key != None:
+            params[key] = value
 
 
     return params
 
 def parseObject(node):
-    pass
+    """
+    Read an object serialized to XML and return the object.
+    """
+
+    id = uuid.UUID(node.findtext("id"))
+    className = node.findtext("type")
+
+    if id == None or className == None:
+        return None
+
+    params = parseParameterList(node)
+
+    klass = getClassByName(className)
+    obj = klass()
+    obj.id = id
+
+    for (key, value) in params.items():
+        setattr(obj, key, value)
+
+    return obj
+
+def getClassByName(className):
+    parts = className.split('.')
+    module = ".".join(parts[:-1])
+    m = __import__( module )
+    for comp in parts[1:]:
+        m = getattr(m, comp)
+    return m
+
 
 def addElement(name, text=None, parent=None):
     """
@@ -155,11 +237,6 @@ def addElement(name, text=None, parent=None):
 
     return node
 
-def addParameterList(doc, parent, name, params):
-    """
-    Add a list of parameters as an XML parameterList.
-    """
-    pass
 
 def createMessageString(msg):
     root = msg.createXml()
@@ -180,6 +257,8 @@ class MessageHandleError(Exception):
 
 def selfTest():
 
+    from quartjes.drink import Drink
+
     params = {"what":"that", "howmany":3, "price":2.10}
 
     msg = ServerRequestMessage(uuid.uuid4(), "myservice", "myaction", params)
@@ -192,8 +271,14 @@ def selfTest():
 
     msg2 = parseMessageString(string)
     print(msg2)
-    #assert msg == msg2
+    assert msg == msg2
 
+    d = Drink("Cola")
+    xml = serializeObject(d)
+    print(et.tostring(xml))
+    d2 = parseObject(xml)
+    print(d)
+    print(d2)
 
 if __name__ == "__main__":
     selfTest()
