@@ -12,13 +12,13 @@ __date__ ="$Jun 8, 2011 7:32:02 PM$"
 import xml.etree.ElementTree as et
 import uuid
 
-def createParameterList(root, params):
+def createParameterList(root, params, tagName="parameterList"):
     """
     Construct an XML parameter list for the given dictionary containing parameters.
     Always starts adding a tag <parameterList> to the given parent.
     Returns the <parameterList> tag.
     """
-    paramList = addElement("parameterList", parent=root)
+    paramList = addElement(tagName, parent=root)
 
     for (key, value) in params.items():
         fieldName = None
@@ -36,6 +36,12 @@ def createParameterList(root, params):
         elif isinstance(value, str):
             fieldName = "stringValue"
             strValue = value
+        elif isinstance(value, dict):
+            createParameterList(param, value, tagName="dictValue")
+            continue
+        elif isinstance(value, list):
+            #TODO
+            continue
         elif hasattr(value, "__serialize__"):
             objValue = addElement("objectValue", parent=param)
             serializeObject(value, root=objValue)

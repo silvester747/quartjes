@@ -36,12 +36,13 @@
 
 	<complexType name="parameter">
 		<sequence>
-			<element name="name" type="string"></element>
+			<element name="name" type="string" maxOccurs="1" minOccurs="1"></element>
 			<choice>
 				<element name="stringValue" type="string"></element>
 				<element name="objectValue" type="tns:object"></element>
 				<element name="intValue" type="int"></element>
 				<element name="doubleValue" type="double"></element>
+				<element name="dictValue" type="tns:parameterList"></element>
 			</choice>
 
 		</sequence>
