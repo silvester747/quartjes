@@ -2,9 +2,12 @@
 Methods for serializing Quartjes messages and objects to XML for transmitting
 over the network or maybe even storing in files or other locations.
 
-Objects to be serialized must implement:
-* a constructor accepting zero arguments
-* a class variable __serialize__ containing the names of variables to include
+Several types of objects are supported for serialization:
+* objects implementing a __serialize__ class variable and a constructor allowing
+  zero arguments
+* several builtin types like str, int, float, uuid
+* lists and dictionaries of supported types
+* custom types that are registered with this module
 """
 __author__="Rob van der Most"
 __date__ ="$Jun 8, 2011 7:32:02 PM$"
@@ -12,31 +15,30 @@ __date__ ="$Jun 8, 2011 7:32:02 PM$"
 import xml.etree.ElementTree as et
 import uuid
 
-def serialize(values, parent=None, tagName="unknown"):
+def serialize(obj, parent=None, tagName="unknown"):
     """
-    Serialize a set of values.
-    Values should be a dictionary containing the tag names as keys and the values
-    to store inside the tags as value.
+    If a parent node is supplied the data is serialized as a sub element of the parent
+    node. tagName is used as the name of the top level tag.
     """
 
-    root = addElement(tagName, parent=parent)
+    return addValueElement(obj, parent, tagName)
 
-    for (key, value) in values:
-        addValueElement(value, parent=root, tagName=key)
+def deserialize(node):
+    """
+    """
 
-    return root
+    return parseValueElement(node)
 
-def deserialize(node, keys):
-    pass
 
 def serializeDict(value, parent=None, tagName="dict"):
     """
     Construct an XML representation of the given dictionary.
     Returns the created element.
     """
+    #print("serializeDict %s" % value)
     dictNode = addElement(tagName, parent=parent, type="dict")
 
-    for (key, value) in params.items():
+    for (key, value) in value.items():
 
         itemNode = addElement("item", parent=dictNode)
         addElement("key", text=key, parent=itemNode)
@@ -68,6 +70,8 @@ def serializeList(values, parent=None, tagName="list"):
     Serialize the contents of a list to xml.
     Returns the top element of the list.
     """
+    #print("serializeList %s" % value)
+
     node = addElement(tagName, parent=parent, type="list")
 
     for value in values:
@@ -96,16 +100,14 @@ def serializeInstance(obj=None, parent=None, tagName="object"):
     obj can be None, in that case a None value is stored.
     tagName can be used to override the default <object> tag.
     """
+    #print("serializeInstance %s" % obj)
 
     objNode = addElement(tagName, parent=parent, type="instance")
 
-    if obj == None:
-        return objNode
+    className = "%s.%s" % (obj.__class__.__module__, obj.__class__.__name__)
 
-    objName = "%s.%s" % (obj.__class__.__module__, obj.__class__.__name__)
-
-    addValueElement(obj.id, parent=objNode, tagName="id")
-    addValueElement(objName, parent=objNode, tagName="type")
+    objNode.set("class", className)
+    objNode.set("id", obj.id.urn)
 
     attrs = {}
 
@@ -116,18 +118,18 @@ def serializeInstance(obj=None, parent=None, tagName="object"):
 
     return objNode
 
-def parseInstance(node):
+def deserializeInstance(node):
     """
     Read an object instance serialized to XML and return the instance.
     """
-
-    id = parseValueElement(node.find("id"))
-    className = parseValueElement(node.find("type"))
+    
+    id = uuid.UUID(node.get("id"))
+    className = node.get("class")
 
     if id == None or className == None:
         return None
 
-    params = deserializeDict(node)
+    params = deserializeDict(node.find("attributes"))
 
     klass = getClassByName(className)
     obj = klass()
@@ -179,6 +181,7 @@ def addValueElement(value, parent=None, tagName="value"):
     used.
     Returns the newly created element.
     """
+    #print("addValueElement %s" % value)
 
     if hasattr(value, "__serialize__"):
 
@@ -186,7 +189,7 @@ def addValueElement(value, parent=None, tagName="value"):
 
     elif isinstance(value, dict):
 
-        return serializeDict(parent=parent, params=value, tagName=tagName)
+        return serializeDict(parent=parent, value=value, tagName=tagName)
         
     elif isinstance(value, list):
 
@@ -198,13 +201,16 @@ def addValueElement(value, parent=None, tagName="value"):
         return addElement(tagName, string, parent, type)
 
 def parseValueElement(node):
+    """
+    Parse an element and based on the type call the correct deserializer.
+    """
     type = node.get("type")
 
     if type == None or type == "NoneType":
         return None
 
     if type == "instance":
-        return parseInstance(node)
+        return deserializeInstance(node)
 
     if type == "dict":
         return deserializeDict(node)
@@ -288,25 +294,32 @@ if __name__ == "__main__":
     from quartjes.drink import Drink
 
     value = uuid.uuid4()
-    print(value)
+    #print(value)
     string = _uuidSerializer.serialize(value)
-    print(string)
+    #print(string)
     value2 = _uuidSerializer.deserialize(string)
-    print(value2)
+    #print(value2)
     assert value == value2
 
-    print(getSerializedValue(2))
-    print(getSerializedValue(2.1))
-    print(getSerializedValue("test"))
-    print(getSerializedValue(value))
+    #print(getSerializedValue(2))
+    #print(getSerializedValue(2.1))
+    #print(getSerializedValue("test"))
+    #print(getSerializedValue(value))
 
     xml = addValueElement(value)
-    print(et.tostring(xml))
+    #print(et.tostring(xml))
 
     params = {"what":"that", "howmany":3, "price":2.10, "drink":Drink("Cola")}
     xml = serializeDict(parent=None, value=params)
-    print(et.tostring(xml))
+    #print(et.tostring(xml))
 
     params2 = deserializeDict(xml)
+    #print(params2)
+    #print(params2["drink"])
     assert params == params2
+
+    xml = serialize(params, None, "message")
+    print(et.tostring(xml))
+    params3 = deserialize(xml)
+    assert params == params3
     
