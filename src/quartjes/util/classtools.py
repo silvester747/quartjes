@@ -10,6 +10,8 @@ Created on May 5, 2011
 @author: Rob van der Most
 '''
 
+import uuid
+
 class AttrDisplay(object):
     """
     Provides an inheritable print overload method that displays
@@ -27,3 +29,20 @@ class AttrDisplay(object):
 
     def __str__(self):
         return '[%s: %s]' % (self.__class__.__name__, self.gatherAttrs())
+
+class QuartjesBaseClass(AttrDisplay):
+    """
+    Base class for all objects in quartjes that are serialized. Deriving from
+    this class does not automatically make your objects serializable, but at
+    least a unique id is present.
+    """
+
+    def __init__(self, id=None):
+        """
+        Default constructor. Accepts an id to store. If no id is given, a new
+        unique id is created.
+        """
+        if id == None:
+            self.id = uuid.uuid4()
+        else:
+            self.id = id

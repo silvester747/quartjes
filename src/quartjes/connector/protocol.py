@@ -7,7 +7,8 @@ from twisted.internet.protocol import ServerFactory
 from twisted.protocols.basic import NetstringReceiver
 from twisted.internet import threads
 import uuid
-from quartjes.connector.messages import MessageHandleError, ServerRequestMessage
+from quartjes.connector.messages import ServerRequestMessage
+from quartjes.connector.messages import ServerMotdMessage, createMessageString
 
 class QuartjesServerProtocol(NetstringReceiver):
     """
@@ -20,7 +21,8 @@ class QuartjesServerProtocol(NetstringReceiver):
 
     def connectionMade(self):
         print("Incoming connection")
-        self.transport.write("Hello there!")
+        motd = ServerMotdMessage(clientId=self.id)
+        self.transport.write(createMessageString(motd))
         self.factory.clientConnected(self)
 
     def stringReceived(self, string):
@@ -47,7 +49,7 @@ class QuartjesServerFactory(ServerFactory):
         self.clients[client.id] = client
 
     def clientDisconnected(self, client):
-        self.clients.remove(client.id)
+        del self.clients[client.id]
 
     def registerService(self, service):
         self.services[service.name] = service
@@ -91,24 +93,33 @@ class QuartjesClientFactory(ReconnectingClientFactory):
     protocol = QuartjesClientProtocol
 
 
-class EndPoint(object):
-    pass
-
-class ServerEndPoint(EndPoint):
-    pass
-
-class ClientEndPoint(EndPoint):
-    def __init__(self, id=None):
-        self.id = id
-
 class Service(object):
     """
     Base class to be implemented by services using the protocol.
+    In derived implementations create actions as function definitions with format:
+    action_<action name>. The parameters are passed as dictionary. You can accept
+    the dictionary or let Python fill the arguments by keyword.
     """
 
     def __init__(self, name="Unnamed"):
         self.name = name
 
     def call(self, action, params):
-        pass
-    
+        meth = getattr(self, "action_%s" % action, default=None)
+        if meth != None:
+           meth(params)
+        
+
+class MessageHandleError(Exception):
+
+    RESULT_OK = 0
+    RESULT_XML_PARSE_FAILED = 1
+    RESULT_XML_INVALID = 2
+    RESULT_UNKNOWN_MESSAGE = 3
+    RESULT_UNEXPECTED_MESSAGE = 4
+    RESULT_UNKNOWN_SERVICE = 5
+    RESULT_UNKNOWN_ERROR = 99
+
+    def __init__(self, errorCode=RESULT_UNKNOWN_ERROR):
+        self.errorCode = errorCode
+

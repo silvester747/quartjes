@@ -7,20 +7,18 @@ __author__="Rob van der Most"
 __date__ ="$Jun 3, 2011 8:52:26 PM$"
 
 import uuid
-from quartjes.util.classtools import AttrDisplay
+from quartjes.util.classtools import QuartjesBaseClass
 import quartjes.connector.serializer as serializer
 import xml.etree.ElementTree as et
 
-class Message(AttrDisplay):
+class Message(QuartjesBaseClass):
     """
     Base class all messages are derived from.
     """
 
     def __init__(self, id=None):
-        if id == None:
-            self.id = uuid.uuid4()
-        else:
-            self.id = id
+        QuartjesBaseClass.__init__(self, id)
+
 
 class ServerRequestMessage(Message):
     """
@@ -42,6 +40,31 @@ class ServerRequestMessage(Message):
     def __ne__(self, other):
         return other == None or self.id != other.id or self.serviceName != other.serviceName or self.action != other.action or self.params != other.params
 
+class ServerResponseMessage(Message):
+    """
+    Message used to respond to server request messages.
+    """
+
+    __serialize__ = ["resultCode"]
+
+    def __init__(self, id=None, resultCode = 0):
+        Message.__init__(self, id)
+
+        self.resultCode = resultCode
+
+class ServerMotdMessage(Message):
+    """
+    MOTD message received from the server upon connection.
+    """
+
+    __serialize__ = ["motd", "clientId"]
+
+    def __init__(self, id=None, motd="Hello there!", clientId=None):
+        Message.__init__(self, id)
+
+        self.motd = motd
+        self.clientId = clientId
+        
 
 def parseMessageString(string):
     """
@@ -54,23 +77,10 @@ def parseMessageString(string):
 
 
 def createMessageString(msg):
-    root = msg.createXml()
+    root = serializer.serialize(msg, parent=None, tagName="message")
     return et.tostring(root)
 
 
-
-class MessageHandleError(Exception):
-
-    RESULT_OK = 0
-    RESULT_XML_PARSE_FAILED = 1
-    RESULT_XML_INVALID = 2
-    RESULT_UNKNOWN_MESSAGE = 3
-    RESULT_UNEXPECTED_MESSAGE = 4
-    RESULT_UNKNOWN_SERVICE = 5
-    RESULT_UNKNOWN_ERROR = 99
-
-    def __init__(self, errorCode=RESULT_UNKNOWN_ERROR):
-        self.errorCode = errorCode
 
 def selfTest():
 
