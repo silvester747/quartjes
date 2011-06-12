@@ -319,7 +319,7 @@ if __name__ == "__main__":
     assert params == params2
 
     xml = serialize(params, None, "message")
-    print(et.tostring(xml))
+    #print(et.tostring(xml))
     params3 = deserialize(xml)
     assert params == params3
     
