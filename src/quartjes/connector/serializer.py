@@ -109,12 +109,8 @@ def serializeInstance(obj=None, parent=None, tagName="object"):
     objNode.set("class", className)
     objNode.set("id", obj.id.urn)
 
-    attrs = {}
-
     for attrName in obj.__serialize__:
-        attrs[attrName] = getattr(obj, attrName, None)
-
-    serializeDict(attrs, parent=objNode, tagName="attributes")
+        addValueElement(getattr(obj, attrName, None), parent=objNode, tagName=attrName)
 
     return objNode
 
@@ -129,14 +125,13 @@ def deserializeInstance(node):
     if id == None or className == None:
         return None
 
-    params = deserializeDict(node.find("attributes"))
-
     klass = getClassByName(className)
     obj = klass()
     obj.id = id
 
-    for (key, value) in params.items():
-        setattr(obj, key, value)
+    for element in node:
+        value = parseValueElement(element)
+        setattr(obj, element.tag, value)
 
     return obj
 
