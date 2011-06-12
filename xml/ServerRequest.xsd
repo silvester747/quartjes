@@ -12,7 +12,7 @@
 			<element name="id" type="string" maxOccurs="1" minOccurs="1"></element>
 			<element name="service" type="string" maxOccurs="1" minOccurs="1"></element>
 			<element name="action" type="string" maxOccurs="1" minOccurs="1"></element>
-			<element name="parameterList" type="tns:parameterList" maxOccurs="1" minOccurs="0"></element>
+			<element name="params" type="tns:parameterList" maxOccurs="1" minOccurs="0"></element>
 		</sequence>
 	</complexType>
 

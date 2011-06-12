@@ -46,7 +46,7 @@ class ServerRequestMessage(Message):
         addElement("action", parent=root, text=self.action)
         
         if self.params != None:
-            createParameterList(root, self.params)
+            serializeDict(root, self.params, tagName="params")
 
         return root
 
@@ -74,7 +74,7 @@ class ServerRequestMessage(Message):
         node = root.find("parameterList")
         params = None
         if node != None:
-            params = parseParameterList(node)
+            params = deserializeDict(node)
 
         return ServerRequestMessage(id, serviceName, action, params)
 
