@@ -45,12 +45,14 @@ class ServerResponseMessage(Message):
     Message used to respond to server request messages.
     """
 
-    __serialize__ = ["resultCode"]
+    __serialize__ = ["resultCode", "result", "responseTo"]
 
-    def __init__(self, id=None, resultCode = 0):
+    def __init__(self, id=None, resultCode = 0, result=None, responseTo=None):
         Message.__init__(self, id)
 
         self.resultCode = resultCode
+        self.result = result
+        self.responseTo = responseTo
 
 class ServerMotdMessage(Message):
     """
