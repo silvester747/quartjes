@@ -283,39 +283,4 @@ add_value_serializer(_int_serializer)
 add_value_serializer(_string_serializer)
 add_value_serializer(_float_serializer)
 add_value_serializer(_uuid_serializer)
-
-
-if __name__ == "__main__":
-
-    from quartjes.drink import Drink
-
-    value = uuid.uuid4()
-    #print(value)
-    string = _uuid_serializer.serialize(value)
-    #print(string)
-    value2 = _uuid_serializer.deserialize(string)
-    #print(value2)
-    assert value == value2
-
-    #print(getSerializedValue(2))
-    #print(getSerializedValue(2.1))
-    #print(getSerializedValue("test"))
-    #print(getSerializedValue(value))
-
-    xml = add_value_element(value)
-    #print(et.tostring(xml))
-
-    params = {"what":"that", "howmany":3, "price":2.10, "drink":Drink("Cola")}
-    xml = serialize_dict(parent=None, value=params)
-    #print(et.tostring(xml))
-
-    params2 = deserialize_dict(xml)
-    #print(params2)
-    #print(params2["drink"])
-    assert params == params2
-
-    xml = serialize(params, None, "message")
-    #print(et.tostring(xml))
-    params3 = deserialize(xml)
-    assert params == params3
     

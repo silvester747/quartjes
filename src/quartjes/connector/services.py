@@ -6,6 +6,8 @@ is identified by its service name.
 __author__="rob"
 __date__ ="$Jun 13, 2011 12:14:15 PM$"
 
+from quartjes.connector.protocol import MessageHandleError
+
 class Service(object):
     """
     Base class to be implemented by services using the protocol.
