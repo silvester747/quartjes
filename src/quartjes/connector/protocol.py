@@ -8,7 +8,7 @@ from twisted.protocols.basic import NetstringReceiver
 from twisted.internet import threads
 import uuid
 from quartjes.connector.messages import ServerRequestMessage, ServerResponseMessage
-from quartjes.connector.messages import ServerMotdMessage, createMessageString
+from quartjes.connector.messages import ServerMotdMessage, createMessageString, parseMessageString
 
 class QuartjesProtocol(NetstringReceiver):
     """
@@ -29,7 +29,8 @@ class QuartjesProtocol(NetstringReceiver):
         self.factory.clientDisconnected(self)
 
     def sendMessageAsXml(self, msg):
-        self.transport.write(createMessageString(msg))
+        #print("Sending message: %s" % msg)
+        self.sendString(createMessageString(msg))
 
 
 class QuartjesServerFactory(ServerFactory):
@@ -58,11 +59,13 @@ class QuartjesServerFactory(ServerFactory):
         self.services.remove(service.name)
 
     def handleIncomingMessage(self, string, client):
+        #print("Incoming: %s" % string)
         d = threads.deferToThread(self.parseMessage, string, client)
         d.addCallbacks(callback=self.sendResult, errback=self.sendError, callbackArgs=(client,), errbackArgs=(client,))
 
     def parseMessage(self, string, client):
-        msg = messages.parseMessageString(string)
+        #print("Parsing message: %s" % string)
+        msg = parseMessageString(string)
         result = None
 
         if isinstance(msg, ServerRequestMessage):
@@ -73,21 +76,25 @@ class QuartjesServerFactory(ServerFactory):
         return MessageResult(result=result, originalMessage=msg)
 
     def performAction(self, msg):
-        service = self.services[msg.serviceName]
+        #print("Performing service: %s, action: %s" % (msg.serviceName, msg.action))
+        service = self.services.get(msg.serviceName)
         if service == None:
             raise MessageHandleError(MessageHandleError.RESULT_UNKNOWN_SERVICE, msg)
 
         return service.call(msg.action, msg.params)
 
     def sendResult(self, result, client):
-        msg = ServerResponseMessage(0, result=result, responseTo=result.originalMessage.id)
+        #print("Send result: %s" % result)
+        msg = ServerResponseMessage(resultCode=0, result=result.result, responseTo=result.originalMessage.id)
         client.sendMessageAsXml(msg)
 
     def sendError(self, result, client):
+        error = result.value
+        #print("Error occurred: %s" % result)
         id = None
-        if result.originalMessage != None:
-            id = result.originalMessage.id
-        msg = ServerResponseMessage(result.errorCode, responseTo=id)
+        if error.originalMessage != None:
+            id = error.originalMessage.id
+        msg = ServerResponseMessage(resultCode=error.errorCode, responseTo=id)
         client.sendMessageAsXml(msg)
 
 
@@ -97,31 +104,32 @@ class QuartjesClientFactory(ReconnectingClientFactory):
     to make sure it reconnects in case of errors.
     """
     protocol = QuartjesProtocol
-    waitingMessages = {}
-    currentClient = None
+
+    def __init__(self):
+        self.waitingMessages = {}
+        self.currentClient = None
 
     def clientConnected(self, client):
         print("Client connected")
-        self.resetDelay()
+        self.currentClient = client
 
     def clientDisconnected(self, client):
         print("Client disconnected")
+        self.currentClient = None
 
     def handleIncomingMessage(self, string, client):
-        print("Incoming: %s" % string)
-        d = threads.deferToThread(messages.parseMessageString, string)
-        d.addCallback(handleMessageContents, client)
+        #print("Incoming: %s" % string)
+        d = threads.deferToThread(parseMessageString, string)
+        d.addCallback(self.handleMessageContents, client)
 
     def handleMessageContents(self, msg, client):
         if isinstance(msg, ServerResponseMessage):
-            d = waitingMessages.get(msg.responseTo)
+            d = self.waitingMessages.get(msg.responseTo)
             if d != None:
-                if msg.errorCode == 0:
-                    d.callback(msg.result)
-                else:
-                    d.errback(MessageHandleError(msg.errorCode))
+                d.callback(msg)
         elif isinstance(msg, ServerMotdMessage):
             print("Connected: %s" % msg.motd)
+            self.resetDelay()
 
 
     def sendMessageBlockingFromThread(self, message):
@@ -129,8 +137,8 @@ class QuartjesClientFactory(ReconnectingClientFactory):
 
     def sendMessageAndWait(self, message):
         d = defer.Deferred()
-        waitingMessages[message.id] = d
-        currentClient.sendMessageAsXml(message)
+        self.waitingMessages[message.id] = d
+        self.currentClient.sendMessageAsXml(message)
         return d
 
 class Service(object):
@@ -145,16 +153,16 @@ class Service(object):
         self.name = name
 
     def call(self, action, params):
-        meth = getattr(self, "action_%s" % action, default=None)
+        meth = getattr(self, "action_%s" % action, None)
         if meth == None:
             raise MessageHandleError(MessageHandleError.RESULT_UNKNOWN_ACTION)
 
-        meth(params)
+        return meth(**params)
 
 class TestService(Service):
     
     def __init__(self):
-        Service.__init__("test")
+        Service.__init__(self, "test")
     
     def action_test(self, text):
         return text
