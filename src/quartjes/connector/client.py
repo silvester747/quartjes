@@ -2,8 +2,10 @@
 # and open the template in the editor.
 
 from quartjes.connector.protocol import QuartjesClientFactory
+from quartjes.connector.messages import ServerRequestMessage
 from twisted.internet import reactor, threads
 from threading import Thread
+from quartjes.connector.services import ServiceInterface
 
 __author__="rob"
 __date__ ="$Jun 12, 2011 9:37:38 PM$"
@@ -28,6 +30,16 @@ class ClientConnector(object):
     def stop(self):
         threads.blockingCallFromThread(reactor, reactor.stop)
 
+    def send_request(self, service_name, action, params):
+        msg = ServerRequestMessage(service_name=service_name, action=action, params=params)
+        result_msg = self.factory.send_message_blocking_from_thread(msg)
+        if result_msg.result_code > 0:
+            raise MessageHandleError(error_code=result_msg.result_code)
+        return result_msg.result
+
+    def get_service_interface(self, service_name):
+        return ServiceInterface(self, service_name)
+
 class ReactorThread(Thread):
     def __init__(self):
         Thread.__init__(self, name="ReactorThread")
@@ -46,10 +58,11 @@ if __name__ == "__main__":
     cl = ClientConnector("localhost", 1234)
     cl.start()
 
+    testService = cl.get_service_interface("test")
+
     time.sleep(5)
     print("Sending message")
-    msg = ServerRequestMessage(service_name="test", action="test", params={"text":"Spam"})
-    result = cl.factory.send_message_blocking_from_thread(msg)
+    result = testService.test(text="Spam")
     print(result)
 
     time.sleep(5)

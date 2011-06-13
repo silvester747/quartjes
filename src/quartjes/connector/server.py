@@ -34,5 +34,10 @@ class ReactorThread(Thread):
         reactor.run()
         print("Reactor stopped")
 
+if __name__ == "__main__":
+    from quartjes.connector.services import TestService
 
+    server = ServerConnector(1234)
+    server.register_service(TestService())
+    server.start()
 
