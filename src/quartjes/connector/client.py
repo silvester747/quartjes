@@ -17,8 +17,8 @@ class Client(object):
 
     def start(self):
         reactor.callLater(0, self._connect)
-        self._reactorThread = ReactorThread()
-        self._reactorThread.start()
+        self._reactor_thread = ReactorThread()
+        self._reactor_thread.start()
 
     def _connect(self):
         print("Connecting...")
@@ -47,8 +47,8 @@ if __name__ == "__main__":
 
     time.sleep(5)
     print("Sending message")
-    msg = ServerRequestMessage(serviceName="test", action="test", params={"text":"Spam"})
-    result = cl.factory.sendMessageBlockingFromThread(msg)
+    msg = ServerRequestMessage(service_name="test", action="test", params={"text":"Spam"})
+    result = cl.factory.send_message_blocking_from_thread(msg)
     print(result)
 
     time.sleep(5)

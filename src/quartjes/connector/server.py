@@ -9,7 +9,7 @@ from twisted.internet.endpoints import TCP4ServerEndpoint
 from quartjes.connector.protocol import QuartjesServerFactory, TestService
 
 factory = QuartjesServerFactory()
-factory.registerService(TestService())
+factory.register_service(TestService())
 
 endpoint = TCP4ServerEndpoint(reactor, 1234)
 endpoint.listen(factory)

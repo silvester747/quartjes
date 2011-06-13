@@ -25,50 +25,50 @@ class ServerRequestMessage(Message):
     Message type used to send requests from clients to the server.
     """
 
-    __serialize__ = ["serviceName", "action", "params"]
+    __serialize__ = ["service_name", "action", "params"]
 
-    def __init__(self, id=None, serviceName=None, action=None, params=None):
+    def __init__(self, id=None, service_name=None, action=None, params=None):
         Message.__init__(self, id)
         
-        self.serviceName = serviceName
+        self.service_name = service_name
         self.action = action
         self.params = params
 
     def __eq__(self, other):
-        return other != None and self.id == other.id and self.serviceName == other.serviceName and self.action == other.action and self.params == other.params
+        return other != None and self.id == other.id and self.service_name == other.service_name and self.action == other.action and self.params == other.params
 
     def __ne__(self, other):
-        return other == None or self.id != other.id or self.serviceName != other.serviceName or self.action != other.action or self.params != other.params
+        return other == None or self.id != other.id or self.service_name != other.service_name or self.action != other.action or self.params != other.params
 
 class ServerResponseMessage(Message):
     """
     Message used to respond to server request messages.
     """
 
-    __serialize__ = ["resultCode", "result", "responseTo"]
+    __serialize__ = ["result_code", "result", "response_to"]
 
-    def __init__(self, id=None, resultCode = 0, result=None, responseTo=None):
+    def __init__(self, id=None, result_code = 0, result=None, response_to=None):
         Message.__init__(self, id)
 
-        self.resultCode = resultCode
+        self.result_code = result_code
         self.result = result
-        self.responseTo = responseTo
+        self.response_to = response_to
 
 class ServerMotdMessage(Message):
     """
     MOTD message received from the server upon connection.
     """
 
-    __serialize__ = ["motd", "clientId"]
+    __serialize__ = ["motd", "client_id"]
 
-    def __init__(self, id=None, motd="Hello there!", clientId=None):
+    def __init__(self, id=None, motd="Hello there!", client_id=None):
         Message.__init__(self, id)
 
         self.motd = motd
-        self.clientId = clientId
+        self.client_id = client_id
         
 
-def parseMessageString(string):
+def parse_message_string(string):
     """
     Parse a string for an xml message an return an instance of the contained
     message type.
@@ -78,13 +78,13 @@ def parseMessageString(string):
     return serializer.deserialize(node)
 
 
-def createMessageString(msg):
-    root = serializer.serialize(msg, parent=None, tagName="message")
+def create_message_string(msg):
+    root = serializer.serialize(msg, parent=None, tag_name="message")
     return et.tostring(root)
 
 
 
-def selfTest():
+def self_test():
 
     from quartjes.drink import Drink
 
@@ -95,12 +95,12 @@ def selfTest():
     assert not msg != msg
     print(msg)
 
-    string = createMessageString(msg)
+    string = create_message_string(msg)
     print(string)
 
-    msg2 = parseMessageString(string)
+    msg2 = parse_message_string(string)
     print(msg2)
     assert msg == msg2
 
 if __name__ == "__main__":
-    selfTest()
+    self_test()

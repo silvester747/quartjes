@@ -8,7 +8,7 @@ from twisted.protocols.basic import NetstringReceiver
 from twisted.internet import threads
 import uuid
 from quartjes.connector.messages import ServerRequestMessage, ServerResponseMessage
-from quartjes.connector.messages import ServerMotdMessage, createMessageString, parseMessageString
+from quartjes.connector.messages import ServerMotdMessage, create_message_string, parse_message_string
 
 class QuartjesProtocol(NetstringReceiver):
     """
@@ -17,20 +17,35 @@ class QuartjesProtocol(NetstringReceiver):
     """
 
     def __init__(self):
+        """
+        Construct a new protocol handler with a unique id.
+        """
         self.id = uuid.uuid4()
 
     def connectionMade(self):
-        self.factory.clientConnected(self)
+        """
+        Fired by twisted when the connection is established.
+        """
+        self.factory.client_connected(self)
 
     def stringReceived(self, string):
-        self.factory.handleIncomingMessage(string, self)
+        """
+        Fired by twisted when a complete netstring is received.
+        """
+        self.factory.handle_incoming_message(string, self)
 
     def connectionLost(self, reason):
-        self.factory.clientDisconnected(self)
+        """
+        Fired by twisted when the connection is lost.
+        """
+        self.factory.client_disconnected(self)
 
-    def sendMessageAsXml(self, msg):
+    def send_message_as_xml(self, msg):
+        """
+        Send the XML message to the other end of this connection.
+        """
         #print("Sending message: %s" % msg)
-        self.sendString(createMessageString(msg))
+        self.sendString(create_message_string(msg))
 
 
 class QuartjesServerFactory(ServerFactory):
@@ -44,58 +59,58 @@ class QuartjesServerFactory(ServerFactory):
         self.clients = {}
         self.services = {}
 
-    def clientConnected(self, client):
+    def client_connected(self, client):
         self.clients[client.id] = client
-        motd = ServerMotdMessage(clientId=client.id)
-        client.sendMessageAsXml(motd)
+        motd = ServerMotdMessage(client_id=client.id)
+        client.send_message_as_xml(motd)
 
-    def clientDisconnected(self, client):
+    def client_disconnected(self, client):
         del self.clients[client.id]
 
-    def registerService(self, service):
+    def register_service(self, service):
         self.services[service.name] = service
 
-    def unregisterService(self, service):
+    def unregister_service(self, service):
         self.services.remove(service.name)
 
-    def handleIncomingMessage(self, string, client):
+    def handle_incoming_message(self, string, client):
         #print("Incoming: %s" % string)
-        d = threads.deferToThread(self.parseMessage, string, client)
-        d.addCallbacks(callback=self.sendResult, errback=self.sendError, callbackArgs=(client,), errbackArgs=(client,))
+        d = threads.deferToThread(self.parse_message, string, client)
+        d.addCallbacks(callback=self.send_result, errback=self.send_error, callbackArgs=(client,), errbackArgs=(client,))
 
-    def parseMessage(self, string, client):
+    def parse_message(self, string, client):
         #print("Parsing message: %s" % string)
-        msg = parseMessageString(string)
+        msg = parse_message_string(string)
         result = None
 
         if isinstance(msg, ServerRequestMessage):
-            result = self.performAction(msg)
+            result = self.perform_action(msg)
         else:
             raise MessageHandleError(MessageHandleError.RESULT_UNEXPECTED_MESSAGE, msg)
 
-        return MessageResult(result=result, originalMessage=msg)
+        return MessageResult(result=result, original_message=msg)
 
-    def performAction(self, msg):
-        #print("Performing service: %s, action: %s" % (msg.serviceName, msg.action))
-        service = self.services.get(msg.serviceName)
+    def perform_action(self, msg):
+        #print("Performing service: %s, action: %s" % (msg.service_name, msg.action))
+        service = self.services.get(msg.service_name)
         if service == None:
             raise MessageHandleError(MessageHandleError.RESULT_UNKNOWN_SERVICE, msg)
 
         return service.call(msg.action, msg.params)
 
-    def sendResult(self, result, client):
+    def send_result(self, result, client):
         #print("Send result: %s" % result)
-        msg = ServerResponseMessage(resultCode=0, result=result.result, responseTo=result.originalMessage.id)
-        client.sendMessageAsXml(msg)
+        msg = ServerResponseMessage(result_code=0, result=result.result, response_to=result.original_message.id)
+        client.send_message_as_xml(msg)
 
-    def sendError(self, result, client):
+    def send_error(self, result, client):
         error = result.value
         #print("Error occurred: %s" % result)
         id = None
-        if error.originalMessage != None:
-            id = error.originalMessage.id
-        msg = ServerResponseMessage(resultCode=error.errorCode, responseTo=id)
-        client.sendMessageAsXml(msg)
+        if error.original_message != None:
+            id = error.original_message.id
+        msg = ServerResponseMessage(result_code=error.error_code, response_to=id)
+        client.send_message_as_xml(msg)
 
 
 class QuartjesClientFactory(ReconnectingClientFactory):
@@ -106,47 +121,45 @@ class QuartjesClientFactory(ReconnectingClientFactory):
     protocol = QuartjesProtocol
 
     def __init__(self):
-        self.waitingMessages = {}
-        self.currentClient = None
+        self.waiting_messages = {}
+        self.current_client = None
 
-    def clientConnected(self, client):
+    def client_connected(self, client):
         print("Client connected")
-        self.currentClient = client
+        self.current_client = client
 
-    def clientDisconnected(self, client):
+    def client_disconnected(self, client):
         print("Client disconnected")
-        self.currentClient = None
+        self.current_client = None
 
-    def handleIncomingMessage(self, string, client):
+    def handle_incoming_message(self, string, client):
         #print("Incoming: %s" % string)
-        d = threads.deferToThread(parseMessageString, string)
-        d.addCallback(self.handleMessageContents, client)
+        d = threads.deferToThread(parse_message_string, string)
+        d.addCallback(self.handle_message_contents, client)
 
-    def handleMessageContents(self, msg, client):
+    def handle_message_contents(self, msg, client):
         if isinstance(msg, ServerResponseMessage):
-            d = self.waitingMessages.get(msg.responseTo)
+            d = self.waiting_messages.get(msg.response_to)
             if d != None:
                 d.callback(msg)
         elif isinstance(msg, ServerMotdMessage):
             print("Connected: %s" % msg.motd)
             self.resetDelay()
 
+    def send_message_blocking_from_thread(self, message):
+        return threads.blockingCallFromThread(reactor, self.send_message_and_wait, message)
 
-    def sendMessageBlockingFromThread(self, message):
-        return threads.blockingCallFromThread(reactor, self.sendMessageAndWait, message)
-
-    def sendMessageAndWait(self, message):
+    def send_message_and_wait(self, message):
         d = defer.Deferred()
-        self.waitingMessages[message.id] = d
-        self.currentClient.sendMessageAsXml(message)
+        self.waiting_messages[message.id] = d
+        self.current_client.send_message_as_xml(message)
         return d
 
 class Service(object):
     """
     Base class to be implemented by services using the protocol.
     In derived implementations create actions as function definitions with format:
-    action_<action name>. The parameters are passed as dictionary. You can accept
-    the dictionary or let Python fill the arguments by keyword.
+    action_<action name>. The parameters are passed by keyword
     """
 
     def __init__(self, name="Unnamed"):
@@ -169,9 +182,9 @@ class TestService(Service):
 
 class MessageResult(object):
     
-    def __init__(self, result=None, originalMessage=None):
+    def __init__(self, result=None, original_message=None):
         self.result = result
-        self.originalMessage = originalMessage
+        self.original_message = original_message
 
 class MessageHandleError(Exception):
 
@@ -184,7 +197,7 @@ class MessageHandleError(Exception):
     RESULT_UNKNOWN_ACTION = 6
     RESULT_UNKNOWN_ERROR = 99
 
-    def __init__(self, errorCode=RESULT_UNKNOWN_ERROR, originalMessage=None):
-        self.errorCode = errorCode
-        self.originalMessage = originalMessage
+    def __init__(self, error_code=RESULT_UNKNOWN_ERROR, original_message=None):
+        self.error_code = error_code
+        self.original_message = original_message
 
