@@ -155,31 +155,6 @@ class QuartjesClientFactory(ReconnectingClientFactory):
         self.current_client.send_message_as_xml(message)
         return d
 
-class Service(object):
-    """
-    Base class to be implemented by services using the protocol.
-    In derived implementations create actions as function definitions with format:
-    action_<action name>. The parameters are passed by keyword
-    """
-
-    def __init__(self, name="Unnamed"):
-        self.name = name
-
-    def call(self, action, params):
-        meth = getattr(self, "action_%s" % action, None)
-        if meth == None:
-            raise MessageHandleError(MessageHandleError.RESULT_UNKNOWN_ACTION)
-
-        return meth(**params)
-
-class TestService(Service):
-    
-    def __init__(self):
-        Service.__init__(self, "test")
-    
-    def action_test(self, text):
-        return text
-
 class MessageResult(object):
     
     def __init__(self, result=None, original_message=None):
