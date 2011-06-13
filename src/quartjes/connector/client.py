@@ -8,7 +8,7 @@ from threading import Thread
 __author__="rob"
 __date__ ="$Jun 12, 2011 9:37:38 PM$"
 
-class Client(object):
+class ClientConnector(object):
 
     def __init__(self, host, port):
         self.host = host
@@ -17,8 +17,9 @@ class Client(object):
 
     def start(self):
         reactor.callLater(0, self._connect)
-        self._reactor_thread = ReactorThread()
-        self._reactor_thread.start()
+        if not reactor.running:
+            self._reactor_thread = ReactorThread()
+            self._reactor_thread.start()
 
     def _connect(self):
         print("Connecting...")
@@ -42,7 +43,7 @@ if __name__ == "__main__":
     import time
     from quartjes.connector.messages import ServerRequestMessage
 
-    cl = Client("localhost", 1234)
+    cl = ClientConnector("localhost", 1234)
     cl.start()
 
     time.sleep(5)

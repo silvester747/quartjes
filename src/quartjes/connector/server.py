@@ -1,17 +1,38 @@
-# To change this template, choose Tools | Templates
-# and open the template in the editor.
-
-__author__="rob"
+__author__="Rob van der Most"
 __date__ ="$May 27, 2011 9:24:25 PM$"
 
-from twisted.internet import reactor
+from twisted.internet import reactor, threads
 from twisted.internet.endpoints import TCP4ServerEndpoint
-from quartjes.connector.protocol import QuartjesServerFactory, TestService
+from quartjes.connector.protocol import QuartjesServerFactory
+from threading import Thread
 
-factory = QuartjesServerFactory()
-factory.register_service(TestService())
+class ServerConnector(object):
+    def __init__(self, port):
+        self.port = port
+        self.factory = QuartjesServerFactory()
 
-endpoint = TCP4ServerEndpoint(reactor, 1234)
-endpoint.listen(factory)
-reactor.run()
+    def start(self):
+        self._endpoint = TCP4ServerEndpoint(reactor, self.port)
+        self._endpoint.listen(self.factory)
+        if not reactor.running:
+            self._reactor_thread = ReactorThread()
+            self._reactor_thread.start()
+
+    def stop(self):
+        threads.blockingCallFromThread(reactor, reactor.stop)
+
+    def register_service(self, service):
+        self.factory.register_service(service)
+
+class ReactorThread(Thread):
+    def __init__(self):
+        Thread.__init__(self, name="ReactorThread")
+        self.daemon = False
+
+    def run(self):
+        print("Starting reactor")
+        reactor.run()
+        print("Reactor stopped")
+
+
 

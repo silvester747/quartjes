@@ -96,7 +96,11 @@ class QuartjesServerFactory(ServerFactory):
         if service == None:
             raise MessageHandleError(MessageHandleError.RESULT_UNKNOWN_SERVICE, msg)
 
-        return service.call(msg.action, msg.params)
+        try:
+            return service.call(msg.action, msg.params)
+        except MessageHandleError as error:
+            error.original_message = msg
+            raise error
 
     def send_result(self, result, client):
         #print("Send result: %s" % result)
@@ -170,6 +174,7 @@ class MessageHandleError(Exception):
     RESULT_UNEXPECTED_MESSAGE = 4
     RESULT_UNKNOWN_SERVICE = 5
     RESULT_UNKNOWN_ACTION = 6
+    RESULT_INVALID_PARAMS = 7
     RESULT_UNKNOWN_ERROR = 99
 
     def __init__(self, error_code=RESULT_UNKNOWN_ERROR, original_message=None):

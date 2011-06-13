@@ -22,6 +22,12 @@ class ServicesTestCase(unittest.TestCase):
         with self.assertRaises(MessageHandleError):
             self.ts.call("bla", {})
 
+    def test_incorrect_params(self):
+        from quartjes.connector.protocol import MessageHandleError
+
+        with self.assertRaises(MessageHandleError):
+            self.ts.call("test", {})
+
 class SerializerTestCase(unittest.TestCase):
     def setUp(self):
         pass
@@ -73,6 +79,7 @@ class SerializerTestCase(unittest.TestCase):
         xml = et.fromstring(string)
         output = serializer.deserialize(xml)
         self.assertEqual(input, output)
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

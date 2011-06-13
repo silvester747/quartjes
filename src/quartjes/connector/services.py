@@ -23,7 +23,10 @@ class Service(object):
         if meth == None:
             raise MessageHandleError(MessageHandleError.RESULT_UNKNOWN_ACTION)
 
-        return meth(**params)
+        try:
+            return meth(**params)
+        except TypeError:
+            raise MessageHandleError(MessageHandleError.RESULT_INVALID_PARAMS)
 
 class TestService(Service):
     """
