@@ -14,12 +14,17 @@ class Mix(Drink):
         self.__init__(mixname)
         self.drinks = []
 
-    def insert_drank(self,drink):
+    def insert_drink(self,drink):
+        """Add a drink to the mix"""
         self.drinks.append(drink)
         update_properties()
-    def remove_drank(self):
+
+    def remove_drink(self):
+        """Remove a drink from the mix"""
         update_properties()
+        
     def update_properties(self):
+        """Recalculate mix properties"""
         parts = len(self.drinks)
         if parts > 0:
             for d in self.drinks:
