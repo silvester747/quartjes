@@ -8,3 +8,8 @@ if __name__ == "__main__":
     from drinks import *
     print Drinks
 
+    from quartjes.gui import *
+    c = client1
+
+
+
