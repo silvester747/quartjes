@@ -7,7 +7,7 @@ from twisted.internet import reactor, threads, defer
 from twisted.protocols.basic import NetstringReceiver
 from twisted.internet import threads
 import uuid
-from quartjes.connector.messages import ServerRequestMessage, ServerResponseMessage
+from quartjes.connector.messages import ActionRequestMessage, ResponseMessage
 from quartjes.connector.messages import ServerMotdMessage, create_message_string, parse_message_string
 
 class QuartjesProtocol(NetstringReceiver):
@@ -40,12 +40,12 @@ class QuartjesProtocol(NetstringReceiver):
         """
         self.factory.client_disconnected(self)
 
-    def send_message_as_xml(self, msg):
+    def send_message(self, serial_message):
         """
         Send the XML message to the other end of this connection.
         """
         #print("Sending message: %s" % msg)
-        self.sendString(create_message_string(msg))
+        self.sendString(serial_message)
 
 
 class QuartjesServerFactory(ServerFactory):
@@ -62,7 +62,7 @@ class QuartjesServerFactory(ServerFactory):
     def client_connected(self, client):
         self.clients[client.id] = client
         motd = ServerMotdMessage(client_id=client.id)
-        client.send_message_as_xml(motd)
+        client.send_message(create_message_string(motd))
 
     def client_disconnected(self, client):
         del self.clients[client.id]
@@ -83,12 +83,14 @@ class QuartjesServerFactory(ServerFactory):
         msg = parse_message_string(string)
         result = None
 
-        if isinstance(msg, ServerRequestMessage):
+        if isinstance(msg, ActionRequestMessage):
             result = self.perform_action(msg)
         else:
             raise MessageHandleError(MessageHandleError.RESULT_UNEXPECTED_MESSAGE, msg)
 
-        return MessageResult(result=result, original_message=msg)
+        response_msg = ResponseMessage(result_code=0, result=result, response_to=msg.id)
+
+        return create_message_string(response_msg)
 
     def perform_action(self, msg):
         #print("Performing service: %s, action: %s" % (msg.service_name, msg.action))
@@ -102,10 +104,9 @@ class QuartjesServerFactory(ServerFactory):
             error.original_message = msg
             raise error
 
-    def send_result(self, result, client):
+    def send_result(self, response, client):
         #print("Send result: %s" % result)
-        msg = ServerResponseMessage(result_code=0, result=result.result, response_to=result.original_message.id)
-        client.send_message_as_xml(msg)
+        client.send_message(response)
 
     def send_error(self, result, client):
         error = result.value
@@ -113,8 +114,8 @@ class QuartjesServerFactory(ServerFactory):
         id = None
         if error.original_message != None:
             id = error.original_message.id
-        msg = ServerResponseMessage(result_code=error.error_code, response_to=id, result=error.error_details)
-        client.send_message_as_xml(msg)
+        msg = ResponseMessage(result_code=error.error_code, response_to=id, result=error.error_details)
+        client.send_message(create_message_string(msg))
 
 
 class QuartjesClientFactory(ReconnectingClientFactory):
@@ -127,37 +128,93 @@ class QuartjesClientFactory(ReconnectingClientFactory):
     def __init__(self):
         self.waiting_messages = {}
         self.current_client = None
+        self.topic_callbacks = {}
 
     def client_connected(self, client):
+        """
+        Handle a newly established connection to the server.
+        """
         print("Client connected")
         self.current_client = client
 
     def client_disconnected(self, client):
+        """
+        Handle a lost connection.
+        """
         print("Client disconnected")
         self.current_client = None
 
     def handle_incoming_message(self, string, client):
+        """
+        Handle incoming messages. Defers parsing the message to another thread, so the
+        reactor is not blocked.
+        """
         #print("Incoming: %s" % string)
         d = threads.deferToThread(parse_message_string, string)
         d.addCallback(self.handle_message_contents, client)
 
     def handle_message_contents(self, msg, client):
-        if isinstance(msg, ServerResponseMessage):
+        """
+        After parsing a message handle it in the reactor loop.
+        """
+        if isinstance(msg, ResponseMessage):
             d = self.waiting_messages.get(msg.response_to)
             if d != None:
                 d.callback(msg)
         elif isinstance(msg, ServerMotdMessage):
             print("Connected: %s" % msg.motd)
             self.resetDelay()
+        elif isinstance(msg, TopicUpdateMessage):
+            callback = self.topic_callbacks.get((msg.service_name, msg.topic))
+            if callback != None:
+                threads.deferToThread(callback, **msg.params)
+            
 
     def send_message_blocking_from_thread(self, message):
-        return threads.blockingCallFromThread(reactor, self.send_message_and_wait, message)
+        """
+        Call from another thread to send a message to the server and wait for the result.
+        Accepts a serializable message.
+        Based on the response either the result is returned or an exception is raised.
+        """
+        serial_message = create_message_string(message)
+        result_msg = threads.blockingCallFromThread(reactor, self.send_message_and_wait, message.id, serial_message)
+        if result_msg.result_code > 0:
+            raise MessageHandleError(error_code=result_msg.result_code, error_details = result_msg.result)
+        return result_msg.result
 
-    def send_message_and_wait(self, message):
+    def send_message_and_wait(self, message_id, serial_message):
+        """
+        Send a message to the server and return a Deferred which is called back
+        when a response has been received.
+        Accepts a string containing an already serialized message.
+        """
         d = defer.Deferred()
-        self.waiting_messages[message.id] = d
-        self.current_client.send_message_as_xml(message)
+        self.waiting_messages[message_id] = d
+        self.current_client.send_message(serial_message)
         return d
+
+    def send_action_request_from_thread(self, service_name, action, params):
+        """
+        Call from another thread to request an action to be performed at the server
+        and wait for the result.
+        """
+        msg = ActionRequestMessage(service_name=service_name, action=action, params=params)
+        return self.send_message_blocking_from_thread(msg)
+
+    def subscribe_from_thread(self, service_name, topic, callback):
+        """
+        Call from another thread to subscribe to a topic of a specific service.
+        The given callback is called each time an update for the topic is received.
+        Returns None, but an exception can be raised.
+        """
+        msg = SubscribeMessage(service_name=service_name, topic=topic)
+        self.send_message_blocking_from_thread(msg)
+
+        # if subscribe failed an exception should be raised by now
+        self.topic_callbacks[(service_name, topic)] = callback
+
+        return None
+
 
 class MessageResult(object):
     

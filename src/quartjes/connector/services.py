@@ -61,7 +61,7 @@ class ServiceInterfaceMethod(object):
         if len(pargs) > 0:
             raise TypeError("Positional arguments not allowed by automatic ServiceInterface methods.")
         try:
-            return self.client.send_request(self.service_name, self.action, kargs)
+            return self.client.send_action_request(self.service_name, self.action, kargs)
         except MessageHandleError as err:
             if err.error_code == MessageHandleError.RESULT_UNKNOWN_ACTION:
                 raise AttributeError("Action %s does not exist in service %s." % (self.action, self.service_name))
