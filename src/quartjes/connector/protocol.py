@@ -113,7 +113,7 @@ class QuartjesServerFactory(ServerFactory):
         id = None
         if error.original_message != None:
             id = error.original_message.id
-        msg = ServerResponseMessage(result_code=error.error_code, response_to=id)
+        msg = ServerResponseMessage(result_code=error.error_code, response_to=id, result=error.error_details)
         client.send_message_as_xml(msg)
 
 
@@ -177,7 +177,8 @@ class MessageHandleError(Exception):
     RESULT_INVALID_PARAMS = 7
     RESULT_UNKNOWN_ERROR = 99
 
-    def __init__(self, error_code=RESULT_UNKNOWN_ERROR, original_message=None):
+    def __init__(self, error_code=RESULT_UNKNOWN_ERROR, original_message=None, error_details=None):
         self.error_code = error_code
         self.original_message = original_message
+        self.error_details = error_details
 

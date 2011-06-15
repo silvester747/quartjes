@@ -34,7 +34,7 @@ class ClientConnector(object):
         msg = ServerRequestMessage(service_name=service_name, action=action, params=params)
         result_msg = self.factory.send_message_blocking_from_thread(msg)
         if result_msg.result_code > 0:
-            raise MessageHandleError(error_code=result_msg.result_code)
+            raise MessageHandleError(error_code=result_msg.result_code, error_details = result_msg.result)
         return result_msg.result
 
     def get_service_interface(self, service_name):
