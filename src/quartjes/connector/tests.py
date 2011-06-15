@@ -65,6 +65,15 @@ class SerializerTestCase(unittest.TestCase):
         d.realprice = 12.1
         self.base_serialize_test(d)
 
+    def test_serialize_same_instances(self):
+        from quartjes.drink import Drink
+        d = Drink("Cola")
+        d.alc_perc = 12.0
+        d.color = [255,255,0,0]
+        d.price_factor = 0.234
+        d.realprice = 12.1
+        self.base_serialize_test([d, d])
+
     def base_serialize_test(self, value):
         import quartjes.connector.serializer as serializer
         import xml.etree.ElementTree as et

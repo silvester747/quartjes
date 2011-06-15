@@ -15,23 +15,27 @@ __date__ ="$Jun 8, 2011 7:32:02 PM$"
 import xml.etree.ElementTree as et
 import uuid
 
-def serialize(obj, parent=None, tag_name="unknown"):
+def serialize(obj, parent=None, tag_name="unknown", cache=None):
     """
     If a parent node is supplied the data is serialized as a sub element of the parent
     node. tagName is used as the name of the top level tag.
     """
+    if cache == None:
+        cache = {}
 
-    return add_value_element(obj, parent, tag_name)
+    return add_value_element(obj, parent, tag_name, cache=cache)
 
-def deserialize(node):
+def deserialize(node, cache=None):
     """
     Deserialize the contents of the given node and return the instance.
     """
+    if cache == None:
+        cache = {}
 
-    return parse_value_element(node)
+    return parse_value_element(node, cache=cache)
 
 
-def serialize_dict(value, parent=None, tag_name="dict"):
+def serialize_dict(value, parent=None, tag_name="dict", cache=None):
     """
     Construct an XML representation of the given dictionary.
     Returns the created element.
@@ -43,11 +47,11 @@ def serialize_dict(value, parent=None, tag_name="dict"):
 
         item_node = add_element("item", parent=dict_node)
         add_element("key", text=key, parent=item_node)
-        add_value_element(value, parent=item_node, tag_name="value")
+        add_value_element(value, parent=item_node, tag_name="value", cache=cache)
 
     return dict_node
 
-def deserialize_dict(node):
+def deserialize_dict(node, cache=None):
     """
     Parse the contents of the given node as a dictionary and return the
     contents.
@@ -59,14 +63,14 @@ def deserialize_dict(node):
     for param in param_elements:
 
         key = param.findtext("key")
-        value = parse_value_element(param.find("value"))
+        value = parse_value_element(param.find("value"), cache=cache)
 
         if key != None:
             params[key] = value
 
     return params
 
-def serialize_list(values, parent=None, tag_name="list"):
+def serialize_list(values, parent=None, tag_name="list", cache=None):
     """
     Serialize the contents of a list to xml.
     Returns the top element of the list.
@@ -77,11 +81,11 @@ def serialize_list(values, parent=None, tag_name="list"):
 
     for value in values:
 
-        add_value_element(value, parent=node, tag_name="value")
+        add_value_element(value, parent=node, tag_name="value", cache=cache)
 
     return node
 
-def deserialize_list(node):
+def deserialize_list(node, cache=None):
     """
     Parse an XML list node. Returns the original list.
     """
@@ -89,11 +93,11 @@ def deserialize_list(node):
 
     for item in node:
 
-        value.append(parse_value_element(item))
+        value.append(parse_value_element(item, cache=cache))
     
     return value
 
-def serialize_instance(obj=None, parent=None, tag_name="object"):
+def serialize_instance(obj=None, parent=None, tag_name="object", cache=None):
     """
     Create an XML representation of an object instance. All variables are stored in a
     parameter list. Returns the root element of the object.
@@ -110,12 +114,17 @@ def serialize_instance(obj=None, parent=None, tag_name="object"):
     obj_node.set("class", class_name)
     obj_node.set("id", obj.id.urn)
 
-    for attr_name in obj.__serialize__:
-        add_value_element(getattr(obj, attr_name, None), parent=obj_node, tag_name=attr_name)
+    if cache != None and obj.id in cache:
+        obj_node.set("stub", "yes")
+    else:
+        if cache != None:
+            cache[obj.id] = obj
+        for attr_name in obj.__serialize__:
+            add_value_element(getattr(obj, attr_name, None), parent=obj_node, tag_name=attr_name, cache=cache)
 
     return obj_node
 
-def deserialize_instance(node):
+def deserialize_instance(node, cache=None):
     """
     Read an object instance serialized to XML and return the instance.
     """
@@ -126,13 +135,23 @@ def deserialize_instance(node):
     if id == None or class_name == None:
         return None
 
-    klass = get_class_by_name(class_name)
-    obj = klass()
-    obj.id = id
+    obj = None
+    stub = node.get("stub")
+    if stub == "yes":
+        assert cache != None
+        obj = cache.get(id)
 
-    for element in node:
-        value = parse_value_element(element)
-        setattr(obj, element.tag, value)
+    if obj == None:
+        klass = get_class_by_name(class_name)
+        obj = klass()
+        obj.id = id
+
+        if cache != None:
+            cache[id] = obj
+
+        for element in node:
+            value = parse_value_element(element, cache=cache)
+            setattr(obj, element.tag, value)
 
     return obj
 
@@ -169,7 +188,7 @@ def add_element(tag_name, text=None, parent=None, type=None):
 
     return node
 
-def add_value_element(value, parent=None, tag_name="value"):
+def add_value_element(value, parent=None, tag_name="value", cache=None):
     """
     Add a value inside an element. Use the correct way to serialize built-in
     types, library types or serializable types. The element is added to the
@@ -181,22 +200,22 @@ def add_value_element(value, parent=None, tag_name="value"):
 
     if hasattr(value, "__serialize__"):
 
-        return serialize_instance(value, parent, tag_name)
+        return serialize_instance(value, parent, tag_name, cache=cache)
 
     elif isinstance(value, dict):
 
-        return serialize_dict(parent=parent, value=value, tag_name=tag_name)
+        return serialize_dict(parent=parent, value=value, tag_name=tag_name, cache=cache)
         
     elif isinstance(value, list):
 
-        return serialize_list(parent=parent, values=value, tag_name=tag_name)
+        return serialize_list(parent=parent, values=value, tag_name=tag_name, cache=cache)
         
     else:
         (string, type) = get_serialized_value(value)
 
         return add_element(tag_name, string, parent, type)
 
-def parse_value_element(node):
+def parse_value_element(node, cache=None):
     """
     Parse an element and based on the type call the correct deserializer.
     """
@@ -206,13 +225,13 @@ def parse_value_element(node):
         return None
 
     if type == "instance":
-        return deserialize_instance(node)
+        return deserialize_instance(node, cache=cache)
 
     if type == "dict":
-        return deserialize_dict(node)
+        return deserialize_dict(node, cache=cache)
 
     if type == "list":
-        return deserialize_list(node)
+        return deserialize_list(node, cache=cache)
 
     if not type in value_serializers_by_klass_name:
         return None
@@ -283,4 +302,4 @@ add_value_serializer(_int_serializer)
 add_value_serializer(_string_serializer)
 add_value_serializer(_float_serializer)
 add_value_serializer(_uuid_serializer)
-    
+
