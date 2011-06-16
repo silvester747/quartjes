@@ -4,12 +4,12 @@
 __author__="rob"
 __date__ ="$May 27, 2011 8:52:01 PM$"
 
-if __name__ == "__main__":
-    from drinks import *
-    print Drinks
+from quartjes import server
+s=server.Server()
 
-    from quartjes.gui import *
-    c = client1
+
+if __name__ == "__main__":
+    print 'hello world !!!'
 
 
 
