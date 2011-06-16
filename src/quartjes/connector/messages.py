@@ -74,7 +74,7 @@ class TopicUpdateMessage(Message):
 
     __serialize__ = ["service_name", "topic", "params"]
 
-    def __init__(self, service_name=None, topic=None, params=params):
+    def __init__(self, service_name=None, topic=None, params=None):
         Message.__init__(self)
 
         self.service_name = service_name

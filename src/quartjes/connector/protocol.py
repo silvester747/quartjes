@@ -7,7 +7,7 @@ from twisted.internet import reactor, threads, defer
 from twisted.protocols.basic import NetstringReceiver
 from twisted.internet import threads
 import uuid
-from quartjes.connector.messages import ActionRequestMessage, ResponseMessage
+from quartjes.connector.messages import ActionRequestMessage, ResponseMessage, SubscribeMessage
 from quartjes.connector.messages import ServerMotdMessage, create_message_string, parse_message_string
 
 class QuartjesProtocol(NetstringReceiver):
@@ -58,6 +58,7 @@ class QuartjesServerFactory(ServerFactory):
     def __init__(self):
         self.clients = {}
         self.services = {}
+        self.topic_listeners = {}
 
     def client_connected(self, client):
         self.clients[client.id] = client
@@ -75,22 +76,34 @@ class QuartjesServerFactory(ServerFactory):
 
     def handle_incoming_message(self, string, client):
         #print("Incoming: %s" % string)
-        d = threads.deferToThread(self.parse_message, string, client)
+        d = threads.deferToThread(self.parse_message_in_thread, string, client)
+        d.addCallback(self.process_message_in_reactor, client)
         d.addCallbacks(callback=self.send_result, errback=self.send_error, callbackArgs=(client,), errbackArgs=(client,))
 
-    def parse_message(self, string, client):
+    def parse_message_in_thread(self, string, client):
         #print("Parsing message: %s" % string)
         msg = parse_message_string(string)
-        result = None
+        result = MessageResult(original_message=msg)
 
         if isinstance(msg, ActionRequestMessage):
-            result = self.perform_action(msg)
+            res = self.perform_action(msg)
+            response_msg = ResponseMessage(result_code=0, result=res, response_to=msg.id)
+            result.response = create_message_string(response_msg)
+        elif isinstance(msg, SubscribeMessage):
+            response_msg = ResponseMessage(result_code=0, result=None, response_to=msg.id)
+            result.response = create_message_string(response_msg)
         else:
             raise MessageHandleError(MessageHandleError.RESULT_UNEXPECTED_MESSAGE, msg)
 
-        response_msg = ResponseMessage(result_code=0, result=result, response_to=msg.id)
+        return result
 
-        return create_message_string(response_msg)
+    def process_message_in_reactor(self, result, client):
+
+        if isinstance(result.original_message, SubscribeMessage):
+            self.subscribe_to_topic(result.original_message.service_name,
+                result.original_message.topic, client)
+        
+        return result.response
 
     def perform_action(self, msg):
         #print("Performing service: %s, action: %s" % (msg.service_name, msg.action))
@@ -104,12 +117,17 @@ class QuartjesServerFactory(ServerFactory):
             error.original_message = msg
             raise error
 
+    def subscribe_to_topic(self, service_name, topic, client):
+        self.topic_listeners[(service_name, topic)] = client
+
     def send_result(self, response, client):
         #print("Send result: %s" % result)
         client.send_message(response)
 
     def send_error(self, result, client):
         error = result.value
+        if not isinstance(error, MessageHandleError):
+            raise error
         #print("Error occurred: %s" % result)
         id = None
         if error.original_message != None:
@@ -218,8 +236,8 @@ class QuartjesClientFactory(ReconnectingClientFactory):
 
 class MessageResult(object):
     
-    def __init__(self, result=None, original_message=None):
-        self.result = result
+    def __init__(self, response=None, original_message=None):
+        self.response = response
         self.original_message = original_message
 
 class MessageHandleError(Exception):

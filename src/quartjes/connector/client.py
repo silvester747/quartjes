@@ -32,6 +32,9 @@ class ClientConnector(object):
     def send_action_request(self, service_name, action, params):
         return self.factory.send_action_request_from_thread(service_name, action, params)
 
+    def subscribe(self, service_name, topic, callback):
+        self.factory.subscribe_from_thread(service_name, topic, callback)
+
     def get_service_interface(self, service_name):
         return ServiceInterface(self, service_name)
 
@@ -49,6 +52,9 @@ class ReactorThread(Thread):
 if __name__ == "__main__":
     import time
 
+    def callback(text):
+        print(text)
+
     cl = ClientConnector("localhost", 1234)
     cl.start()
 
@@ -58,6 +64,10 @@ if __name__ == "__main__":
     print("Sending message")
     result = testService.test(text="Spam")
     print(result)
+
+    time.sleep(5)
+    print("Subscribe to topic")
+    testService.subscribe("topic", callback)
 
     time.sleep(5)
     print("Stopping client")

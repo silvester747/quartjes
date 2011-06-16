@@ -47,6 +47,13 @@ class ServiceInterface(object):
         """
         return ServiceInterfaceMethod(self.client, self.service_name, name)
 
+    def subscribe(self, topic, callback):
+        """
+        Subscribe to receive updates on the given topic. The callback is called
+        each time an update is received.
+        """
+        self.client.subscribe(self.service_name, topic, callback)
+
 class ServiceInterfaceMethod(object):
     """
     Callable object that will result in calling the action on the service and
