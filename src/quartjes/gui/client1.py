@@ -12,22 +12,19 @@ class Application(Frame):
         self.pack()
         self.createWidgets()
 
-    def say_hi(self):
-        print "hi there, everyone!"
+    def add_drink(self):
+        print "Drink added"
+
+    def remove_drink(self):
+        print "Drink removed"
 
     def createWidgets(self):
-        self.QUIT = Button(self)
-        self.QUIT["text"] = "QUIT"
-        self.QUIT["fg"]   = "red"
-        self.QUIT["command"] =  self.quit
+        
+        self.b_add_drink = Button(self, text = "Add drink",fg = "red", command =  self.add_drink)
+        self.b_remove_drink = Button(self, text = "Remove drink", command = self.remove_drink)
 
-        self.QUIT.pack({"side": "left"})
-
-        self.hi_there = Button(self)
-        self.hi_there["text"] = "Hello",
-        self.hi_there["command"] = self.say_hi
-
-        self.hi_there.pack({"side": "left"})
+        self.b_add_drink.grid(row = 0,column=0,sticky=EW)
+        self.b_remove_drink.grid(row = 1,column = 0,sticky=EW)
 
 root = Tk()
 app = Application(master=root)
