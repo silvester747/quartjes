@@ -6,7 +6,6 @@ clients.
 __author__="Rob van der Most"
 __date__ ="$Jun 3, 2011 8:52:26 PM$"
 
-import uuid
 from quartjes.util.classtools import QuartjesBaseClass
 import quartjes.connector.serializer as serializer
 import xml.etree.ElementTree as et

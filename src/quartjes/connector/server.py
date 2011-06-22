@@ -15,7 +15,7 @@ class ServerConnector(object):
         self._endpoint = TCP4ServerEndpoint(reactor, self.port)
         self._endpoint.listen(self.factory)
         if not reactor.running:
-            self._reactor_thread = ReactorThread()
+            self._reactor_thread = ServerConnector.ReactorThread()
             self._reactor_thread.start()
 
     def stop(self):
@@ -24,15 +24,16 @@ class ServerConnector(object):
     def register_service(self, service):
         self.factory.register_service(service)
 
-class ReactorThread(Thread):
-    def __init__(self):
-        Thread.__init__(self, name="ReactorThread")
-        self.daemon = False
 
-    def run(self):
-        print("Starting reactor")
-        reactor.run()
-        print("Reactor stopped")
+    class ReactorThread(Thread):
+        def __init__(self):
+            Thread.__init__(self, name="ReactorThread")
+            self.daemon = False
+
+        def run(self):
+            print("Starting reactor")
+            reactor.run()
+            print("Reactor stopped")
 
 if __name__ == "__main__":
     from quartjes.connector.services import TestService

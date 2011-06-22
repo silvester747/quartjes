@@ -19,7 +19,7 @@ class ClientConnector(object):
     def start(self):
         reactor.callLater(0, self._connect)
         if not reactor.running:
-            self._reactor_thread = ReactorThread()
+            self._reactor_thread = ClientConnector.ReactorThread()
             self._reactor_thread.start()
 
     def _connect(self):
@@ -38,15 +38,15 @@ class ClientConnector(object):
     def get_service_interface(self, service_name):
         return ServiceInterface(self, service_name)
 
-class ReactorThread(Thread):
-    def __init__(self):
-        Thread.__init__(self, name="ReactorThread")
-        self.daemon = True
+    class ReactorThread(Thread):
+        def __init__(self):
+            Thread.__init__(self, name="ReactorThread")
+            self.daemon = True
 
-    def run(self):
-        print("Starting reactor")
-        reactor.run()
-        print("Reactor stopped")
+        def run(self):
+            print("Starting reactor")
+            reactor.run()
+            print("Reactor stopped")
         
 
 if __name__ == "__main__":
@@ -60,16 +60,20 @@ if __name__ == "__main__":
 
     testService = cl.get_service_interface("test")
 
-    time.sleep(5)
+    time.sleep(1)
     print("Sending message")
     result = testService.test(text="Spam")
     print(result)
 
-    time.sleep(5)
+    time.sleep(1)
     print("Subscribe to topic")
-    testService.subscribe("topic", callback)
+    testService.subscribe("testtopic", callback)
 
-    time.sleep(5)
+    time.sleep(1)
+    print("Trigger topic")
+    testService.callback(text="Eggs")
+
+    time.sleep(100)
     print("Stopping client")
     cl.stop()
     

@@ -9,6 +9,7 @@ from twisted.internet import threads
 import uuid
 from quartjes.connector.messages import ActionRequestMessage, ResponseMessage, SubscribeMessage
 from quartjes.connector.messages import ServerMotdMessage, create_message_string, parse_message_string
+from quartjes.connector.messages import TopicUpdateMessage
 
 class QuartjesProtocol(NetstringReceiver):
     """
@@ -70,9 +71,11 @@ class QuartjesServerFactory(ServerFactory):
 
     def register_service(self, service):
         self.services[service.name] = service
+        service.factory = self
 
     def unregister_service(self, service):
         self.services.remove(service.name)
+        service.factory = None
 
     def handle_incoming_message(self, string, client):
         #print("Incoming: %s" % string)
@@ -118,7 +121,12 @@ class QuartjesServerFactory(ServerFactory):
             raise error
 
     def subscribe_to_topic(self, service_name, topic, client):
-        self.topic_listeners[(service_name, topic)] = client
+        listeners = self.topic_listeners.get((service_name, topic))
+        if listeners == None:
+            listeners = [client]
+            self.topic_listeners[(service_name, topic)] = listeners
+        else:
+            listeners.append(client)
 
     def send_result(self, response, client):
         #print("Send result: %s" % result)
@@ -134,6 +142,20 @@ class QuartjesServerFactory(ServerFactory):
             id = error.original_message.id
         msg = ResponseMessage(result_code=error.error_code, response_to=id, result=error.error_details)
         client.send_message(create_message_string(msg))
+
+    def send_topic_update_from_thread(self, service_name, topic, **kwargs):
+        listeners = self.topic_listeners.get((service_name, topic))
+        if listeners == None:
+            return
+
+        msg = TopicUpdateMessage(service_name, topic, kwargs)
+        string = create_message_string(msg)
+        reactor.callFromThread(self.multicast_message, listeners, string)
+
+    def multicast_message(self, clients, string):
+        for client in clients:
+            client.send_message(string)
+
 
 
 class QuartjesClientFactory(ReconnectingClientFactory):

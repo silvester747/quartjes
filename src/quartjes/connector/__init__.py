@@ -3,7 +3,6 @@ Quartjes Connector
 
 Allows connections between the Quartjes server and its clients.
 
-
 Server components
 
 A server must start the ServerConnector in quartjes.connector.server
@@ -16,6 +15,8 @@ Client components
 To connect to the server create a ClientConnector from quartjes.connector.client
 and start it. On the ClientConnector call get_service_interface to get an interface
 to call methods on a specific service on the server.
+
+For examples see the self tests in server.py and client.py
 
 """
 

@@ -17,6 +17,7 @@ class Service(object):
 
     def __init__(self, name="Unnamed"):
         self.name = name
+        self.factory = None
 
     def call(self, action, params):
         meth = getattr(self, "action_%s" % action, None)
@@ -25,8 +26,12 @@ class Service(object):
 
         try:
             return meth(**params)
-        except TypeError:
-            raise MessageHandleError(MessageHandleError.RESULT_INVALID_PARAMS)
+        except TypeError as err:
+            raise MessageHandleError(MessageHandleError.RESULT_INVALID_PARAMS, error_details=err.value)
+
+    def send_topic_update(self, topic, **kwargs):
+        self.factory.send_topic_update_from_thread(self.name, topic, **kwargs)
+
 
 class ServiceInterface(object):
     """
@@ -43,7 +48,8 @@ class ServiceInterface(object):
 
     def __getattr__(self, name):
         """
-        Return a special callable object as a proxy to the action on the service.
+        Return a special callable object as a proxy to the action on the service for
+        each attribute that does not exist.
         """
         return ServiceInterfaceMethod(self.client, self.service_name, name)
 
@@ -87,5 +93,9 @@ class TestService(Service):
         Service.__init__(self, "test")
 
     def action_test(self, text):
+        return text
+
+    def action_callback(self, text):
+        self.send_topic_update("testtopic", text="Callback: %s" % text)
         return text
 
