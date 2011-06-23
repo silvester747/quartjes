@@ -13,7 +13,7 @@ class ServerConnector(object):
     """
     Server side endpoint of the quartjes connector.
 
-    A server needs at least one ServerConnector to be able to accept incoming
+    A server needs at exactly one ServerConnector to be able to accept incoming
     connections. The reactor used by the ServerConnector runs in its own thread
     so you do not need to worry about blocking it.
 
@@ -30,7 +30,7 @@ class ServerConnector(object):
 
     def start(self):
         """
-        Start accepting incoming connections. Starts the reactor.
+        Start accepting incoming connections. Starts the reactor in a separate thread.
         """
         self._endpoint = TCP4ServerEndpoint(reactor, self.port)
         self._endpoint.listen(self.factory)
@@ -52,14 +52,18 @@ class ServerConnector(object):
 
 
     class ReactorThread(Thread):
+        """
+        Thread for running the reactor loop. Does not run as a daemon, so you
+        need to manually stop it when closing the server application.
+        """
         def __init__(self):
             Thread.__init__(self, name="ReactorThread")
             self.daemon = False
 
         def run(self):
-            print("Starting reactor")
+            #print("Starting reactor")
             reactor.run()
-            print("Reactor stopped")
+            #print("Reactor stopped")
 
 if __name__ == "__main__":
     from quartjes.connector.services import TestService
