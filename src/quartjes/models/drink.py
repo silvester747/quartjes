@@ -4,18 +4,16 @@
 __author__="piet"
 __date__ ="$5-jun-2011 12:34:35$"
 
-import uuid
-from quartjes.util.classtools import AttrDisplay
+from quartjes.util.classtools import QuartjesBaseClass
 
-class Drink(AttrDisplay):
+class Drink(QuartjesBaseClass):
     """
     Drink class
     """
 
     __serialize__ = ["name", "alc_perc", "color", "realprice", "price_factor"]
     
-    def __init__(self, name="Unnamed"):
-        self.id = uuid.uuid4()
+    def __init__(self, name="Unnamed"):        
         self.name = name
         self.alc_perc = 0
         self.color = [0,0,0,0]
@@ -37,4 +35,5 @@ class Drink(AttrDisplay):
             or self.realprice != other.realprice or self.price_factor != other.price_factor)
 
 if __name__ == "__main__":
-    print "Hello World"
+    d = Drink('testdrink')
+    print d

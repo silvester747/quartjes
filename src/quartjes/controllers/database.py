@@ -34,9 +34,4 @@ if __name__ == "__main__":
     
     for drink in drinks:        
         print drink
-        
-        for attr in vars(drink):
-            print "%s = %s" % (attr, getattr(drink, attr))
-
-        print ''
 
