@@ -6,7 +6,7 @@ __date__ ="$16-jun-2011 20:35:14$"
 import shelve
 from quartjes.models import drink,mix
 
-class Server:
+class Database:
     def __init__(self):        
         self.drinks = []
         self.mix = mix.Mix
@@ -28,4 +28,15 @@ class Server:
         self.db_write('drinks',self.drinks)
 
 if __name__ == "__main__":
-    print "Hello World"
+    print "Running self test"
+    d = Database()
+    drinks = d.db['drinks']
+    
+    for drink in drinks:        
+        print drink
+        
+        for attr in vars(drink):
+            print "%s = %s" % (attr, getattr(drink, attr))
+
+        print ''
+
