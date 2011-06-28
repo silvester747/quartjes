@@ -32,7 +32,7 @@ class Service(object):
         try:
             return meth(**params)
         except TypeError as err:
-            raise MessageHandleError(MessageHandleError.RESULT_INVALID_PARAMS, error_details=err.value)
+            raise MessageHandleError(MessageHandleError.RESULT_INVALID_PARAMS, error_details=err.message)
 
     def send_topic_update(self, topic, **kwargs):
         self.factory.send_topic_update_from_thread(self.name, topic, **kwargs)

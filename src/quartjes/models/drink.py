@@ -59,12 +59,13 @@ class Mix(Drink):
         if parts > 0:
             self.price_per_liter = 0
             self.alc_perc = 0
-            self.color = array([0,0,0,0])
+            color = array([0,0,0,0])
             for d in self.drinks:
                 pass
                 self.alc_perc = self.alc_perc + d.alc_perc / parts
-                self.color = self.color + d.color/parts
+                color += d.color/parts
                 self.price_per_liter = self.price_per_liter + d.price_per_liter/parts
+            self.color = color.tolist()
 
 if __name__ == "__main__":
     d1 = Drink('cola',color = [0,0,0,100],alc_perc = 0,price_per_liter = 3.50)

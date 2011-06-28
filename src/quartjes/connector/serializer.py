@@ -5,6 +5,7 @@ over the network or maybe even storing in files or other locations.
 Several types of objects are supported for serialization:
 * objects implementing a __serialize__ class variable and a constructor allowing
   zero arguments
+* objects with a __dict__ variable and a constructor allowing zero arguments
 * several builtin types like str, int, float, uuid
 * lists and dictionaries of supported types
 * custom types that are registered with this module
@@ -111,15 +112,24 @@ def serialize_instance(obj=None, parent=None, tag_name="object", cache=None):
 
     class_name = "%s.%s" % (obj.__class__.__module__, obj.__class__.__name__)
 
+    if not hasattr(obj, "id"):
+        obj.id = uuid.uuid4()
+
     obj_node.set("class", class_name)
     obj_node.set("id", obj.id.urn)
 
     if cache != None and obj.id in cache:
         obj_node.set("stub", "yes")
     else:
+        attributes = None
+        if hasattr(obj, "__serialize__"):
+            attributes = obj.__serialize__
+        else:
+            attributes = obj.__dict__
+
         if cache != None:
             cache[obj.id] = obj
-        for attr_name in obj.__serialize__:
+        for attr_name in attributes:
             add_value_element(getattr(obj, attr_name, None), parent=obj_node, tag_name=attr_name, cache=cache)
 
     return obj_node
@@ -210,10 +220,18 @@ def add_value_element(value, parent=None, tag_name="value", cache=None):
 
         return serialize_list(parent=parent, values=value, tag_name=tag_name, cache=cache)
         
-    else:
+    elif value.__class__ in value_serializers_by_klass:
         (string, type) = get_serialized_value(value)
 
         return add_element(tag_name, string, parent, type)
+
+    elif hasattr(value, "__dict__"):
+
+        return serialize_instance(value, parent, tag_name, cache=cache)
+
+    else:
+
+        return add_element(tag_name, None, parent, "NoneType")
 
 def parse_value_element(node, cache=None):
     """

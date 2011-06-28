@@ -74,6 +74,10 @@ class SerializerTestCase(unittest.TestCase):
         d.realprice = 12.1
         self.base_serialize_test([d, d])
 
+    def test_serialize_instance_by_dict(self):
+        obj = DictObject()
+        self.base_serialize_test(obj)
+
     def base_serialize_test(self, value):
         import quartjes.connector.serializer as serializer
         import xml.etree.ElementTree as et
@@ -89,6 +93,14 @@ class SerializerTestCase(unittest.TestCase):
         output = serializer.deserialize(xml)
         self.assertEqual(input, output)
 
+class DictObject(object):
+    def __init__(self):
+        self.a = 2
+        self.b = 12
+        self.c = [23, 22]
+
+    def __eq__(self, other):
+        return self.a == other.a and self.b == other.b and self.c == other.c
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
