@@ -44,7 +44,8 @@ class BottomTicker(cocos.layer.Layer):
         self._calculate_points()
 
         self.drinks = drinks
-        self.current_drink = 0
+        self.current_drink_index = 0
+        self.focussed_drink = None
 
         self.next_drink()
 
@@ -59,7 +60,7 @@ class BottomTicker(cocos.layer.Layer):
             self.points[pnt] = (self.points[pnt][0], self.focus_height)
 
     def update_drinks(self, drinks):
-        self.drinks, self.current_drink = drinks, 0
+        self.drinks, self.current_drink_index = drinks, 0
         if self.reset_on_update:
             self.reset()
 
@@ -68,15 +69,20 @@ class BottomTicker(cocos.layer.Layer):
             child.do(FadeOut(1))
         time.sleep(1)
 
+    def _set_focussed_drink(self, drink):
+        self.focussed_drink = drink
+        print(drink)
+
     def next_drink(self):
 
         text = ""
+        drink = None
 
         if self.drinks != None and len(self.drinks) > 0:
-            self.current_drink += 1
-            if self.current_drink >= len(self.drinks):
-                self.current_drink = 0
-            drink = self.drinks[self.current_drink]
+            self.current_drink_index += 1
+            if self.current_drink_index >= len(self.drinks):
+                self.current_drink_index = 0
+            drink = self.drinks[self.current_drink_index]
             text = "%s - %d" % (drink.name, drink.sellprice())
 
         next_label = cocos.text.Label(text,
@@ -93,7 +99,8 @@ class BottomTicker(cocos.layer.Layer):
         move_actions += (MoveTo(self.points[self.focus_start + 1], self.display_time) |
                          (Delay(self.display_time / 2) +
                          ScaleTo(1, self.display_time / 2)))
-        move_actions += MoveTo(self.points[self.focus_end - 1], self.display_time * self.focus_length)
+        move_actions += (MoveTo(self.points[self.focus_end - 1], self.display_time * self.focus_length) |
+                         CallFunc(self._set_focussed_drink, drink))
         move_actions += (MoveTo(self.points[self.focus_end], self.display_time) |
                          (ScaleTo(0.5, self.display_time / 2) +
                          Delay(self.display_time / 2)))
