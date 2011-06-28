@@ -181,18 +181,20 @@ class QuartjesClientFactory(ReconnectingClientFactory):
         """
         Handle a newly established connection to the server.
         """
-        #print("Client connected")
+        print("Client connected")
         self.current_protocol = protocol
+
 
     def connection_lost(self, protocol):
         """
         Handle a lost connection.
         """
-        #print("Client disconnected")
+        print("Client disconnected")
         self.current_protocol = None
 
-        for cb in self.waiting_messages:
+        for cb in self.waiting_messages.values():
             cb.errback(ConnectionError("Connection lost."))
+        self.waiting_messages.clear()
 
     def handle_incoming_message(self, string, protocol):
         """
@@ -208,17 +210,23 @@ class QuartjesClientFactory(ReconnectingClientFactory):
         After parsing a message handle it in the reactor loop.
         """
         if isinstance(msg, ResponseMessage):
-            d = self.waiting_messages.get(msg.response_to)
+            d = self.waiting_messages.pop(msg.response_to, None)
             if d != None:
                 d.callback(msg)
         elif isinstance(msg, ServerMotdMessage):
             print("Connected: %s" % msg.motd)
-            self.resetDelay()
+            self.successful_connection()
         elif isinstance(msg, TopicUpdateMessage):
             callback = self.topic_callbacks.get((msg.service_name, msg.topic))
             if callback != None:
                 threads.deferToThread(callback, **msg.params)
             
+    def successful_connection(self):
+        self.resetDelay()
+        for (service_name, topic) in self.topic_callbacks.keys():
+            msg = SubscribeMessage(service_name=service_name, topic=topic)
+            serial_message = create_message_string(msg)
+            self.current_protocol.send_message(serial_message)
 
     def send_message_blocking_from_thread(self, message):
         """
@@ -240,6 +248,8 @@ class QuartjesClientFactory(ReconnectingClientFactory):
         when a response has been received.
         Accepts a string containing an already serialized message.
         """
+        if self.current_protocol == None:
+            raise ConnectionError("Not connected.")
         d = defer.Deferred()
         self.waiting_messages[message_id] = d
         self.current_protocol.send_message(serial_message)
