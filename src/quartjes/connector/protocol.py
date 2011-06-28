@@ -27,7 +27,7 @@ class QuartjesProtocol(NetstringReceiver):
         """
         Fired by twisted when the connection is established.
         """
-        self.factory.client_connected(self)
+        self.factory.connection_established(self)
 
     def stringReceived(self, string):
         """
@@ -39,7 +39,7 @@ class QuartjesProtocol(NetstringReceiver):
         """
         Fired by twisted when the connection is lost.
         """
-        self.factory.client_disconnected(self)
+        self.factory.connection_lost(self)
 
     def send_message(self, serial_message):
         """
@@ -57,17 +57,23 @@ class QuartjesServerFactory(ServerFactory):
     protocol = QuartjesProtocol
 
     def __init__(self):
-        self.clients = {}
+        self.connections = {}
         self.services = {}
         self.topic_listeners = {}
+        self.topics_per_connection = {}
 
-    def client_connected(self, client):
-        self.clients[client.id] = client
-        motd = ServerMotdMessage(client_id=client.id)
-        client.send_message(create_message_string(motd))
+    def connection_established(self, protocol):
+        self.connections[protocol.id] = protocol
+        self.topics_per_connection[protocol.id] = []
+        motd = ServerMotdMessage(client_id=protocol.id)
+        protocol.send_message(create_message_string(motd))
 
-    def client_disconnected(self, client):
-        del self.clients[client.id]
+    def connection_lost(self, protocol):
+        del self.connections[protocol.id]
+
+        topics = self.topics_per_connection[protocol.id]
+        for topic in topics:
+            self.topic_listeners[topic].remove(protocol)
 
     def register_service(self, service):
         self.services[service.name] = service
@@ -77,13 +83,13 @@ class QuartjesServerFactory(ServerFactory):
         self.services.remove(service.name)
         service.factory = None
 
-    def handle_incoming_message(self, string, client):
+    def handle_incoming_message(self, string, protocol):
         #print("Incoming: %s" % string)
-        d = threads.deferToThread(self.parse_message_in_thread, string, client)
-        d.addCallback(self.process_message_in_reactor, client)
-        d.addCallbacks(callback=self.send_result, errback=self.send_error, callbackArgs=(client,), errbackArgs=(client,))
+        d = threads.deferToThread(self.parse_message_in_thread, string, protocol)
+        d.addCallback(self.process_message_in_reactor, protocol)
+        d.addCallbacks(callback=self.send_result, errback=self.send_error, callbackArgs=(protocol,), errbackArgs=(protocol,))
 
-    def parse_message_in_thread(self, string, client):
+    def parse_message_in_thread(self, string, protocol):
         #print("Parsing message: %s" % string)
         msg = parse_message_string(string)
         result = MessageResult(original_message=msg)
@@ -100,11 +106,11 @@ class QuartjesServerFactory(ServerFactory):
 
         return result
 
-    def process_message_in_reactor(self, result, client):
+    def process_message_in_reactor(self, result, protocol):
 
         if isinstance(result.original_message, SubscribeMessage):
             self.subscribe_to_topic(result.original_message.service_name,
-                result.original_message.topic, client)
+                result.original_message.topic, protocol)
         
         return result.response
 
@@ -120,19 +126,20 @@ class QuartjesServerFactory(ServerFactory):
             error.original_message = msg
             raise error
 
-    def subscribe_to_topic(self, service_name, topic, client):
+    def subscribe_to_topic(self, service_name, topic, protocol):
         listeners = self.topic_listeners.get((service_name, topic))
         if listeners == None:
-            listeners = [client]
+            listeners = [protocol]
             self.topic_listeners[(service_name, topic)] = listeners
         else:
-            listeners.append(client)
+            listeners.append(protocol)
+        self.topics_per_connection[protocol.id].append((service_name, topic))
 
-    def send_result(self, response, client):
+    def send_result(self, response, protocol):
         #print("Send result: %s" % result)
-        client.send_message(response)
+        protocol.send_message(response)
 
-    def send_error(self, result, client):
+    def send_error(self, result, protocol):
         error = result.value
         if not isinstance(error, MessageHandleError):
             raise error
@@ -141,7 +148,7 @@ class QuartjesServerFactory(ServerFactory):
         if error.original_message != None:
             id = error.original_message.id
         msg = ResponseMessage(result_code=error.error_code, response_to=id, result=error.error_details)
-        client.send_message(create_message_string(msg))
+        protocol.send_message(create_message_string(msg))
 
     def send_topic_update_from_thread(self, service_name, topic, **kwargs):
         listeners = self.topic_listeners.get((service_name, topic))
@@ -152,9 +159,9 @@ class QuartjesServerFactory(ServerFactory):
         string = create_message_string(msg)
         reactor.callFromThread(self.multicast_message, listeners, string)
 
-    def multicast_message(self, clients, string):
-        for client in clients:
-            client.send_message(string)
+    def multicast_message(self, protocols, string):
+        for protocol in protocols:
+            protocol.send_message(string)
 
 
 
@@ -167,33 +174,36 @@ class QuartjesClientFactory(ReconnectingClientFactory):
 
     def __init__(self):
         self.waiting_messages = {}
-        self.current_client = None
+        self.current_protocol = None
         self.topic_callbacks = {}
 
-    def client_connected(self, client):
+    def connection_established(self, protocol):
         """
         Handle a newly established connection to the server.
         """
-        print("Client connected")
-        self.current_client = client
+        #print("Client connected")
+        self.current_protocol = protocol
 
-    def client_disconnected(self, client):
+    def connection_lost(self, protocol):
         """
         Handle a lost connection.
         """
-        print("Client disconnected")
-        self.current_client = None
+        #print("Client disconnected")
+        self.current_protocol = None
 
-    def handle_incoming_message(self, string, client):
+        for cb in self.waiting_messages:
+            cb.errback(ConnectionError("Connection lost."))
+
+    def handle_incoming_message(self, string, protocol):
         """
         Handle incoming messages. Defers parsing the message to another thread, so the
         reactor is not blocked.
         """
         #print("Incoming: %s" % string)
         d = threads.deferToThread(parse_message_string, string)
-        d.addCallback(self.handle_message_contents, client)
+        d.addCallback(self.handle_message_contents, protocol)
 
-    def handle_message_contents(self, msg, client):
+    def handle_message_contents(self, msg, protocol):
         """
         After parsing a message handle it in the reactor loop.
         """
@@ -215,6 +225,8 @@ class QuartjesClientFactory(ReconnectingClientFactory):
         Call from another thread to send a message to the server and wait for the result.
         Accepts a serializable message.
         Based on the response either the result is returned or an exception is raised.
+
+        Can throw either a MessageHandleError or a ConnectionError
         """
         serial_message = create_message_string(message)
         result_msg = threads.blockingCallFromThread(reactor, self.send_message_and_wait, message.id, serial_message)
@@ -230,13 +242,15 @@ class QuartjesClientFactory(ReconnectingClientFactory):
         """
         d = defer.Deferred()
         self.waiting_messages[message_id] = d
-        self.current_client.send_message(serial_message)
+        self.current_protocol.send_message(serial_message)
         return d
 
     def send_action_request_from_thread(self, service_name, action, params):
         """
         Call from another thread to request an action to be performed at the server
         and wait for the result.
+
+        Can throw either a MessageHandleError or a ConnectionError
         """
         msg = ActionRequestMessage(service_name=service_name, action=action, params=params)
         return self.send_message_blocking_from_thread(msg)
@@ -246,6 +260,8 @@ class QuartjesClientFactory(ReconnectingClientFactory):
         Call from another thread to subscribe to a topic of a specific service.
         The given callback is called each time an update for the topic is received.
         Returns None, but an exception can be raised.
+
+        Can throw either a MessageHandleError or a ConnectionError
         """
         msg = SubscribeMessage(service_name=service_name, topic=topic)
         self.send_message_blocking_from_thread(msg)
@@ -279,3 +295,7 @@ class MessageHandleError(Exception):
         self.original_message = original_message
         self.error_details = error_details
 
+class ConnectionError(Exception):
+
+    def __init__(self, message=None):
+        self.message = message
