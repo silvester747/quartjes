@@ -8,7 +8,7 @@ __date__ ="$Jun 3, 2011 8:52:26 PM$"
 
 from quartjes.util.classtools import QuartjesBaseClass
 import quartjes.connector.serializer as serializer
-import xml.etree.ElementTree as et
+from quartjes.connector.serializer import et
 
 class Message(QuartjesBaseClass):
     """

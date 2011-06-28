@@ -80,7 +80,7 @@ class SerializerTestCase(unittest.TestCase):
 
     def base_serialize_test(self, value):
         import quartjes.connector.serializer as serializer
-        import xml.etree.ElementTree as et
+        from quartjes.connector.serializer import et
 
         input = value
         xml = serializer.serialize(input)

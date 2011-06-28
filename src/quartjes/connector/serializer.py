@@ -13,7 +13,9 @@ Several types of objects are supported for serialization:
 __author__="Rob van der Most"
 __date__ ="$Jun 8, 2011 7:32:02 PM$"
 
-import xml.etree.ElementTree as et
+# In other modules using ElementTree always import the version from this file.
+# That makes it easy to switch between py and c version.
+import xml.etree.cElementTree as et
 import uuid
 
 def serialize(obj, parent=None, tag_name="unknown", cache=None):
@@ -130,6 +132,9 @@ def serialize_instance(obj=None, parent=None, tag_name="object", cache=None):
         if cache != None:
             cache[obj.id] = obj
         for attr_name in attributes:
+            if attr_name == "id":
+                continue
+                
             add_value_element(getattr(obj, attr_name, None), parent=obj_node, tag_name=attr_name, cache=cache)
 
     return obj_node
