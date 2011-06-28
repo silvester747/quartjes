@@ -25,18 +25,21 @@ class TitleLayer(cocos.layer.Layer):
 
 class BottomTicker(cocos.layer.Layer):
 
-    def __init__(self, display_time=1.0, display_y=0, screen_width=1024, drinks=None):
+    def __init__(self, display_time=1.0, display_y=0, screen_width=1024, drinks=None,
+                 visible_segments=10, margin=1, interval=3, focus_start=3,
+                 focus_length=2, focus_height=40, reset_on_update=True):
         super(BottomTicker, self).__init__()
 
         self.display_time = display_time
         self.display_y = display_y
         self.screen_width = screen_width
-        self.visible_segments = 8
-        self.margin = 1
-        self.interval = 2
-        self.focus_segment = 5
-        self.focus_length = 2
-        self.focus_height = 40
+        self.visible_segments = visible_segments
+        self.margin = margin
+        self.interval = interval
+        self.focus_start = focus_start + self.margin
+        self.focus_length = focus_length
+        self.focus_height = focus_height
+        self.reset_on_update = reset_on_update
 
         self._calculate_points()
 
@@ -49,17 +52,21 @@ class BottomTicker(cocos.layer.Layer):
 
         distance = self.screen_width / self.visible_segments
         self.points = [(x*distance, self.display_y) for x in range(self.visible_segments + self.margin, -1 - self.margin, -1)]
-        self.points[self.focus_segment] = (self.points[self.focus_segment][0], self.focus_height)
-
         self.segment_count = len(self.points) - 1
 
-        self.focus_start = self.focus_segment - (self.focus_length / 2)
-        self.focus_end = self.focus_segment + (self.focus_length / 2)
-
-
+        self.focus_end = self.focus_start + 2 + self.focus_length
+        for pnt in range(self.focus_start + 1, self.focus_end):
+            self.points[pnt] = (self.points[pnt][0], self.focus_height)
 
     def update_drinks(self, drinks):
         self.drinks, self.current_drink = drinks, 0
+        if self.reset_on_update:
+            self.reset()
+
+    def reset(self):
+        for child in self.get_children():
+            child.do(FadeOut(1))
+        time.sleep(1)
 
     def next_drink(self):
 
@@ -83,27 +90,46 @@ class BottomTicker(cocos.layer.Layer):
         spawn_actions = Delay(self.display_time * self.interval) + CallFunc(self.next_drink)
 
         move_actions = MoveTo(self.points[self.focus_start], self.display_time * self.focus_start)
-        move_actions += (MoveTo(self.points[self.focus_segment], self.display_time * (self.focus_length / 2)) |
-                         (Delay((self.display_time * (self.focus_length / 2)) / 2) +
-                         ScaleTo(1, (self.display_time * (self.focus_length / 2)) / 2)))
-        move_actions += (MoveTo(self.points[self.focus_end], self.display_time * (self.focus_length / 2)) |
-                         (ScaleTo(0.5, (self.display_time * (self.focus_length / 2)) / 2)) +
-                         Delay((self.display_time * (self.focus_length / 2)) / 2))
+        move_actions += (MoveTo(self.points[self.focus_start + 1], self.display_time) |
+                         (Delay(self.display_time / 2) +
+                         ScaleTo(1, self.display_time / 2)))
+        move_actions += MoveTo(self.points[self.focus_end - 1], self.display_time * self.focus_length)
+        move_actions += (MoveTo(self.points[self.focus_end], self.display_time) |
+                         (ScaleTo(0.5, self.display_time / 2) +
+                         Delay(self.display_time / 2)))
         move_actions += MoveTo(self.points[-1], self.display_time * (self.segment_count - self.focus_end))
 
         next_label.do((spawn_actions | move_actions) + CallFunc(next_label.kill))
 
 
 if __name__ == "__main__":
+    import time
+    import threading
 
     def transition_to(dest):
         cocos.director.director.replace(cocos.scenes.transitions.ShrinkGrowTransition(dest))
 
-    db = Database()
+    class UpdateTestThread(threading.Thread):
+        def __init__(self, ticker):
+            threading.Thread.__init__(self, name="TestThread")
+            self.daemon = True
+            self.ticker = ticker
+
+        def run(self):
+            db = Database()
+
+            while True:
+                time.sleep(20)
+                #print("Updating...")
+                self.ticker.update_drinks(db.drinks)
+
 
     cocos.director.director.init(width=1024, height=768, fullscreen=True)
     ticker_layer = BottomTicker()
-    ticker_layer.update_drinks(db.drinks)
     title_layer = TitleLayer()
     main_scene = cocos.scene.Scene(ticker_layer, title_layer)
+
+    thread = UpdateTestThread(ticker_layer)
+    thread.start()
+
     cocos.director.director.run(main_scene)
