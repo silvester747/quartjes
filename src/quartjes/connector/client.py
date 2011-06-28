@@ -19,6 +19,9 @@ class ClientConnector(object):
 
     Use the method get_service_interface to retrieve an interface to a server side
     service.
+
+    As long as the connector is running, it will keep trying to reconnect any
+    lost connections using an exponential back-off.
     """
 
     def __init__(self, host, port):

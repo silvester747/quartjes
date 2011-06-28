@@ -50,6 +50,9 @@ class ServiceInterface(object):
 
     The subscribe method is used to register a callback method that is called when
     the service publishes an update on the selected topic.
+
+    Always be ready to receive a MessageHandleError or ConnectionError when calling
+    methods on a ServiceInterface.
     """
     def __init__(self, client_connector, service_name):
         """
