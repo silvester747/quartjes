@@ -20,6 +20,7 @@ class Drink(QuartjesBaseClass):
         self.price_per_liter = price_per_liter
         self.price_factor = price_factor
         self.amount = amount
+        self.history = None
 
     def sellprice(self):
         price = self.price_per_liter * self.price_factor * self.amount/1000

@@ -49,6 +49,8 @@ class BottomTicker(cocos.layer.Layer):
 
         self.next_drink()
 
+        self.history_graph = None
+
     def _calculate_points(self):
 
         distance = self.screen_width / self.visible_segments
@@ -71,7 +73,12 @@ class BottomTicker(cocos.layer.Layer):
 
     def _set_focussed_drink(self, drink):
         self.focussed_drink = drink
-        print(drink)
+        if drink != None:
+            if self.history_graph != None:
+                self.history_graph.kill()
+            self.history_graph = Graph(position=(100, 150), width = 824, height=400, data=drink.history)
+            self.add(self.history_graph)
+        #print(drink)
 
     def next_drink(self):
 
@@ -108,10 +115,96 @@ class BottomTicker(cocos.layer.Layer):
 
         next_label.do((spawn_actions | move_actions) + CallFunc(next_label.kill))
 
+class Graph(cocos.draw.Canvas):
+
+    def __init__(self, position=(0,0), width=400, height=300, data=None):
+        super(Graph, self).__init__()
+        self.position = position
+        self.width = width
+        self.height = height
+
+        # a dictionary: key is x, value = y
+        self.data = data
+        self._prepare_data()
+
+    def update_data(self, data):
+        self.data = data
+        self._prepare_data()
+
+    def _prepare_data(self):
+        if self.data == None:
+            return
+
+        #max_x = 0
+        #for x in self.data.keys():
+        #    if x > max_x:
+        #        max_x = x
+        #min_x = max_x
+        #for x in self.data.keys():
+        #    if x < min_x:
+        #        min_x = x
+
+        max_y = 0
+        for y in self.data.values():
+            if y > max_y:
+                max_y = y
+        min_y = max_y
+        for y in self.data.values():
+            if y < min_y:
+                min_y = y
+
+        #self._min_x, self._max_x = min_x, max_x
+        self._min_y, self._max_y = min_y, max_y
+
+    def render(self):
+        self.draw_graph()
+
+    def draw_graph(self):
+
+        w, h = self.width, self.height
+        margin = 30
+
+        self.set_color((255, 255, 255, 255))
+        self.set_stroke_width(0.5)
+
+        self.move_to((margin, h - margin))
+        self.line_to((margin, margin))
+        self.line_to((w - margin, margin))
+
+        if self.data == None:
+            return
+
+        x_spacing = (w - 2 * margin) / (len(self.data) - 1)
+        x = margin
+        for key in self.data.keys():
+            self.move_to((x, margin))
+            self.line_to((x, margin/2))
+            x += x_spacing
+
+        y_count = self._max_y - self._min_y + 1
+        y_spacing = (h - 2 * margin) / (y_count - 1)
+        y = margin
+        for y_val in range(self._min_y, self._max_y + 1):
+            self.move_to((margin, y))
+            self.line_to((margin/2, y))
+            y += y_spacing
+
+        self.set_stroke_width(1.0)
+        self.set_color((255, 0, 0, 255))
+
+        x = margin
+        self.move_to((x, margin + (self.data.values()[0] - self._min_y) * y_spacing))
+        x += x_spacing
+        for (x_val, y_val) in self.data.items()[1:]:
+            y = margin + (y_val - self._min_y) * y_spacing
+            self.line_to((x, y))
+            x += x_spacing
+
 
 if __name__ == "__main__":
     import time
     import threading
+    import random
 
     def transition_to(dest):
         cocos.director.director.replace(cocos.scenes.transitions.ShrinkGrowTransition(dest))
@@ -136,7 +229,13 @@ if __name__ == "__main__":
     title_layer = TitleLayer()
     main_scene = cocos.scene.Scene(ticker_layer, title_layer)
 
-    thread = UpdateTestThread(ticker_layer)
-    thread.start()
+    db = Database()
+    drinks = db.drinks
+    for drink in drinks:
+        drink.history = dict(zip(range(1, 8), [random.randint(6, 15) for x in range(1,8)]))
+    ticker_layer.update_drinks(db.drinks)
+
+    #thread = UpdateTestThread(ticker_layer)
+    #thread.start()
 
     cocos.director.director.run(main_scene)
