@@ -11,7 +11,7 @@ class Drink(QuartjesBaseClass):
     """
     Drink class
     """
-    __serialize__ = ["name", "alc_perc", "color", "price_per_liter", "price_factor"]
+    __serialize__ = ["name", "alc_perc", "color", "price_per_liter", "price_factor", "amount", "history"]
     
     def __init__(self, name="Unnamed", alc_perc = 0,color = [255,255,255,255],price_per_liter = 70,price_factor = 1,amount = 200):
         self.name = name
@@ -29,12 +29,14 @@ class Drink(QuartjesBaseClass):
     def __eq__(self, other):
         return (other != None and self.id == other.id and self.name == other.name
             and self.alc_perc == other.alc_perc and self.color == other.color
-            and self.price_per_liter == other.price_per_liter and self.price_factor == other.price_factor)
+            and self.price_per_liter == other.price_per_liter and self.price_factor == other.price_factor
+            and self.history == other.history)
 
     def __ne__(self, other):
         return (other == None or self.id != other.id or self.name != other.name
             or self.alc_perc != other.alc_perc or self.color != other.color
-            or self.price_per_liter != other.price_per_liter or self.price_factor != other.price_factor)
+            or self.price_per_liter != other.price_per_liter or self.price_factor != other.price_factor
+            or self.history != other.history)
 
 class Mix(Drink):
     """

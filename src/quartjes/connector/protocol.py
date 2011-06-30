@@ -45,7 +45,7 @@ class QuartjesProtocol(NetstringReceiver):
         """
         Send the XML message to the other end of this connection.
         """
-        #print("Sending message: %s" % msg)
+        print("Sending message: %s" % serial_message)
         self.sendString(serial_message)
 
 
@@ -304,6 +304,9 @@ class MessageHandleError(Exception):
         self.error_code = error_code
         self.original_message = original_message
         self.error_details = error_details
+
+    def __str__(self):
+        return "MessageHandleError: (%d) %s" % (self.error_code, self.error_details)
 
 class ConnectionError(Exception):
 
