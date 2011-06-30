@@ -281,6 +281,9 @@ class QuartjesClientFactory(ReconnectingClientFactory):
 
         return None
 
+    def is_connected(self):
+        return self.current_protocol != None
+
 
 class MessageResult(object):
     

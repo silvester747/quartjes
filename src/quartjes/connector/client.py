@@ -77,6 +77,12 @@ class ClientConnector(object):
         """
         return ServiceInterface(self, service_name)
 
+    def is_connected(self):
+        """
+        Determine whether a connection is active.
+        """
+        return self.factory.is_connected()
+
     class ReactorThread(Thread):
         """
         Thread for running the reactor loop. This thread runs as a daemon, so
