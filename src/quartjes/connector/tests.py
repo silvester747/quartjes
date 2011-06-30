@@ -63,6 +63,7 @@ class SerializerTestCase(unittest.TestCase):
         d.color = [255,255,0,0]
         d.price_factor = 0.234
         d.realprice = 12.1
+        d.history = [(1, 10), (2, 14)]
         self.base_serialize_test(d)
 
     def test_serialize_same_instances(self):
@@ -72,6 +73,7 @@ class SerializerTestCase(unittest.TestCase):
         d.color = [255,255,0,0]
         d.price_factor = 0.234
         d.realprice = 12.1
+        d.history = [(1, 10), (2, 14)]
         self.base_serialize_test([d, d])
 
     def test_serialize_instance_by_dict(self):
@@ -98,9 +100,10 @@ class DictObject(object):
         self.a = 2
         self.b = 12
         self.c = [23, 22]
+        self.d = (43, 32)
 
     def __eq__(self, other):
-        return self.a == other.a and self.b == other.b and self.c == other.c
+        return self.a == other.a and self.b == other.b and self.c == other.c and self.d == other.d
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

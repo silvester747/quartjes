@@ -7,7 +7,7 @@ Several types of objects are supported for serialization:
   zero arguments
 * objects with a __dict__ variable and a constructor allowing zero arguments
 * several builtin types like str, int, float, uuid
-* lists and dictionaries of supported types
+* tuples, lists and dictionaries of supported types
 * custom types that are registered with this module
 """
 __author__="Rob van der Most"
@@ -73,32 +73,35 @@ def deserialize_dict(node, cache=None):
 
     return params
 
-def serialize_list(values, parent=None, tag_name="list", cache=None):
+def serialize_list_or_tuple(values, parent=None, tag_name="list", cache=None):
     """
     Serialize the contents of a list to xml.
     Returns the top element of the list.
     """
-    #print("serializeList %s" % value)
 
-    node = add_element(tag_name, parent=parent, type="list")
+    type = "list"
+    if isinstance(values, tuple):
+        type = "tuple"
 
+    node = add_element(tag_name, parent=parent, type=type)
     for value in values:
-
         add_value_element(value, parent=node, tag_name="value", cache=cache)
 
     return node
 
-def deserialize_list(node, cache=None):
+def deserialize_list_or_tuple(node, cache=None):
     """
     Parse an XML list node. Returns the original list.
     """
     value = []
-
     for item in node:
-
         value.append(parse_value_element(item, cache=cache))
-    
-    return value
+
+    type = node.get("type")
+    if type == "tuple":
+        return tuple(value)
+    else:
+        return value
 
 def serialize_instance(obj=None, parent=None, tag_name="object", cache=None):
     """
@@ -221,9 +224,9 @@ def add_value_element(value, parent=None, tag_name="value", cache=None):
 
         return serialize_dict(parent=parent, value=value, tag_name=tag_name, cache=cache)
         
-    elif isinstance(value, list):
+    elif isinstance(value, list) or isinstance(value, tuple):
 
-        return serialize_list(parent=parent, values=value, tag_name=tag_name, cache=cache)
+        return serialize_list_or_tuple(parent=parent, values=value, tag_name=tag_name, cache=cache)
         
     elif value.__class__ in value_serializers_by_klass:
         (string, type) = get_serialized_value(value)
@@ -253,8 +256,8 @@ def parse_value_element(node, cache=None):
     if type == "dict":
         return deserialize_dict(node, cache=cache)
 
-    if type == "list":
-        return deserialize_list(node, cache=cache)
+    if type == "list" or type == "tuple":
+        return deserialize_list_or_tuple(node, cache=cache)
 
     if not type in value_serializers_by_klass_name:
         return None
