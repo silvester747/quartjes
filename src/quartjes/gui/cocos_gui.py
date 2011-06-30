@@ -8,7 +8,6 @@ from cocos.particle_systems import *
 import cocos.scenes.transitions
 import cocos.director
 import cocos.text
-from quartjes.controllers.database import Database
 from quartjes.connector.client import ClientConnector
 import time
 
@@ -23,7 +22,7 @@ class TitleLayer(cocos.layer.Layer):
                                       anchor_x='center', anchor_y='top')
         demo_label.position = (512, 768)
         self.add(demo_label)
-        demo_label.do(Repeat(Waves3D(duration=200, waves=200)))
+        demo_label.do(Repeat(Waves3D(duration=2, waves=1) + RandomDelay(30, 90)))
 
 
 class BottomTicker(cocos.layer.Layer):
@@ -51,9 +50,11 @@ class BottomTicker(cocos.layer.Layer):
         self.current_drink_index = 0
         self.focussed_drink = None
 
-        self.next_drink()
+        # True if a reset is currently in progress, should block all creation
+        # of new nodes until reset is finished
+        self._resetting = False
 
-        self.history_graph = None
+        self.next_drink()
 
     def _calculate_points(self):
 
@@ -72,17 +73,30 @@ class BottomTicker(cocos.layer.Layer):
             self.reset()
 
     def reset(self):
+        self._resetting = True
         for child in self.get_children():
-            child.do(FadeOut(1))
+            child.do(FadeOut(1) + CallFunc(child.kill))
+
+        if self.graph_layer != None:
+            self.graph_layer.reset()
+
         time.sleep(1)
+        self._resetting = False
+        self.next_drink()
 
     def _set_focussed_drink(self, drink):
+        if self._resetting:
+            drink = None
+
         self.focussed_drink = drink
         if drink != None:
             if self.graph_layer != None:
                 self.graph_layer.show_drink_history(drink)
 
     def next_drink(self):
+
+        if self._resetting:
+            return
 
         text = ""
         drink = None
@@ -152,6 +166,10 @@ class GraphLayer(cocos.layer.base_layers.Layer):
         self.current_graph.do(MoveTo(self._points[1], self.move_time))
 
         self.add(self.current_graph)
+
+    def reset(self):
+        for child in self.get_children():
+            child.do(FadeOut(1) + CallFunc(child.kill))
 
 class HistoryGraph(cocos.draw.Canvas):
 
@@ -261,9 +279,14 @@ def run_cocos_gui():
     connector = ClientConnector(hostname, port)
     connector.start()
 
-    time.sleep(5)
+    while not connector.is_connected():
+        time.sleep(1)
 
-    connector.subscribe("cocos_test", "drinks", ticker_layer.update_drinks)
+    test_service = connector.get_service_interface("cocos_test")
+
+    ticker_layer.update_drinks(test_service.get_drinks())
+
+    test_service.subscribe("drinks", ticker_layer.update_drinks)
 
     cocos.director.director.run(main_scene)
 
