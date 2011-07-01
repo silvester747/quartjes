@@ -151,7 +151,8 @@ class GraphLayer(cocos.layer.base_layers.Layer):
 
     def show_drink_history(self, drink):
         if self.current_graph != None:
-            self.current_graph.do(MoveTo(self._points[2], self.move_time) +
+            self.current_graph.do(CallFunc(self.current_graph.hide_text) +
+                                  MoveTo(self._points[2], 0.5 * self.move_time) +
                                   CallFunc(self.current_graph.kill))
 
         if drink == None:
@@ -163,7 +164,9 @@ class GraphLayer(cocos.layer.base_layers.Layer):
                                           width = self.graph_width,
                                           height=self.graph_height,
                                           data=drink.history)
-        self.current_graph.do(MoveTo(self._points[1], self.move_time))
+        self.current_graph.do(Delay(0.5 * self.move_time) +
+                              MoveTo(self._points[1], 0.5 * self.move_time) +
+                              CallFunc(self.current_graph.show_text))
 
         self.add(self.current_graph)
 
@@ -173,40 +176,29 @@ class GraphLayer(cocos.layer.base_layers.Layer):
 
 class HistoryGraph(cocos.draw.Canvas):
 
-    def __init__(self, position=(0,0), width=400, height=300, data=None):
+    def __init__(self, position=(0,0), width=400, height=300, margin=30, data=None):
         super(HistoryGraph, self).__init__()
         self.position = position
         self.width = width
         self.height = height
+        self.margin = margin
+        self.labels = None
 
-        # a list of 2 part lists or tuples
+        # a list containing either lists or tuples
+        # each list or tuple should contain exactly 2 values
+        # the first value can be of any type implementing __str__
+        # the second value must be a numeric value
         self.data = data
-        self._prepare_data()
 
-    def _prepare_data(self):
-        if self.data == None:
-            return
+    def show_text(self):
+        if self.labels != None:
+            for lbl in self.labels:
+                self.add(lbl)
 
-        #max_x = 0
-        #for x in self.data.keys():
-        #    if x > max_x:
-        #        max_x = x
-        #min_x = max_x
-        #for x in self.data.keys():
-        #    if x < min_x:
-        #        min_x = x
-
-        max_y = 0
-        for (x, y) in self.data:
-            if y > max_y:
-                max_y = y
-        min_y = max_y
-        for (x, y) in self.data:
-            if y < min_y:
-                min_y = y
-
-        #self._min_x, self._max_x = min_x, max_x
-        self._min_y, self._max_y = min_y, max_y
+    def hide_text(self):
+        if self.labels != None:
+            for lbl in self.labels:
+                lbl.kill()
 
     def render(self):
         self._draw_graph()
@@ -214,8 +206,9 @@ class HistoryGraph(cocos.draw.Canvas):
     def _draw_graph(self):
 
         w, h = self.width, self.height
-        margin = 30
+        margin = self.margin
 
+        # draw x and y axis lines
         self.set_color((255, 255, 255, 255))
         self.set_stroke_width(0.5)
 
@@ -225,30 +218,68 @@ class HistoryGraph(cocos.draw.Canvas):
 
         if self.data == None:
             return
+        if len(self.data) < 2:
+            return
 
-        x_spacing = (w - 2 * margin) / (len(self.data) - 1)
-        x = margin
-        for (x_val, y_val) in self.data:
+        self.labels = []
+
+        # draw x axis marks
+        x_count = len(self.data)
+        x_spacing = (w - 2 * margin) / (x_count - 1)
+        x_label_interval = 1
+        while x_spacing / x_label_interval < 50:
+            x_label_interval += 1
+
+        for i in range(x_count -1, -1, 0 - x_label_interval):
+            x = margin + i * x_spacing
             self.move_to((x, margin))
-            self.line_to((x, margin/2))
-            x += x_spacing
+            self.line_to((x, margin* 3/4))
 
-        y_count = self._max_y - self._min_y + 1
+            self.labels.append(cocos.text.Label(str(self.data[i][0]),
+                                      font_name='Times New Roman',
+                                      font_size=10,
+                                      anchor_x='center', anchor_y='top',
+                                      position = (x, margin * 3/4)))
+
+        # draw y axis marks
+        max_y = 0
+        for (x, y) in self.data:
+            if y > max_y:
+                max_y = y
+        min_y = max_y
+        for (x, y) in self.data:
+            if y < min_y:
+                min_y = y
+
+        y_count = max_y - min_y + 1
+        if min_y > 0:   # only start from the bottom if we start at 0
+            min_y -= 1
+            y_count += 1
+
         y_spacing = (h - 2 * margin) / (y_count - 1)
-        y = margin
-        for y_val in range(self._min_y, self._max_y + 1):
-            self.move_to((margin, y))
-            self.line_to((margin/2, y))
-            y += y_spacing
+        y_label_interval = 1
+        while y_spacing / y_label_interval < 25:
+            y_label_interval += 1
 
+        for y_val in range(max_y, min_y, 0 - y_label_interval):
+            y = margin + (y_val - min_y) * y_spacing
+            self.move_to((margin, y))
+            self.line_to((margin * 3/4, y))
+            self.labels.append(cocos.text.Label(str(y_val),
+                                      font_name='Times New Roman',
+                                      font_size=10,
+                                      anchor_x='right', anchor_y='center',
+                                      position = (margin * 3/4, y)))
+
+        # draw the graph
         self.set_stroke_width(1.0)
         self.set_color((255, 0, 0, 255))
 
         x = margin
-        self.move_to((x, margin + (self.data[0][1] - self._min_y) * y_spacing))
+        self.move_to((x, margin + (self.data[0][1] - min_y) * y_spacing))
         x += x_spacing
         for (x_val, y_val) in self.data[1:]:
-            y = margin + (y_val - self._min_y) * y_spacing
+            y = margin + (y_val - min_y) * y_spacing
             self.line_to((x, y))
             x += x_spacing
 
