@@ -10,6 +10,9 @@ import cocos.director
 import cocos.text
 from quartjes.connector.client import ClientConnector
 import time
+import cocos.cocosnode
+import pyglet.text
+from pyglet.gl import *
 
 class TitleLayer(cocos.layer.Layer):
 
@@ -150,7 +153,14 @@ class GraphLayer(cocos.layer.base_layers.Layer):
         self.current_graph = None
 
     def show_drink_history(self, drink):
-        if self.current_graph != None:
+        if not self.is_running:
+            if self.current_graph:
+                self.current_graph.kill
+                self.current_graph = None
+
+            return
+
+        if self.current_graph:
             self.current_graph.do(CallFunc(self.current_graph.hide_text) +
                                   MoveTo(self._points[2], 0.5 * self.move_time) +
                                   CallFunc(self.current_graph.kill))
@@ -172,7 +182,10 @@ class GraphLayer(cocos.layer.base_layers.Layer):
 
     def reset(self):
         for child in self.get_children():
-            child.do(FadeOut(1) + CallFunc(child.kill))
+            if self.is_running:
+                child.do(FadeOut(1) + CallFunc(child.kill))
+            else:
+                child.kill()
 
 class HistoryGraph(cocos.draw.Canvas):
 
@@ -183,6 +196,7 @@ class HistoryGraph(cocos.draw.Canvas):
         self.height = height
         self.margin = margin
         self.labels = None
+        self.text_visible = False
 
         # a list containing either lists or tuples
         # each list or tuple should contain exactly 2 values
@@ -191,14 +205,20 @@ class HistoryGraph(cocos.draw.Canvas):
         self.data = data
 
     def show_text(self):
-        if self.labels != None:
-            for lbl in self.labels:
-                self.add(lbl)
+        if not self.text_visible:
+            self.text_visible = True
+            if self.labels != None:
+                #for lbl in self.labels:
+                #    self.add(lbl)
+                self.add(self.labels)
 
     def hide_text(self):
-        if self.labels != None:
-            for lbl in self.labels:
-                lbl.kill()
+        if self.text_visible:
+            self.text_visible = False
+            if self.labels != None:
+                #for lbl in self.labels:
+                #    lbl.kill()
+                self.labels.kill()
 
     def render(self):
         self._draw_graph()
@@ -221,7 +241,7 @@ class HistoryGraph(cocos.draw.Canvas):
         if len(self.data) < 2:
             return
 
-        self.labels = []
+        self.labels = GraphLabels()
 
         # draw x axis marks
         x_count = len(self.data)
@@ -235,11 +255,16 @@ class HistoryGraph(cocos.draw.Canvas):
             self.move_to((x, margin))
             self.line_to((x, margin* 3/4))
 
-            self.labels.append(cocos.text.Label(str(self.data[i][0]),
+            #self.labels.append(cocos.text.Label(str(self.data[i][0]),
+            #                          font_name='Times New Roman',
+            #                          font_size=10,
+            #                          anchor_x='center', anchor_y='top',
+            #                          position = (x, margin * 3/4)))
+            self.labels.add_text(str(self.data[i][0]),
                                       font_name='Times New Roman',
                                       font_size=10,
                                       anchor_x='center', anchor_y='top',
-                                      position = (x, margin * 3/4)))
+                                      position = (x, margin * 3/4))
 
         # draw y axis marks
         max_y = 0
@@ -265,11 +290,16 @@ class HistoryGraph(cocos.draw.Canvas):
             y = margin + (y_val - min_y) * y_spacing
             self.move_to((margin, y))
             self.line_to((margin * 3/4, y))
-            self.labels.append(cocos.text.Label(str(y_val),
+            #self.labels.append(cocos.text.Label(str(y_val),
+            #                          font_name='Times New Roman',
+            #                          font_size=10,
+            #                          anchor_x='right', anchor_y='center',
+            #                          position = (margin * 3/4, y)))
+            self.labels.add_text(str(y_val),
                                       font_name='Times New Roman',
                                       font_size=10,
                                       anchor_x='right', anchor_y='center',
-                                      position = (margin * 3/4, y)))
+                                      position = (margin * 3/4, y))
 
         # draw the graph
         self.set_stroke_width(1.0)
@@ -282,6 +312,31 @@ class HistoryGraph(cocos.draw.Canvas):
             y = margin + (y_val - min_y) * y_spacing
             self.line_to((x, y))
             x += x_spacing
+
+class GraphLabels(cocos.cocosnode.CocosNode):
+    """
+    Special CocosNode to contain a number of text objects
+    """
+    def __init__(self, position=(0,0)):
+        super(GraphLabels, self).__init__()
+        self.position = position
+        self.group = None
+        self.elements = []
+
+        self.batch = pyglet.graphics.Batch()
+
+    def add_text(self, text='', position=(0,0), **kwargs):
+        kwargs['text']=text
+        self.elements.append(self.klass(group=self.group, batch=self.batch,
+                                        x=position[0], y=position[1], **kwargs))
+
+    def draw(self):
+        glPushMatrix()
+        self.transform()
+        self.batch.draw()
+        glPopMatrix()
+
+    klass = pyglet.text.Label
 
 
 def run_cocos_gui():
@@ -319,6 +374,7 @@ def run_cocos_gui():
 
     test_service.subscribe("drinks", ticker_layer.update_drinks)
 
+    cocos.director.director.set_show_FPS(True)
     cocos.director.director.run(main_scene)
 
 if __name__ == "__main__":
