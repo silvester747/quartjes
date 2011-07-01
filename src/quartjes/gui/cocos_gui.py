@@ -73,12 +73,12 @@ class BottomTicker(cocos.layer.Layer):
         print("Receiving update")
         self.drinks, self.current_drink_index = drinks, 0
         if self.reset_on_update:
-            self.reset()
+            self.do(CallFunc(self.reset))
 
     def reset(self):
         self._resetting = True
         for child in self.get_children():
-            child.do(FadeOut(1) + CallFunc(child.kill))
+            child.do(FadeOut(1) + CallFunc(self._safe_kill, child))
 
         if self.graph_layer != None:
             self.graph_layer.reset()
@@ -86,6 +86,12 @@ class BottomTicker(cocos.layer.Layer):
         time.sleep(1)
         self._resetting = False
         self.next_drink()
+
+    def _safe_kill(self, child):
+        try:
+            child.kill()
+        except:
+            pass
 
     def _set_focussed_drink(self, drink):
         if self._resetting:
