@@ -301,6 +301,7 @@ class MessageHandleError(Exception):
     RESULT_UNKNOWN_SERVICE = 5
     RESULT_UNKNOWN_ACTION = 6
     RESULT_INVALID_PARAMS = 7
+    RESULT_EXCEPTION_RAISED = 8
     RESULT_UNKNOWN_ERROR = 99
 
     def __init__(self, error_code=RESULT_UNKNOWN_ERROR, original_message=None, error_details=None):
