@@ -391,9 +391,11 @@ class CocosGui(object):
         while not self.connector.is_connected():
             time.sleep(1)
 
-        test_service = self.connector.get_service_interface("cocos_test")
-        self.drinks = test_service.get_drinks()
-        test_service.subscribe("drinks", self._update_drinks)
+        stock_exchange = self.connector.get_service_interface("stock_exchange")
+        database = self.connector.get_service_interface("database")
+        self.drinks = database.get_drinks()
+        database.subscribe("drinks_updated", self._update_drinks)
+        stock_exchange.subscribe("next_round", self._next_round)
 
         self.show_ticker_scene()
 
@@ -423,10 +425,11 @@ class CocosGui(object):
 
     def _update_drinks(self, drinks):
         self.drinks = drinks
-        if self.refresh_ticker_on_update:
-            self.show_ticker_scene(new_ticker=True)
-        else:
-            self.ticker_layer.update_drinks(drinks)
+        self.ticker_layer.update_drinks(drinks)
+
+    def _next_round(self, drinks):
+        self.drinks = drinks
+        self.show_ticker_scene(True)
 
 def run_cocos_gui():
     gui = CocosGui()

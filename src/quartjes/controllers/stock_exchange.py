@@ -1,3 +1,4 @@
+import threading
 import random
 import time
 import quartjes.controllers.database
@@ -10,10 +11,16 @@ __date__ ="$Jul 2, 2011 12:38:26 PM$"
 
 class StockExchange(object):
 
-    def __init__(self):
+    def __init__(self, start_thread=True):
         self.transactions = []
         self.db = quartjes.controllers.database.database
         self.service = None
+
+        self.round_time = 30
+
+        if start_thread:
+            self.thread = StockExchangeUpdateThread(self)
+            self.thread.start()
 
     def sell(self, drink, amount):
         local_drink = self.db.get_drink(drink.id)
@@ -40,6 +47,8 @@ class StockExchange(object):
                 sales[dr] = total + amount
 
         mean_sales = float(total_sales) / float(len(drinks))
+        if mean_sales == 0:
+            mean_sales = 1
 
         print("Total: %d, Mean: %f" % (total_sales, mean_sales))
 
@@ -67,6 +76,16 @@ class StockExchange(object):
     def _notify_next_round(self):
         if self.service:
             self.service.notify_next_round(self.db.drinks)
+
+class StockExchangeUpdateThread(threading.Thread):
+    def __init__(self, exchange):
+        super(StockExchangeUpdateThread, self).__init__()
+        self.exchange = exchange
+
+    def run(self):
+        while (True):
+            time.sleep(self.exchange.round_time)
+            self.exchange.recalculate_factors()
 
 class StockExchangeService(quartjes.connector.services.Service):
     """
@@ -98,7 +117,7 @@ class StockExchangeService(quartjes.connector.services.Service):
         return self.exchange.sell(drink, amount)
 
 if __name__ == "__main__":
-    exchange = StockExchange()
+    exchange = StockExchange(start_thread=False)
     drinks = exchange.db.drinks
 
     while True:

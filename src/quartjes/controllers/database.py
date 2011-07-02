@@ -104,7 +104,7 @@ class Database:
 
     def _drinks_updated(self):
         if self.service:
-            self.service.notify_drinks_updated(self.db.get_drinks())
+            self.service.notify_drinks_updated(self.drinks)
 
 
 class DatabaseService(quartjes.connector.services.Service):
