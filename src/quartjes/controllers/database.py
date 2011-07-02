@@ -13,6 +13,9 @@ class Database:
         self.drink_index = {}
         self.mixes = []
 
+        self.dirty = False
+        self.service = None
+
         self.db = shelve.open('database')
         if 'drinks' not in self.db.keys():
             self.db_reset()
@@ -20,8 +23,6 @@ class Database:
             self.replace_drinks(self.db_read('drinks'))
             self.mixes = self.db_read('mixes')
 
-        self.dirty = False
-        self.service = None
 
 
     def replace_drinks(self, drinks):
@@ -85,7 +86,7 @@ class Database:
 
         drinks = []
         for i in range(len(names)):
-            drinks.append(Drink(name = names[i], alc_perc = alc_perc[i],price_per_liter = price_per_liter[i],color=color[i],amount=amount[i]))
+            drinks.append(Drink(name = names[i], alc_perc = alc_perc[i],unit_price = price_per_liter[i],color=color[i],unit_amount=amount[i]))
         self.replace_drinks(drinks)
 
         d1 = self.drinks[0]
