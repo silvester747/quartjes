@@ -21,13 +21,6 @@ class AttrDisplay(object):
     inherited from its classes). Can be mixed into any class,
     and will work on any instance.
     """
-
-    def gatherAttrs(self):
-        attrs = []
-        for key in sorted(self.__dict__):
-            attrs.append('%s = %s' % (key, getattr(self, key)))
-        return '\n '.join(attrs)
-
     def __str__(self):
         return '%s: \n %s' % (self.__class__.__name__, pformat(vars(self)))
 

@@ -12,34 +12,27 @@ class Drink(QuartjesBaseClass):
     Drink class
     """
 
-    def __init__(self, name="Unnamed", alc_perc = 0,color = (255,255,255),unit_price = 70,price_factor = 1,unit_amount = 200):
+    def __init__(self, name="Unnamed", alc_perc = 0,color = (255,255,255),unit_price = 0.70,price_factor = 1,unit_amount = 200):
         super(Drink, self).__init__()
         self.name = name
         self.alc_perc = alc_perc
         self.color = color
+        self.unit_price = unit_price
         self.unit_amount = unit_amount
-        self.price_per_liter = unit_price/(float(unit_amount)/1000)
         self.price_factor = price_factor        
         self.history = None
 
-    def unit_price(self):
-        return self.price_per_liter * self.unit_amount/1000
+    def price_per_liter(self):
+        return self.unit_price / (float(self.unit_amount) / 1000)
 
     def sellprice(self):
-        price = self.price_per_liter * self.price_factor * self.unit_amount/1000
-        return price
+        return self.price_per_liter() * self.price_factor * self.unit_amount/1000
 
     def __eq__(self, other):
-        return (other != None and self.id == other.id and self.name == other.name
-            and self.alc_perc == other.alc_perc and self.color == other.color
-            and self.price_per_liter == other.price_per_liter and self.price_factor == other.price_factor
-            and self.history == other.history)
+        return vars(self)==vars(other)
 
     def __ne__(self, other):
-        return (other == None or self.id != other.id or self.name != other.name
-            or self.alc_perc != other.alc_perc or self.color != other.color
-            or self.price_per_liter != other.price_per_liter or self.price_factor != other.price_factor
-            or self.history != other.history)
+        return vars(self)!=vars(other)
 
 class Mix(Drink):
     """
@@ -63,25 +56,29 @@ class Mix(Drink):
         """Recalculate mix properties"""
         parts = len(self.drinks)
         if parts > 0:
-            self.price_per_liter = 0
+            self.unit_price = 0
             self.alc_perc = 0
+            self.price_factor = 0
             color = array([0,0,0])
             for d in self.drinks:
                 pass
                 self.alc_perc = self.alc_perc + d.alc_perc / parts
                 color += array(d.color)/parts
-                self.price_per_liter = self.price_per_liter + d.price_per_liter/parts
+                self.unit_price = self.unit_price + (d.price_per_liter()/parts)*(float(self.unit_amount)/1000)
+                self.price_factor = self.price_factor + d.price_factor/parts
             self.color = tuple(color)
 
 if __name__ == "__main__":
     d1 = Drink('cola',color = (0,0,0),alc_perc = 0,unit_price = 0.70, unit_amount = 200)
     d2 = Drink('bacardi',color = (255,255,255),alc_perc = 40,unit_price = 2, unit_amount = 50)
+    d1.price_factor = 0.8
+    d2.price_factor = 0.9
     print d1
     print d2
 
     # example mix, 3 parts cola 1 part bacardi
-    m = Mix(name = 'baco',drinks = [d1,d1,d1,d2],unit_amount = 1600)
-    m.price_factor = 0.7866783
+    m = Mix(name = 'baco',drinks = [d1,d1,d1,d2],unit_amount = 200)
+    
     print m
-    print "Unit price = " + str(m.unit_price()) + " euro"
+    print "Liter price = " + str(m.price_per_liter()) + " euro"
     print "Selling price = " + str(m.sellprice()) + " euro"
