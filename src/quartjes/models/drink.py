@@ -11,15 +11,15 @@ class Drink(QuartjesBaseClass):
     """
     Drink class
     """
-    __serialize__ = ["name", "alc_perc", "color", "unit_price", "price_factor", "unit_amount", "history"]
 
-    def __init__(self, name="Unnamed", alc_perc = 0,color = (255,255,255),price_per_liter = 70,price_factor = 1,amount = 200):
+    def __init__(self, name="Unnamed", alc_perc = 0,color = (255,255,255),unit_price = 70,price_factor = 1,unit_amount = 200):
         super(Drink, self).__init__()
         self.name = name
         self.alc_perc = alc_perc
         self.color = color
-        self.unit_price = price_per_liter
+        self.unit_price = unit_price
         self.unit_amount = unit_amount
+        self.price_per_liter = unit_price/(float(unit_amount)/1000)
         self.price_factor = price_factor        
         self.history = None
 
@@ -44,7 +44,7 @@ class Mix(Drink):
     Mix class
     """
     def __init__(self,name,drinks = []):
-        Drink.__init__(self,name)
+        super(Mix, self).__init__()
         self.drinks = drinks
         self.update_properties()
 
@@ -72,8 +72,8 @@ class Mix(Drink):
             self.color = tuple(color)
 
 if __name__ == "__main__":
-    d1 = Drink('cola',color = (0,0,0),alc_perc = 0,price_per_liter = 3.50)
-    d2 = Drink('bacardi',color = (255,255,255),alc_perc = 40,price_per_liter = 50)
+    d1 = Drink('cola',color = (0,0,0),alc_perc = 0,unit_price = 3.50)
+    d2 = Drink('bacardi',color = (255,255,255),alc_perc = 40,unit_price = 50)
     print d1
     print d2
 
