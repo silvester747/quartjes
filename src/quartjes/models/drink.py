@@ -17,14 +17,16 @@ class Drink(QuartjesBaseClass):
         self.name = name
         self.alc_perc = alc_perc
         self.color = color
-        self.unit_price = unit_price
         self.unit_amount = unit_amount
         self.price_per_liter = unit_price/(float(unit_amount)/1000)
         self.price_factor = price_factor        
         self.history = None
 
+    def unit_price(self):
+        return self.price_per_liter * self.unit_amount/1000
+
     def sellprice(self):
-        price = self.price_per_liter * self.price_factor * self.amount/1000
+        price = self.price_per_liter * self.price_factor * self.unit_amount/1000
         return price
 
     def __eq__(self, other):
@@ -43,8 +45,8 @@ class Mix(Drink):
     """
     Mix class
     """
-    def __init__(self,name,drinks = []):
-        super(Mix, self).__init__()
+    def __init__(self,name,drinks = [],unit_amount = 200):
+        super(Mix, self).__init__(unit_amount = unit_amount)
         self.drinks = drinks
         self.update_properties()
 
@@ -72,12 +74,14 @@ class Mix(Drink):
             self.color = tuple(color)
 
 if __name__ == "__main__":
-    d1 = Drink('cola',color = (0,0,0),alc_perc = 0,unit_price = 3.50)
-    d2 = Drink('bacardi',color = (255,255,255),alc_perc = 40,unit_price = 50)
+    d1 = Drink('cola',color = (0,0,0),alc_perc = 0,unit_price = 0.70, unit_amount = 200)
+    d2 = Drink('bacardi',color = (255,255,255),alc_perc = 40,unit_price = 2, unit_amount = 50)
     print d1
     print d2
 
     # example mix, 3 parts cola 1 part bacardi
-    m = Mix(name = 'baco',drinks = [d1,d1,d1,d2])
+    m = Mix(name = 'baco',drinks = [d1,d1,d1,d2],unit_amount = 1600)
+    m.price_factor = 0.7866783
     print m
+    print "Unit price = " + str(m.unit_price()) + " euro"
     print "Selling price = " + str(m.sellprice()) + " euro"
