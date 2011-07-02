@@ -26,7 +26,8 @@ class Application(Frame):
         self.b_add_drink.grid(row = 0,column=0,sticky=EW)
         self.b_remove_drink.grid(row = 1,column = 0,sticky=EW)
 
-root = Tk()
-app = Application(master=root)
-app.mainloop()
-root.destroy()
+if __name__ == "__main__":
+    root = Tk()
+    app = Application(master=root)
+    app.mainloop()    
+    

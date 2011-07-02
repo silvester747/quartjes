@@ -13,10 +13,10 @@ class Drink(QuartjesBaseClass):
     """
     __serialize__ = ["name", "alc_perc", "color", "price_per_liter", "price_factor", "amount", "history"]
     
-    def __init__(self, name="Unnamed", alc_perc = 0,color = [255,255,255,255],price_per_liter = 70,price_factor = 1,amount = 200):
+    def __init__(self, name="Unnamed", alc_perc = 0,color = (255,255,255),price_per_liter = 70,price_factor = 1,amount = 200):
         self.name = name
         self.alc_perc = alc_perc
-        self.color = array(color)
+        self.color = color
         self.price_per_liter = price_per_liter
         self.price_factor = price_factor
         self.amount = amount
@@ -62,17 +62,17 @@ class Mix(Drink):
         if parts > 0:
             self.price_per_liter = 0
             self.alc_perc = 0
-            color = array([0,0,0,0])
+            color = array([0,0,0])
             for d in self.drinks:
                 pass
                 self.alc_perc = self.alc_perc + d.alc_perc / parts
-                color += d.color/parts
+                color += array(d.color)/parts
                 self.price_per_liter = self.price_per_liter + d.price_per_liter/parts
-            self.color = color.tolist()
+            self.color = tuple(color)
 
 if __name__ == "__main__":
-    d1 = Drink('cola',color = [0,0,0,100],alc_perc = 0,price_per_liter = 3.50)
-    d2 = Drink('bacardi',color = [255,255,255,255],alc_perc = 40,price_per_liter = 50)
+    d1 = Drink('cola',color = (0,0,0),alc_perc = 0,price_per_liter = 3.50)
+    d2 = Drink('bacardi',color = (255,255,255),alc_perc = 40,price_per_liter = 50)
     print d1
     print d2
 

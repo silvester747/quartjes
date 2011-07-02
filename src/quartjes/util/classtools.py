@@ -11,6 +11,7 @@ Created on May 5, 2011
 '''
 
 import uuid
+from pprint import pformat
 
 class AttrDisplay(object):
     """
@@ -28,7 +29,7 @@ class AttrDisplay(object):
         return '\n '.join(attrs)
 
     def __str__(self):
-        return '%s: \n %s' % (self.__class__.__name__, self.gatherAttrs())
+        return '%s: \n %s' % (self.__class__.__name__, pformat(vars(self)))
 
 class QuartjesBaseClass(AttrDisplay):
     """
