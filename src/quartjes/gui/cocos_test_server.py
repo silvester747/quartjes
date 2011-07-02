@@ -36,10 +36,10 @@ class CocosTestService(quartjes.connector.services.Service):
 
         def run(self):
             while True:
-                time.sleep(30)
                 self._randomize_history()
                 print("Sending update")
                 self.service.send_topic_update("drinks", drinks=self.drinks)
+                time.sleep(30)
 
 if __name__ == "__main__":
     from quartjes.connector.server import ServerConnector
