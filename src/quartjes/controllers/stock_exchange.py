@@ -1,3 +1,5 @@
+import random
+import time
 import quartjes.controllers.database
 import quartjes.connector.services
 # To change this template, choose Tools | Templates
@@ -23,14 +25,48 @@ class StockExchange(object):
         self.transactions.append((local_drink, amount))
         return total_price
 
-    def calculate_factors(self):
+    def recalculate_factors(self):
+        total_sales = 0
+        sales = {}
+        drinks = self.db.drinks
 
-        pass
+        for dr in drinks:
+            sales[dr] = 0
 
+        for (dr, amount) in self.transactions:
+            total_sales += amount
+            total = sales.get(dr)
+            if total != None:
+                sales[dr] = total + amount
+
+        mean_sales = float(total_sales) / float(len(drinks))
+
+        print("Total: %d, Mean: %f" % (total_sales, mean_sales))
+
+        t = time.time()
+
+        for (dr, amount) in sales.items():
+            sales_factor = float(amount) / mean_sales
+            if sales_factor < 1.0:
+                sales_factor = 0.5 + sales_factor * 0.5
+            print(sales_factor)
+            dr.price_factor *= sales_factor
+            if not dr.history:
+                dr.history = []
+            dr.history.append((t, dr.sellprice()))
+
+        self.transactions = []
+
+        self.db.set_dirty()
+        
     def get_service(self):
         if not self.service:
             self.service = StockExchangeService(self)
         return self.service
+    
+    def _notify_next_round(self):
+        if self.service:
+            self.service.notify_next_round(self.db.drinks)
 
 class StockExchangeService(quartjes.connector.services.Service):
     """
@@ -62,10 +98,26 @@ class StockExchangeService(quartjes.connector.services.Service):
         return self.exchange.sell(drink, amount)
 
 if __name__ == "__main__":
-    from quartjes.connector.server import ServerConnector
-
-    server = ServerConnector(1234)
     exchange = StockExchange()
-    server.register_service(exchange.get_service())
-    server.register_service(quartjes.controllers.database.database.get_service())
-    server.start()
+    drinks = exchange.db.drinks
+
+    while True:
+        for d in drinks:
+            print("%s: %f" % (d.name, d.sellprice()))
+
+        inp = raw_input()
+        if len(inp) > 0:
+            exit()
+
+        for x in range(0, random.randint(30, 60)):
+            i = random.randint(0, len(drinks) - 1)
+            a = random.randint(1, 10)
+
+            c = random.randint(1, int(drinks[i].price_factor))
+            if c > 1:
+                continue
+            exchange.sell(drinks[i], a)
+
+        exchange.recalculate_factors()
+
+

@@ -47,3 +47,6 @@ class QuartjesBaseClass(AttrDisplay):
             self.id = uuid.uuid4()
         else:
             self.id = id
+
+    def __hash__(self):
+        return hash(self.id)
