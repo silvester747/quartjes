@@ -26,7 +26,7 @@ class Application(Frame):
         self.drink.name = self.e_name.get()
         print self.drink
 
-    def createWidgets(self):
+    def createWidgets(self): #bla
         self.b_set_color = Button(self, text = "set color", command =  self.set_color)
         self.b_remove_drink = Button(self, text = "Remove drink", command = self.remove_drink)
         self.e_name = Entry(self)
