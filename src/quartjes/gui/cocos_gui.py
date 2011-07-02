@@ -1,3 +1,4 @@
+import cocos.actions.base_actions
 import cocos.layer.base_layers
 __author__="rob"
 __date__ ="$Jun 23, 2011 10:13:35 PM$"
@@ -32,7 +33,7 @@ class BottomTicker(cocos.layer.Layer):
 
     def __init__(self, display_time=1.0, display_y=0, screen_width=1024, drinks=None,
                  visible_segments=10, margin=2, interval=3, focus_start=3,
-                 focus_length=2, focus_height=40, reset_on_update=True, graph_layer=None):
+                 focus_length=2, focus_height=40, reset_on_update=False, graph_layer=None):
         super(BottomTicker, self).__init__()
 
         self.display_time = display_time
@@ -76,16 +77,21 @@ class BottomTicker(cocos.layer.Layer):
             self.do(CallFunc(self.reset))
 
     def reset(self):
+        """
+        WARNING: Currently causes invalid operation in GL.
+        """
+        return
         self._resetting = True
         for child in self.get_children():
             child.do(FadeOut(1) + CallFunc(self._safe_kill, child))
+            #child.do(Kill())
 
         if self.graph_layer != None:
             self.graph_layer.reset()
 
         time.sleep(1)
         self._resetting = False
-        self.next_drink()
+        self.do(CallFunc(self.next_drink))
 
     def _safe_kill(self, child):
         try:
@@ -187,6 +193,7 @@ class GraphLayer(cocos.layer.base_layers.Layer):
         self.add(self.current_graph)
 
     def reset(self):
+        return # unsafe
         for child in self.get_children():
             if self.is_running:
                 child.do(FadeOut(1) + CallFunc(child.kill))
@@ -344,44 +351,87 @@ class GraphLabels(cocos.cocosnode.CocosNode):
 
     klass = pyglet.text.Label
 
+class Kill(cocos.actions.base_actions.InstantAction):
+
+    def start(self):
+        self.target.pause_scheduler()
+        for a in self.target.actions:
+            self.target.remove_action(a)
+        #self.target.do(Delay(0.1) + CallFunc(self.target.kill))
+        self.target.resume_scheduler()
+        #self.target.kill()
+
+class CocosGui(object):
+
+    def __init__(self, hostname="localhost", port=1234, width=1024, height=768,
+                 fullscreen=True):
+        self.width = width
+        self.height = height
+        self.fullscreen = fullscreen
+        self.hostname = hostname
+        self.port = port
+
+        self.refresh_ticker_on_update = True
+
+        self.ticker_layer = None
+        self.graph_layer = None
+        self.title_layer = None
+
+        self.drinks = None
+
+
+    def start(self):
+        cocos.director.director.init(width=self.width, height=self.height,
+                                     fullscreen=self.fullscreen)
+        cocos.director.director.set_show_FPS(True)
+
+        self.connector = ClientConnector(self.hostname, self.port)
+        self.connector.start()
+
+        while not self.connector.is_connected():
+            time.sleep(1)
+
+        test_service = self.connector.get_service_interface("cocos_test")
+        self.drinks = test_service.get_drinks()
+        test_service.subscribe("drinks", self._update_drinks)
+
+        self.show_ticker_scene()
+
+    def show_ticker_scene(self, new_ticker=False):
+        if not self.ticker_layer or new_ticker:
+            self.ticker_layer = BottomTicker()
+        if not self.graph_layer:
+            self.graph_layer = GraphLayer()
+        if not self.title_layer:
+            self.title_layer = TitleLayer()
+
+        self.ticker_layer.update_drinks(self.drinks)
+
+        if new_ticker:
+            self.graph_layer.show_drink_history(None)
+
+        scene = cocos.scene.Scene(self.ticker_layer, self.graph_layer, self.title_layer)
+        self.ticker_layer.graph_layer = self.graph_layer
+
+        self._display_scene(scene)
+
+    def _display_scene(self, scene):
+        if cocos.director.director.scene == None:
+            cocos.director.director.run(scene)
+        else:
+            cocos.director.director.replace(cocos.scenes.transitions.FadeTransition(scene))
+
+    def _update_drinks(self, drinks):
+        self.drinks = drinks
+        if self.refresh_ticker_on_update:
+            self.show_ticker_scene(new_ticker=True)
+        else:
+            self.ticker_layer.update_drinks(drinks)
 
 def run_cocos_gui():
-    import random
-
-    width=1024
-    height=768
-    fullscreen=True
-    hostname = "localhost"
-    port = 1234
-
-
-    cocos.director.director.init(width=width, height=height, fullscreen=fullscreen)
-    ticker_layer = BottomTicker()
-    graph_layer = GraphLayer()
-    ticker_layer.graph_layer = graph_layer
-    title_layer = TitleLayer()
-    main_scene = cocos.scene.Scene(ticker_layer, graph_layer, title_layer)
-
-    #db = Database()
-    #drinks = db.drinks
-    #for drink in drinks:
-    #    drink.history = zip(range(1, 8), [random.randint(6, 15) for x in range(1,8)])
-    #ticker_layer.update_drinks(db.drinks)
-
-    connector = ClientConnector(hostname, port)
-    connector.start()
-
-    while not connector.is_connected():
-        time.sleep(1)
-
-    test_service = connector.get_service_interface("cocos_test")
-
-    ticker_layer.update_drinks(test_service.get_drinks())
-
-    test_service.subscribe("drinks", ticker_layer.update_drinks)
-
-    cocos.director.director.set_show_FPS(True)
-    cocos.director.director.run(main_scene)
+    gui = CocosGui()
+    gui.start()
+    #gui.show_ticker_scene()
 
 if __name__ == "__main__":
     run_cocos_gui()
