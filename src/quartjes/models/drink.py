@@ -12,8 +12,9 @@ class Drink(QuartjesBaseClass):
     Drink class
     """
     __serialize__ = ["name", "alc_perc", "color", "unit_price", "price_factor", "unit_amount", "history"]
-    
+
     def __init__(self, name="Unnamed", alc_perc = 0,color = (255,255,255),price_per_liter = 70,price_factor = 1,amount = 200):
+        super(Drink, self).__init__()
         self.name = name
         self.alc_perc = alc_perc
         self.color = color
