@@ -1,3 +1,5 @@
+import time
+import threading
 # To change this template, choose Tools | Templates
 # and open the template in the editor.
 
@@ -138,17 +140,33 @@ class DatabaseService(quartjes.connector.services.Service):
     def action_update_drink(self, drink):
         return self.db.update_drink(drink)
 
+class DatabaseMonitor(threading.Thread):
+    def __init__(self):
+        super(DatabaseMonitor, self).__init__()
+        self.daemon = True
+        
+    def run(self):
+        while True:
+            time.sleep(1)
+            if database.dirty:
+                database.store()
 
+'''
+Singleton reference to the database.
+'''
 database = Database()
+
+monitor = DatabaseMonitor()
+monitor.start()
 
 if __name__ == "__main__":
     print "Running self test"
-    d = Database()    
+     
     
-    for drink in d.drinks:
+    for drink in database.drinks:
         print drink
 
-    for mix in d.mixes:
+    for mix in database.mixes:
         print mix
 
     print "Selling price = " + str(mix.sellprice()) + " euro"
