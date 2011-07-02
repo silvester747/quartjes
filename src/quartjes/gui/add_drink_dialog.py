@@ -9,11 +9,12 @@ from tkColorChooser import *
 from quartjes.models.drink import *
 
 class Application(Frame):
-    def __init__(self, master=None):
-        self.tags = ["name","alc_perc","unit_price","unit_amount","color"]
-        self.drink = Drink()
-        self.temp_color = self.drink.color
-        Frame.__init__(self, master)
+    def __init__(self, root, drink):
+        Frame.__init__(self,root)
+        self.parent = root
+        self.tags = ["name","alc_perc","unit_price","unit_amount"]
+        self.drink = drink
+        self.temp_color = self.drink.color        
         self.pack()
         self.createWidgets()
         self.reset_object_values()
@@ -38,13 +39,20 @@ class Application(Frame):
             self.__dict__["sv_" + tag] = sv
             self.__dict__["e_" + tag].grid(row = self.tags.index(tag),column = 1,sticky=EW)
 
-
+        self.l_color = Label(self,text = "Color")
+        self.l_color.grid(row = len(self.tags)+1,column = 0,sticky=E)
         hexcolor = '#%02x%02x%02x' % self.temp_color
-        self.b_color = Button(self, text = "set color",bg = hexcolor,command =  self.set_color)
-        self.b_color.grid(row = self.tags.index("color"),column = 1,sticky=EW)
+        self.b_color = Button(self,bg = hexcolor,command =  self.set_color)
+        self.b_color.grid(row = len(self.tags)+1,column = 1,sticky=EW)
 
-        self.b_commit = Button(self, text = "Save drink",width = 50)
-        self.b_commit.grid(row = len(self.tags)+1,column = 0,columnspan = 2,pady=10)
+        self.b_reset = Button(self, text = "Reset values",width = 40,command = self.reset_object_values)
+        self.b_reset.grid(row = len(self.tags)+2,column = 0,columnspan = 2,pady=10)
+
+        self.b_save = Button(self, text = "Save drink & exit",width = 20, command=self.save)
+        self.b_save.grid(row = len(self.tags)+3,column = 0)
+
+        self.b_cancel = Button(self, text = "Cancel",width = 20,command=self.cancel)
+        self.b_cancel.grid(row = len(self.tags)+3,column = 1)
 
     def set_name(self):
         print 'temp'
@@ -57,10 +65,22 @@ class Application(Frame):
     def remove_drink(self):
         self.drink.name = self.e_name.get()
         print self.drink
+
+    def cancel(self):
+        self.parent.destroy()
+
+    def save(self):
+        self.drink.color = self.temp_color
+        for tag in self.tags:
+            self.drink.__dict__[tag] = self.__dict__["sv_" + tag].get()
+
+        self.parent.destroy()
         
 if __name__ == "__main__":
+    d = Drink()
     root = Tk()
-    app = Application(master=root)
+    app = Application(root, d)
     from pprint import pprint
     pprint(vars(app))
     app.mainloop()
+    pprint(vars(d))
