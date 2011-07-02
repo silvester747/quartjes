@@ -30,9 +30,14 @@ class Application(Frame):
         self.b_set_color = Button(self, text = "set color", command =  self.set_color)
         self.b_remove_drink = Button(self, text = "Remove drink", command = self.remove_drink)
         self.e_name = Entry(self)
+        self.e_alc_perc = Entry(self)
+        self.e_unit_price = Entry(self)
+        self.e_unit_amount = Entry(self)
 
         self.b_set_color.grid(row = 0,column=0,sticky=EW)
         self.b_remove_drink.grid(row = 1,column = 0,sticky=EW)
+        self.e_name.grid(row = 2,column = 0,sticky=EW)
+        self.e_name.grid(row = 2,column = 0,sticky=EW)
         self.e_name.grid(row = 2,column = 0,sticky=EW)
 
 if __name__ == "__main__":
