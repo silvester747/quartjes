@@ -11,34 +11,30 @@ from quartjes.models.drink import Drink,Mix
 
 class Database:
     def __init__(self):        
-        self.drinks = []
-        self.drink_index = {}
-        self.mixes = []
+        self._drinks = []
+        self._drink_index = {}
+        self._mixes = []
 
         self.dirty = False
         self.service = None
 
-        self.db = shelve.open('database')
-        if 'drinks' not in self.db.keys():
-            self.db_reset()
-        else:
-            self.replace_drinks(self.db_read('drinks'))
-            self.mixes = self.db_read('mixes')
+        self.db_file = "database"
 
+        self.monitor = DatabaseMonitor(self)
 
 
     def replace_drinks(self, drinks):
         index = {}
         for dr in drinks:
             index[dr.id] = dr
-        self.drinks, self.drink_index = drinks, index
+        self._drinks, self._drink_index = drinks, index
         self.dirty = True
 
     def update_drink(self, drink):
-        local_drink = self.db.get_drink(drink.id)
+        local_drink = self.get_drink(drink.id)
 
         if not local_drink:
-            self.db.add_drink(drink)
+            self.add_drink(drink)
         else:
             local_drink.name = drink.name
             local_drink.alc_perc = drink.alc_perc
@@ -49,21 +45,43 @@ class Database:
             self.set_dirty()
 
     def add_drink(self, drink):
-        self.drink_index[drink.id] = drink
-        self.drinks.append(drink)
+        self._drink_index[drink.id] = drink
+        self._drinks.append(drink)
         self.dirty = True
 
     def remove_drink(self, drink):
-        del self.drink_index[drink.id]
-        self.drinks.remove(drink)
+        del self._drink_index[drink.id]
+        self._drinks.remove(drink)
         self.dirty = True
 
     def get_drink(self, id):
-        return self.drink_index.get(id)
+        return self._drink_index.get(id)
+
+    def get_drinks(self):
+        if not self._drinks:
+            self._load_drinks()
+        return self._drinks
+
+    def _load_drinks(self):
+        db = shelve.open(self.db_file)
+        if not db.has_key('drinks'):
+            db.close()
+            self.db_reset()
+
+        else:
+            self.replace_drinks(db['drinks'])
+            self._mixes = db['mixes']
+            db.close()
+
+        self.monitor.start()
+
 
     def store(self):
-        self.db_write('drinks',self.drinks)
-        self.db_write('mixes',self.mixes)
+        print("Storing db")
+        db = shelve.open(self.db_file)
+        db['drinks'] = self._drinks
+        db['mixes'] =self._mixes
+        db.close()
 
         self._drinks_updated()
 
@@ -72,14 +90,9 @@ class Database:
     def set_dirty(self):
         self.dirty = True
 
-    def db_write(self,tag,values):
-        self.db[tag] = values
-
-    def db_read(self,tag):
-        values = self.db[tag]
-        return values
-
     def db_reset(self):
+        #assert False
+        print("Resetting database")
         names = ['Cola','Sinas','Cassis','7up','Safari','Bacardi lemon','Bacardi','Whiskey','Jenever','Oude Jenever']
         alc_perc = [0,0,0,0,14,20,40,40,40,40]
         price_per_liter = [3.50,3.50,3.50,3.50,20,25,40,50,35,45]
@@ -91,9 +104,9 @@ class Database:
             drinks.append(Drink(name = names[i], alc_perc = alc_perc[i],unit_price = price_per_liter[i],color=color[i],unit_amount=amount[i]))
         self.replace_drinks(drinks)
 
-        d1 = self.drinks[0]
-        d2 = self.drinks[6]
-        self.mixes.append(Mix('Baco',[d1,d1,d1,d2]))
+        d1 = self._drinks[0]
+        d2 = self._drinks[6]
+        self._mixes.append(Mix('Baco',[d1,d1,d1,d2]))
 
         self.store()
 
@@ -104,7 +117,7 @@ class Database:
 
     def _drinks_updated(self):
         if self.service:
-            self.service.notify_drinks_updated(self.drinks)
+            self.service.notify_drinks_updated(self._drinks)
 
 
 class DatabaseService(quartjes.connector.services.Service):
@@ -137,7 +150,7 @@ class DatabaseService(quartjes.connector.services.Service):
         self.send_topic_update("drinks_updated", drinks=drinks)
 
     def action_get_drinks(self):
-        return self.db.drinks
+        return self.db.get_drinks()
 
     def action_update_drink(self, drink):
         return self.db.update_drink(drink)
@@ -149,32 +162,30 @@ class DatabaseService(quartjes.connector.services.Service):
         return self.db.remove_drink(drink)
 
 class DatabaseMonitor(threading.Thread):
-    def __init__(self):
+    def __init__(self, db):
         super(DatabaseMonitor, self).__init__()
         self.daemon = True
+        self.db = db
         
     def run(self):
         while True:
             time.sleep(1)
-            if database.dirty:
-                database.store()
+            if self.db.dirty:
+                self.db.store()
 
 '''
 Singleton reference to the database.
 '''
 database = Database()
 
-monitor = DatabaseMonitor()
-monitor.start()
-
 if __name__ == "__main__":
     print "Running self test"
      
     
-    for drink in database.drinks:
+    for drink in database.get_drinks():
         print drink
 
-    for mix in database.mixes:
+    for mix in database._mixes:
         print mix
 
     print "Selling price = " + str(mix.sellprice()) + " euro"

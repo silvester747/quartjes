@@ -3,6 +3,8 @@ Base definitions of services.
 The quartjes server is capable of offering multiple services. Each service
 is identified by its service name.
 """
+import traceback
+import sys
 __author__="rob"
 __date__ ="$Jun 13, 2011 12:14:15 PM$"
 
@@ -34,6 +36,7 @@ class Service(object):
         except TypeError as err:
             raise MessageHandleError(MessageHandleError.RESULT_INVALID_PARAMS, error_details=err.message)
         except Exception as err:
+            traceback.print_exc()
             raise MessageHandleError(MessageHandleError.RESULT_EXCEPTION_RAISED, error_details=str(err))
 
     def send_topic_update(self, topic, **kwargs):

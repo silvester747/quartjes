@@ -16,6 +16,9 @@ class StockExchange(object):
         self.db = quartjes.controllers.database.database
         self.service = None
 
+        self.min_factor = 0.5
+        self.max_factor = 1.5
+
         self.round_time = 10
 
         if start_thread:
@@ -34,7 +37,7 @@ class StockExchange(object):
 
     def recalculate_factors(self):
         sales = {}
-        drinks = self.db.drinks
+        drinks = self.db.get_drinks()
         total_sales = len(drinks)
 
         for dr in drinks:
@@ -56,8 +59,10 @@ class StockExchange(object):
         for (dr, amount) in sales.items():
             sales_factor = float(amount) / mean_sales
             dr.price_factor *= sales_factor
-            if dr.price_factor < 0.25:
-                dr.price_factor = 0.25
+            if dr.price_factor < self.min_factor:
+                dr.price_factor = self.min_factor
+            if dr.price_factor > self.max_factor:
+                dr.price_factor = self.max_factor
             total_factors += dr.price_factor
             if not dr.history:
                 dr.history = []
@@ -84,7 +89,7 @@ class StockExchange(object):
     
     def _notify_next_round(self):
         if self.service:
-            self.service.notify_next_round(self.db.drinks)
+            self.service.notify_next_round(self.db.get_drinks())
 
 class StockExchangeUpdateThread(threading.Thread):
     def __init__(self, exchange):
