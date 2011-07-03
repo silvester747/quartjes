@@ -16,7 +16,8 @@ class Database:
         self._mixes = None
         self._mix_index = {}
 
-        self.dirty = False
+        self.mix_dirty = False
+        self.drink_dirty = False
         self.service = None
 
         self.db_file = "database"
@@ -29,14 +30,14 @@ class Database:
         for dr in drinks:
             index[dr.id] = dr
         self._drinks, self._drink_index = drinks, index
-        self.dirty = True
+        self.drink_dirty = True
 
     def replace_mixes(self, mixes):
         index = {}
         for mix in mixes:
             index[mix.id] = mix
         self._mixes, self._mix_index = mixes, index
-        self.dirty = True
+        self.mix_dirty = True
 
     def update(self, obj):
         if isinstance(obj, Mix):
@@ -56,7 +57,7 @@ class Database:
             local_drink.price_per_liter = drink.price_per_liter
             local_drink.amount = drink.amount
 
-            self.set_dirty()
+            self.drink_dirty = True
 
     def update_mix(self, mix):
         local_mix = self.get_mix(mix.id)
@@ -66,7 +67,7 @@ class Database:
         else:
             local_mix.name = mix.name
             #TODO
-            self.set_dirty()
+            self.mix_dirty = True
 
     def add(self, obj):
         if isinstance(obj, Mix):
@@ -77,12 +78,12 @@ class Database:
     def add_drink(self, drink):
         self._drink_index[drink.id] = drink
         self._drinks.append(drink)
-        self.dirty = True
+        self.drink_dirty = True
 
     def add_mix(self, mix):
         self._mix_index[mix.id] = mix
         self._mixes.append(mix)
-        self.dirty = True
+        self.mix_dirty = True
 
     def remove(self, obj):
         if isinstance(obj, Mix):
@@ -93,12 +94,12 @@ class Database:
     def remove_drink(self, drink):
         del self._drink_index[drink.id]
         self._drinks.remove(drink)
-        self.dirty = True
+        self.drink_dirty = True
 
     def remove_mix(self, mix):
         del self._mix_index[mix.id]
         self._mixes.remove(mix)
-        self.dirty = True
+        self.mix_dirty = True
 
     def get(self, id):
         val = self.get_drink(id)
@@ -144,12 +145,17 @@ class Database:
         db['mixes'] =self._mixes
         db.close()
 
-        self._drinks_updated()
+        if self.drink_dirty:
+            self._drinks_updated()
+        if self.mix_dirty:
+            self._mixes_updated()
 
-        self.dirty = False
+        self.drink_dirty = False
+        self.mix_dirty = False
 
     def set_dirty(self):
-        self.dirty = True
+        self.drink_dirty = True
+        self.mix_dirty = True
 
     def db_reset(self):
         #assert False
