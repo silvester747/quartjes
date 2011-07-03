@@ -22,6 +22,7 @@ class QuartjesProtocol(NetstringReceiver):
         Construct a new protocol handler with a unique id.
         """
         self.id = uuid.uuid4()
+        self.MAX_LENGTH = 999999999999
 
     def connectionMade(self):
         """
