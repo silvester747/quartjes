@@ -23,7 +23,10 @@ class dialog(Frame):
         print 'hoi'
 
     def edit_drink(self):
-        print 'hoi'
+        selection = self.lb_drinks.curselection()
+        if len(selection) > 0:
+            selected = int(selection[0])
+            print selected
 
     def remove_drink(self):
         print 'hoi'
@@ -32,8 +35,7 @@ class dialog(Frame):
         self.drinks = self.db.get_drinks()
         names = []
         for d in self.drinks:
-            names.append(d.name)
-        lb_drinks.insert(names)
+            lb_drinks.insert(END,d.name)
 
     def createWidgets(self,type):
         font16 = ("Arial", 26, "bold")
@@ -41,16 +43,16 @@ class dialog(Frame):
             self.lb_drinks = Listbox(self, height=40, width = 100)
             self.lb_drinks.grid(row = 0,column=0,rowspan=10,sticky=EW, padx = 20, pady = 20)
 
-            self.b_add_drink = Button(self, text = "Edit database",command =  self.add_drink, width = 20, height = 2, font = font16)
+            self.b_add_drink = Button(self, text = "Add drink",command =  self.add_drink, width = 20, height = 2, font = font16)
             self.b_add_drink.grid(row = 0,column=1,sticky=EW, padx = 20, pady = 20)
 
-            self.b_add_drink = Button(self, text = "Edit database",command =  self.add_mix, width = 20, height = 2, font = font16)
+            self.b_add_drink = Button(self, text = "Add mix",command =  self.add_mix, width = 20, height = 2, font = font16)
             self.b_add_drink.grid(row = 1,column=1,sticky=EW, padx = 20, pady = 20)
 
-            self.b_add_drink = Button(self, text = "Edit database",command =  self.edit_drink, width = 20, height = 2, font = font16)
+            self.b_add_drink = Button(self, text = "Edit drink",command =  self.edit_drink, width = 20, height = 2, font = font16)
             self.b_add_drink.grid(row = 2,column=1,sticky=EW, padx = 20, pady = 20)
 
-            self.b_remove_drink = Button(self, text = "Sell dialog", command = self.remove_drink, width = 20, height = 2, font = font16)
+            self.b_remove_drink = Button(self, text = "Remove drink", command = self.remove_drink, width = 20, height = 2, font = font16)
             self.b_remove_drink.grid(row = 3,column = 1,sticky=EW, padx = 20, pady = 20)
 
             self.fill_drinks_listbox(self.lb_drinks)

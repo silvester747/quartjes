@@ -16,7 +16,7 @@ class Application(Frame):
         self.root = root
         self.pack()
         self.createWidgets()
-        hostname = "192.168.20.134"
+        hostname = "localhost"
         port = 1234
 
         self.conn = ClientConnector(hostname,port)
