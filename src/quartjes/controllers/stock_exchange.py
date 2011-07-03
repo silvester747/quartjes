@@ -15,9 +15,6 @@ class StockExchange(object):
         self.transactions = []
         self.db = quartjes.controllers.database.database
         self.service = None
-
-        self.min_factor = 0.5
-        self.max_factor = 2.0
         self.max_history = 120
 
         self.round_time = 10
