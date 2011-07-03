@@ -15,7 +15,7 @@ class dialog(Frame):
         self.root = root
         self.pack()
         self.conn = conn
-        #self.db = self.conn.get_service_interface("database")
+        self.db = self.conn.get_service_interface("database")
         self.createWidgets(type)
 
     def add_drink(self):
@@ -23,18 +23,17 @@ class dialog(Frame):
         drink_dialog(Tk(),d)
         print d
 
-
     def add_mix(self):
         m = Mix()
-        drink_dialog(Tk(),m)
+        #mix_dialog(Tk(),m)
         print m
 
     def edit_drink(self):
         selection = self.lb_drinks.curselection()
         if len(selection) > 0:
-            selected = int(selection[0])
-            print selected
-            drink_dialog(Tk(),self.drink[selected])
+            selected = int(selection[0])            
+            drink_dialog(Tk(),self.drinks[selected])
+
 
     def remove_drink(self):
         print 'hoi'
@@ -64,8 +63,7 @@ class dialog(Frame):
             self.b_remove_drink.grid(row = 3,column = 1,sticky=EW, padx = 20, pady = 20)
 
             self.fill_drinks_listbox(self.lb_drinks)
-
-        elif type is "sell":
+        elif type is "add_mix":
             self.b_add_drink = Button(self, text = "Edit database", width = 20, height = 2, font = font16)
             self.b_add_drink.grid(row = 1,column=0,sticky=EW, padx = 20, pady = 20)
 
@@ -78,9 +76,10 @@ class dialog(Frame):
 class drink_dialog(Frame):
     def __init__(self, root, drink):
         Frame.__init__(self,root)
-        self.parent = root
+        self.root = root
         self.tags = ["name","alc_perc","unit_price","unit_amount"]
         self.drink = drink
+        print drink
         self.temp_color = self.drink.color
         self.pack()
         self.createWidgets()
@@ -92,19 +91,30 @@ class drink_dialog(Frame):
         self.b_color.config(bg = hexcolor)
 
         for tag in self.tags:
-            self.__dict__["sv_" + tag].set(self.drink.__dict__[tag])
+            text = self.drink.__dict__[tag]
+            self.__dict__["sv_" + tag].set(text)
+            print text
+            print self.__dict__["e_" + tag].get()
+            print self.__dict__["sv_" + tag].get()
+
+            
+    def set_color(self):
+        color = askcolor(master=self,initialcolor = self.temp_color)
+        self.temp_color = color[0]
+        self.b_color.config(bg = color[1])
+
+    def cancel(self):
+        self.root.destroy()
+
+    def save(self):
+        self.drink.color = self.temp_color
+        for tag in self.tags:
+            self.drink.__dict__[tag] = self.__dict__["sv_" + tag].get()
+
+        self.root.destroy()
 
     def createWidgets(self):
         self.config(padx = 20, pady = 20)
-
-        for tag in self.tags:
-            self.__dict__["l_" + tag] = Label(self,text = tag)
-            self.__dict__["l_" + tag].grid(row = self.tags.index(tag),column = 0,sticky=E)
-
-            sv = StringVar()
-            self.__dict__["e_" + tag] = Entry(self, textvariable = sv)
-            self.__dict__["sv_" + tag] = sv
-            self.__dict__["e_" + tag].grid(row = self.tags.index(tag),column = 1,sticky=EW)
 
         self.l_color = Label(self,text = "Color")
         self.l_color.grid(row = len(self.tags)+1,column = 0,sticky=E)
@@ -121,29 +131,20 @@ class drink_dialog(Frame):
         self.b_cancel = Button(self, text = "Cancel",width = 20,command=self.cancel)
         self.b_cancel.grid(row = len(self.tags)+3,column = 1)
 
-    def set_name(self):
-        print 'temp'
-
-    def set_color(self):
-        color = askcolor(master=self,initialcolor = self.temp_color)
-        self.temp_color = color[0]
-        self.b_color.config(bg = color[1])
-
-    def remove_drink(self):
-        self.drink.name = self.e_name.get()
-        print self.drink
-
-    def cancel(self):
-        self.parent.destroy()
-
-    def save(self):
-        self.drink.color = self.temp_color
         for tag in self.tags:
-            self.drink.__dict__[tag] = self.__dict__["sv_" + tag].get()
+            self.__dict__["l_" + tag] = Label(self,text = tag)
+            self.__dict__["l_" + tag].grid(row = self.tags.index(tag),column = 0,sticky=E)
 
-        self.parent.destroy()
+            sv = StringVar()
+            self.__dict__["e_" + tag] = Entry(self, textvariable = sv)
+            self.__dict__["sv_" + tag] = sv            
+
+            self.__dict__["e_" + tag].grid(row = self.tags.index(tag),column = 1,sticky=EW)
 
 if __name__ == "__main__":
     root = Tk()
-    app = dialog(root,"sell")
+    d = Drink()
+    print d
+    app = drink_dialog(root,d)
+    #app = dialog(root,"sell")
     app.mainloop()
