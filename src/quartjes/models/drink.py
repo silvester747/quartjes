@@ -29,9 +29,13 @@ class Drink(QuartjesBaseClass):
         return self.price_per_liter() * self.price_factor * self.unit_amount/1000
 
     def __eq__(self, other):
+        if other == None:
+            return False
         return vars(self)==vars(other)
 
     def __ne__(self, other):
+        if other == None:
+            return True
         return vars(self)!=vars(other)
 
 class Mix(Drink):

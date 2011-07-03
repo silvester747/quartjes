@@ -45,7 +45,7 @@ class QuartjesProtocol(NetstringReceiver):
         """
         Send the XML message to the other end of this connection.
         """
-        print("Sending message: %s" % serial_message)
+        #print("Sending message: %s" % serial_message)
         self.sendString(serial_message)
 
 

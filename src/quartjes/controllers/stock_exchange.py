@@ -16,7 +16,7 @@ class StockExchange(object):
         self.db = quartjes.controllers.database.database
         self.service = None
 
-        self.round_time = 30
+        self.round_time = 10
 
         if start_thread:
             self.thread = StockExchangeUpdateThread(self)
@@ -33,40 +33,49 @@ class StockExchange(object):
         return total_price
 
     def recalculate_factors(self):
-        total_sales = 0
         sales = {}
         drinks = self.db.drinks
+        total_sales = len(drinks)
 
         for dr in drinks:
-            sales[dr] = 0
+            sales[dr] = 1
 
         for (dr, amount) in self.transactions:
-            total_sales += amount
             total = sales.get(dr)
             if total != None:
                 sales[dr] = total + amount
+                total_sales += amount
 
         mean_sales = float(total_sales) / float(len(drinks))
-        if mean_sales == 0:
-            mean_sales = 1
 
         print("Total: %d, Mean: %f" % (total_sales, mean_sales))
 
         t = time.time()
 
+        total_factors = 0
         for (dr, amount) in sales.items():
             sales_factor = float(amount) / mean_sales
-            if sales_factor < 1.0:
-                sales_factor = 0.5 + sales_factor * 0.5
-            print(sales_factor)
             dr.price_factor *= sales_factor
+            if dr.price_factor < 0.25:
+                dr.price_factor = 0.25
+            total_factors += dr.price_factor
             if not dr.history:
                 dr.history = []
             dr.history.append((t, dr.sellprice()))
 
+        print("Total factors: %f" % total_factors)
+
+        skew = float(len(drinks)) / total_factors
+
+        print("Skew: %f" % skew)
+
+        for (dr, amount) in sales.items():
+            dr.price_factor *= skew
+
         self.transactions = []
 
         self.db.set_dirty()
+        self._notify_next_round()
         
     def get_service(self):
         if not self.service:
@@ -111,7 +120,7 @@ class StockExchangeService(quartjes.connector.services.Service):
         self.exchange = exchange
 
     def notify_next_round(self, drinks):
-        self.sent_topic_update("next_round", drinks=drinks)
+        self.send_topic_update("next_round", drinks=drinks)
 
     def action_sell(self, drink, amount):
         return self.exchange.sell(drink, amount)

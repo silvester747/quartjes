@@ -1,3 +1,4 @@
+import math
 import cocos.actions.base_actions
 import cocos.layer.base_layers
 __author__="rob"
@@ -14,6 +15,7 @@ import time
 import cocos.cocosnode
 import pyglet.text
 from pyglet.gl import *
+import datetime
 
 class TitleLayer(cocos.layer.Layer):
 
@@ -26,7 +28,8 @@ class TitleLayer(cocos.layer.Layer):
                                       anchor_x='center', anchor_y='top')
         demo_label.position = (512, 768)
         self.add(demo_label)
-        demo_label.do(Repeat(Waves3D(duration=2, waves=1) + RandomDelay(30, 90)))
+        #demo_label.do(Repeat(Waves3D(duration=2, waves=1) + RandomDelay(30, 90)))
+        demo_label.do(Repeat(Waves3D(duration=200, waves=100)))
 
 
 class BottomTicker(cocos.layer.Layer):
@@ -72,7 +75,10 @@ class BottomTicker(cocos.layer.Layer):
 
     def update_drinks(self, drinks):
         print("Receiving update")
-        self.drinks, self.current_drink_index = drinks, 0
+        cur_drink = self.current_drink_index
+        if cur_drink >= len(drinks):
+            cur_drink = 0
+        self.drinks, self.current_drink_index = drinks, cur_drink
         if self.reset_on_update:
             self.do(CallFunc(self.reset))
 
@@ -147,7 +153,7 @@ class BottomTicker(cocos.layer.Layer):
         next_label.do((spawn_actions | move_actions) + CallFunc(next_label.kill))
 
 class GraphLayer(cocos.layer.base_layers.Layer):
-    def __init__(self, graph_position=(100,150), graph_width=840, graph_height=400,
+    def __init__(self, graph_position=(50,150), graph_width=940, graph_height=500,
                  screen_width=1024, move_time=1.0):
         super(GraphLayer, self).__init__()
 
@@ -166,6 +172,7 @@ class GraphLayer(cocos.layer.base_layers.Layer):
 
     def show_drink_history(self, drink):
         if not self.is_running:
+            print("Not running")
             if self.current_graph:
                 self.current_graph.kill
                 self.current_graph = None
@@ -178,8 +185,10 @@ class GraphLayer(cocos.layer.base_layers.Layer):
                                   CallFunc(self.current_graph.kill))
 
         if drink == None:
+            print("No drink")
             return
         if drink.history == None:
+            print("No history")
             return
 
         self.current_graph = HistoryGraph(position=self._points[0],
@@ -250,17 +259,29 @@ class HistoryGraph(cocos.draw.Canvas):
         self.line_to((w - margin, margin))
 
         if self.data == None:
+            print("No data")
             return
         if len(self.data) < 2:
+            print("Not enough data")
             return
 
         self.labels = GraphLabels()
 
         # draw x axis marks
+        #print("draw x axis")
+        max_x = 0
+        for (x, y) in self.data:
+            if x > max_x:
+                max_x = x
+        min_x = max_x
+        for (x, y) in self.data:
+            if x < min_x:
+                min_x = x
+
         x_count = len(self.data)
         x_spacing = (w - 2 * margin) / (x_count - 1)
         x_label_interval = 1
-        while x_spacing / x_label_interval < 50:
+        while x_spacing * x_label_interval < 100:
             x_label_interval += 1
 
         for i in range(x_count -1, -1, 0 - x_label_interval):
@@ -268,18 +289,16 @@ class HistoryGraph(cocos.draw.Canvas):
             self.move_to((x, margin))
             self.line_to((x, margin* 3/4))
 
-            #self.labels.append(cocos.text.Label(str(self.data[i][0]),
-            #                          font_name='Times New Roman',
-            #                          font_size=10,
-            #                          anchor_x='center', anchor_y='top',
-            #                          position = (x, margin * 3/4)))
-            self.labels.add_text(str(self.data[i][0]),
+            txt = datetime.datetime.fromtimestamp(self.data[i][0]).strftime("%H:%M")
+
+            self.labels.add_text(txt,
                                       font_name='Times New Roman',
-                                      font_size=10,
+                                      font_size=12,
                                       anchor_x='center', anchor_y='top',
                                       position = (x, margin * 3/4))
 
         # draw y axis marks
+        #print("draw y axis")
         max_y = 0
         for (x, y) in self.data:
             if y > max_y:
@@ -289,6 +308,9 @@ class HistoryGraph(cocos.draw.Canvas):
             if y < min_y:
                 min_y = y
 
+        max_y = int(math.ceil(max_y))
+        min_y = int(math.floor(min_y))
+
         y_count = max_y - min_y + 1
         if min_y > 0:   # only start from the bottom if we start at 0
             min_y -= 1
@@ -296,25 +318,21 @@ class HistoryGraph(cocos.draw.Canvas):
 
         y_spacing = (h - 2 * margin) / (y_count - 1)
         y_label_interval = 1
-        while y_spacing / y_label_interval < 25:
+        while y_spacing * y_label_interval < 25:
             y_label_interval += 1
 
         for y_val in range(max_y, min_y, 0 - y_label_interval):
             y = margin + (y_val - min_y) * y_spacing
             self.move_to((margin, y))
             self.line_to((margin * 3/4, y))
-            #self.labels.append(cocos.text.Label(str(y_val),
-            #                          font_name='Times New Roman',
-            #                          font_size=10,
-            #                          anchor_x='right', anchor_y='center',
-            #                          position = (margin * 3/4, y)))
             self.labels.add_text(str(y_val),
                                       font_name='Times New Roman',
-                                      font_size=10,
+                                      font_size=12,
                                       anchor_x='right', anchor_y='center',
                                       position = (margin * 3/4, y))
 
         # draw the graph
+        #print("draw graph")
         self.set_stroke_width(1.0)
         self.set_color((255, 0, 0, 255))
 
@@ -429,7 +447,7 @@ class CocosGui(object):
 
     def _next_round(self, drinks):
         self.drinks = drinks
-        self.show_ticker_scene(True)
+        #self.show_ticker_scene(True)
 
 def run_cocos_gui():
     gui = CocosGui()

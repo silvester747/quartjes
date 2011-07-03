@@ -118,6 +118,8 @@ class DatabaseService(quartjes.connector.services.Service):
 
     get_drinks()
     update_drink(drink)
+    add_drink(drink)
+    remove_drink(drink)
 
 
     Supported topics
@@ -139,6 +141,12 @@ class DatabaseService(quartjes.connector.services.Service):
 
     def action_update_drink(self, drink):
         return self.db.update_drink(drink)
+
+    def action_add_drink(self, drink):
+        return self.db.add_drink(drink)
+
+    def action_remove_drink(self, drink):
+        return self.db.remove_drink(drink)
 
 class DatabaseMonitor(threading.Thread):
     def __init__(self):
