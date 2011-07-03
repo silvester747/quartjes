@@ -11,9 +11,10 @@ from quartjes.models.drink import Drink,Mix
 
 class Database:
     def __init__(self):        
-        self._drinks = []
+        self._drinks = None
         self._drink_index = {}
-        self._mixes = []
+        self._mixes = None
+        self._mix_index = {}
 
         self.dirty = False
         self.service = None
@@ -30,6 +31,19 @@ class Database:
         self._drinks, self._drink_index = drinks, index
         self.dirty = True
 
+    def replace_mixes(self, mixes):
+        index = {}
+        for mix in mixes:
+            index[mix.id] = mix
+        self._mixes, self._mix_index = mixes, index
+        self.dirty = True
+
+    def update(self, obj):
+        if isinstance(obj, Mix):
+            self.update_mix(obj)
+        else:
+            self.update_drink(obj)
+
     def update_drink(self, drink):
         local_drink = self.get_drink(drink.id)
 
@@ -44,23 +58,70 @@ class Database:
 
             self.set_dirty()
 
+    def update_mix(self, mix):
+        local_mix = self.get_mix(mix.id)
+
+        if not local_mix:
+            self.add_mix(mix)
+        else:
+            local_mix.name = mix.name
+            #TODO
+            self.set_dirty()
+
+    def add(self, obj):
+        if isinstance(obj, Mix):
+            self.add_mix(obj)
+        else:
+            self.add_drink(obj)
+
     def add_drink(self, drink):
         self._drink_index[drink.id] = drink
         self._drinks.append(drink)
         self.dirty = True
+
+    def add_mix(self, mix):
+        self._mix_index[mix.id] = mix
+        self._mixes.append(mix)
+        self.dirty = True
+
+    def remove(self, obj):
+        if isinstance(obj, Mix):
+            self.remove_mix(obj)
+        else:
+            self.remove_drink(obj)
 
     def remove_drink(self, drink):
         del self._drink_index[drink.id]
         self._drinks.remove(drink)
         self.dirty = True
 
+    def remove_mix(self, mix):
+        del self._mix_index[mix.id]
+        self._mixes.remove(mix)
+        self.dirty = True
+
+    def get(self, id):
+        val = self.get_drink(id)
+        if not val:
+            return self.get_mix(id)
+        else:
+            return val
+
     def get_drink(self, id):
         return self._drink_index.get(id)
+
+    def get_mix(self, id):
+        return self._mix_index.get(id)
 
     def get_drinks(self):
         if not self._drinks:
             self._load_drinks()
         return self._drinks
+
+    def get_mixes(self):
+        if not self._mixes:
+            self._load_drinks()
+        return self._mixes
 
     def _load_drinks(self):
         db = shelve.open(self.db_file)
@@ -70,7 +131,7 @@ class Database:
 
         else:
             self.replace_drinks(db['drinks'])
-            self._mixes = db['mixes']
+            self.replace_mixes(db['mixes'])
             db.close()
 
         self.monitor.start()
@@ -119,6 +180,10 @@ class Database:
         if self.service:
             self.service.notify_drinks_updated(self._drinks)
 
+    def _mixes_updated(self):
+        if self.service:
+            self.service.notify_mixes_updated(self._mixes)
+
 
 class DatabaseService(quartjes.connector.services.Service):
     """
@@ -134,11 +199,20 @@ class DatabaseService(quartjes.connector.services.Service):
     add_drink(drink)
     remove_drink(drink)
 
+    get_mixes()
+    update_mix(mix)
+    add_mix(mix)
+    remove_mix(mix)
+
+    add(obj)
+    remove(obj)
+    update(obj)
 
     Supported topics
     ================
 
     drinks_updated(drinks)
+    mixes_update(mixes)
 
     """
 
@@ -148,6 +222,9 @@ class DatabaseService(quartjes.connector.services.Service):
 
     def notify_drinks_updated(self, drinks):
         self.send_topic_update("drinks_updated", drinks=drinks)
+
+    def notify_drinks_updated(self, mixes):
+        self.send_topic_update("mixes_updated", mixes=mixes)
 
     def action_get_drinks(self):
         return self.db.get_drinks()
@@ -160,6 +237,27 @@ class DatabaseService(quartjes.connector.services.Service):
 
     def action_remove_drink(self, drink):
         return self.db.remove_drink(drink)
+
+    def action_get_mixes(self):
+        return self.db.get_mixes()
+
+    def action_update_mix(self, mix):
+        return self.db.update_mix(mix)
+
+    def action_add_mix(self, mix):
+        return self.db.add_drink(drink)
+
+    def action_remove_mix(self, mix):
+        return self.db.remove_mix(mix)
+
+    def action_update(self, obj):
+        return self.db.update(obj)
+
+    def action_add(self, obj):
+        return self.db.add(obj)
+
+    def action_remove(self, obj):
+        return self.db.remove(obj)
 
 class DatabaseMonitor(threading.Thread):
     def __init__(self, db):
