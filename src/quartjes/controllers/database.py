@@ -229,7 +229,7 @@ class DatabaseService(quartjes.connector.services.Service):
     def notify_drinks_updated(self, drinks):
         self.send_topic_update("drinks_updated", drinks=drinks)
 
-    def notify_drinks_updated(self, mixes):
+    def notify_mixes_updated(self, mixes):
         self.send_topic_update("mixes_updated", mixes=mixes)
 
     def action_get_drinks(self):
@@ -274,7 +274,7 @@ class DatabaseMonitor(threading.Thread):
     def run(self):
         while True:
             time.sleep(1)
-            if self.db.dirty:
+            if self.db.drink_dirty or self.db.mix_dirty:
                 self.db.store()
 
 '''

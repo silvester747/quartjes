@@ -369,6 +369,47 @@ class GraphLabels(cocos.cocosnode.CocosNode):
 
     klass = pyglet.text.Label
 
+class MixLayer(cocos.layer.base_layers.Layer):
+    def __init__(self):
+        super(MixLayer, self).__init__()
+        self.mixes = None
+
+    def update_mixes(self, mixes):
+        self.mixes = mixes
+        self.show_mix(self.mixes[0])
+
+    def show_mix(self, mix):
+        labels = GraphLabels(position=(100, 100))
+        labels.add_text(mix.name,
+                        font_name='Times New Roman',
+                        font_size=62,
+                        anchor_x='center', anchor_y='top',
+                        position = (420, 450))
+        labels.add_text("Alcohol: %2.1f %%" % mix.alc_perc,
+                        font_name='Times New Roman',
+                        font_size=20,
+                        anchor_x='center', anchor_y='top',
+                        position = (420, 340))
+
+        y = 280
+        for d in mix.drinks:
+            labels.add_text(d.name,
+                            font_name='Times New Roman',
+                            font_size=20,
+                            anchor_x='right', anchor_y='top',
+                            position = (400, y))
+            y -= 30
+
+        labels.add_text("%d" % mix.sellprice(),
+                        font_name='Times New Roman',
+                        font_size=100,
+                        anchor_x='left', anchor_y='top',
+                        position = (440, 300))
+
+
+        self.add(labels)
+
+
 class Kill(cocos.actions.base_actions.InstantAction):
 
     def start(self):
@@ -394,15 +435,13 @@ class CocosGui(object):
         self.ticker_layer = None
         self.graph_layer = None
         self.title_layer = None
+        self.mix_layer = None
 
         self.drinks = None
+        self.mixes = None
 
 
     def start(self):
-        cocos.director.director.init(width=self.width, height=self.height,
-                                     fullscreen=self.fullscreen)
-        cocos.director.director.set_show_FPS(True)
-
         self.connector = ClientConnector(self.hostname, self.port)
         self.connector.start()
 
@@ -411,11 +450,21 @@ class CocosGui(object):
 
         stock_exchange = self.connector.get_service_interface("stock_exchange")
         database = self.connector.get_service_interface("database")
+        print("get_drinks")
         self.drinks = database.get_drinks()
+        print("get_mixes")
+        self.mixes = database.get_mixes()
+        print("subscribe drinks_updated")
         database.subscribe("drinks_updated", self._update_drinks)
+        print("subscribe next_round")
         stock_exchange.subscribe("next_round", self._next_round)
 
-        self.show_ticker_scene()
+        cocos.director.director.init(width=self.width, height=self.height,
+                                     fullscreen=self.fullscreen)
+        cocos.director.director.set_show_FPS(True)
+
+        #self.show_ticker_scene()
+        self.show_mix_scene()
 
     def show_ticker_scene(self, new_ticker=False):
         if not self.ticker_layer or new_ticker:
@@ -434,6 +483,23 @@ class CocosGui(object):
         self.ticker_layer.graph_layer = self.graph_layer
 
         self._display_scene(scene)
+
+    def show_mix_scene(self):
+        if not self.ticker_layer:
+            self.ticker_layer = BottomTicker()
+        if not self.mix_layer:
+            self.mix_layer = MixLayer()
+        if not self.title_layer:
+            self.title_layer = TitleLayer()
+
+        self.ticker_layer.update_drinks(self.drinks)
+        self.mix_layer.update_mixes(self.mixes)
+
+        scene = cocos.scene.Scene(self.ticker_layer, self.mix_layer, self.title_layer)
+        self.ticker_layer.graph_layer = None
+
+        self._display_scene(scene)
+
 
     def _display_scene(self, scene):
         if cocos.director.director.scene == None:

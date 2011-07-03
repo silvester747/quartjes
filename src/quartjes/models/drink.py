@@ -42,7 +42,7 @@ class Mix(Drink):
     """
     Mix class
     """
-    def __init__(self,name,drinks = [],unit_amount = 200):
+    def __init__(self,name="Unnamed",drinks = [],unit_amount = 200):
         super(Mix, self).__init__(unit_amount = unit_amount)
         self.drinks = drinks
         self.update_properties()
