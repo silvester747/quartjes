@@ -53,6 +53,7 @@ class ClientConnector(object):
         """
         Stop the connector, closing the connection. Stops the reactor loop.
         """
+        threads.blockingCallFromThread(reactor, self.factory.stopTrying)
         threads.blockingCallFromThread(reactor, reactor.stop)
 
     def send_action_request(self, service_name, action, params):
@@ -123,7 +124,20 @@ if __name__ == "__main__":
     print("Trigger topic")
     testService.callback(text="Eggs")
 
-    time.sleep(100)
+    time.sleep(10)
     print("Stopping client")
     cl.stop()
+
+    time.sleep(10)
+
+    cl.start()
+
+    time.sleep(1)
+    print("Sending message")
+    result = testService.test(text="Spam")
+    print(result)
+
+    cl.stop()
+
+    time.sleep(1)
     
