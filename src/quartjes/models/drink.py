@@ -26,7 +26,10 @@ class Drink(QuartjesBaseClass):
         return self.unit_price / (float(self.unit_amount) / 1000)
 
     def sellprice(self):
-        return self.price_per_liter() * self.price_factor * self.unit_amount/1000
+        return self.unit_price * self.price_factor
+
+    def sellprice_quartjes(self):
+        return self.sellprice()*10
 
     def __eq__(self, other):
         if other == None:
@@ -43,7 +46,7 @@ class Mix(Drink):
     Mix class
     """
     def __init__(self,name="Unnamed",drinks = [],unit_amount = 200):
-        super(Mix, self).__init__(unit_amount = unit_amount)
+        super(Mix, self).__init__(unit_amount = unit_amount, name=name)
         self.drinks = drinks
         self.update_properties()
 

@@ -3,6 +3,7 @@ import random
 import time
 import quartjes.controllers.database
 import quartjes.connector.services
+from quartjes.models.drink import Mix
 # To change this template, choose Tools | Templates
 # and open the template in the editor.
 
@@ -24,12 +25,12 @@ class StockExchange(object):
             self.thread.start()
 
     def sell(self, drink, amount):
-        local_drink = self.db.get_drink(drink.id)
+        local_drink = self.db.get(drink.id)
 
         if not local_drink:
             return None
         
-        total_price = amount * local_drink.sellprice()
+        total_price = amount * local_drink.sellprice_quartjes()
         self.transactions.append((local_drink, amount))
         return total_price
 
@@ -42,10 +43,20 @@ class StockExchange(object):
             sales[dr] = 1
 
         for (dr, amount) in self.transactions:
-            total = sales.get(dr)
-            if total != None:
-                sales[dr] = total + amount
-                total_sales += amount
+            if isinstance(dr, Mix):
+                parts = dr.drinks
+                amount *= 1.0 / len(parts)
+                for p in parts:
+                    total = sales.get(p)
+                    if total != None:
+                        sales[dr] = total + amount
+                        total_sales += amount
+
+            else:
+                total = sales.get(dr)
+                if total != None:
+                    sales[dr] = total + amount
+                    total_sales += amount
 
         mean_sales = float(total_sales) / float(len(drinks))
 
@@ -56,6 +67,7 @@ class StockExchange(object):
         total_factors = 0
         for (dr, amount) in sales.items():
             sales_factor = float(amount) / mean_sales
+            """
             #Als de huidige price factor hoog is: stijging dempen
             #TODO: we kunnen ook alleen dempen als > 1,2 bijvoorbeeld
             if dr.price_factor > 1: #prijs is hoger dan normaal
@@ -70,10 +82,17 @@ class StockExchange(object):
                     dr.price_factor *= dampvalue
                 else: #hij gaat stijgen: niet dempen
                     dr.price_factor *= sales_factor
+            """
+            dr.price_factor *= sales_factor
+            if dr.price_factor > 3:
+                dr.price_factor = 3
+            elif dr.price_factor < 0.4:
+                dr.price_factor = 0.4
+
             total_factors += dr.price_factor
             if not dr.history:
                 dr.history = []
-            dr.history.append((t, dr.sellprice()))
+            dr.history.append((t, dr.sellprice_quartjes()))
             if len(dr.history) > self.max_history:
                 dr.history = dr.history[-self.max_history:]
 
@@ -85,6 +104,10 @@ class StockExchange(object):
 
         for (dr, amount) in sales.items():
             dr.price_factor *= skew
+
+        mixes = self.db.get_mixes()
+        for m in mixes:
+            m.update_properties()
 
         self.transactions = []
 

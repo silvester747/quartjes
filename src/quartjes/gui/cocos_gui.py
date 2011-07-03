@@ -127,7 +127,7 @@ class BottomTicker(cocos.layer.Layer):
             if self.current_drink_index >= len(self.drinks):
                 self.current_drink_index = 0
             drink = self.drinks[self.current_drink_index]
-            text = "%s - %d" % (drink.name, drink.sellprice())
+            text = "%s - %d" % (drink.name, drink.sellprice_quartjes())
 
         next_label = cocos.text.Label(text,
                                  font_name='Times New Roman',
@@ -268,7 +268,7 @@ class HistoryGraph(cocos.draw.Canvas):
         self.labels = GraphLabels()
 
         # draw x axis marks
-        #print("draw x axis")
+        print("draw x axis")
         max_x = 0
         for (x, y) in self.data:
             if x > max_x:
@@ -298,7 +298,7 @@ class HistoryGraph(cocos.draw.Canvas):
                                       position = (x, margin * 3/4))
 
         # draw y axis marks
-        #print("draw y axis")
+        print("draw y axis")
         max_y = 0
         for (x, y) in self.data:
             if y > max_y:
@@ -316,11 +316,13 @@ class HistoryGraph(cocos.draw.Canvas):
             min_y -= 1
             y_count += 1
 
-        y_spacing = (h - 2 * margin) / (y_count - 1)
+        y_spacing = float(h - 2 * margin) / (y_count - 1)
+        print(y_spacing)
         y_label_interval = 1
-        while y_spacing * y_label_interval < 25:
+        while y_spacing * y_label_interval < 50:
             y_label_interval += 1
 
+        print("start drawing y")
         for y_val in range(max_y, min_y, 0 - y_label_interval):
             y = margin + (y_val - min_y) * y_spacing
             self.move_to((margin, y))
@@ -332,7 +334,7 @@ class HistoryGraph(cocos.draw.Canvas):
                                       position = (margin * 3/4, y))
 
         # draw the graph
-        #print("draw graph")
+        print("draw graph")
         self.set_stroke_width(1.0)
         self.set_color((255, 0, 0, 255))
 
@@ -373,13 +375,33 @@ class MixLayer(cocos.layer.base_layers.Layer):
     def __init__(self):
         super(MixLayer, self).__init__()
         self.mixes = None
+        self.mix_index = 0
 
     def update_mixes(self, mixes):
-        self.mixes = mixes
-        self.show_mix(self.mixes[0])
 
-    def show_mix(self, mix):
-        labels = GraphLabels(position=(100, 100))
+        restart = self.mixes == None
+
+        index = self.mix_index
+        if index > len(mixes):
+            index = 0
+        self.mixes, self.mix_index = mixes, index
+
+        if restart:
+            self.show_mix()
+
+
+    def show_mix(self):
+
+        if not self.mixes:
+            return
+
+        self.mix_index += 1
+        if self.mix_index >= len(self.mixes):
+            self.mix_index = 0
+
+        mix = self.mixes[self.mix_index]
+
+        labels = GraphLabels(position=(1024, 100))
         labels.add_text(mix.name,
                         font_name='Times New Roman',
                         font_size=62,
@@ -400,12 +422,17 @@ class MixLayer(cocos.layer.base_layers.Layer):
                             position = (400, y))
             y -= 30
 
-        labels.add_text("%d" % mix.sellprice(),
+        labels.add_text("%d" % mix.sellprice_quartjes(),
                         font_name='Times New Roman',
                         font_size=100,
                         anchor_x='left', anchor_y='top',
                         position = (440, 300))
 
+
+        labels.do(MoveTo((100, 100), 0.5) + Delay(10.0) +
+                  CallFunc(self.show_mix) +
+                  MoveTo((-840, 100), 0.5) +
+                  CallFunc(labels.kill))
 
         self.add(labels)
 
@@ -456,6 +483,7 @@ class CocosGui(object):
         self.mixes = database.get_mixes()
         print("subscribe drinks_updated")
         database.subscribe("drinks_updated", self._update_drinks)
+        database.subscribe("mixes_updated", self._update_mixes)
         print("subscribe next_round")
         stock_exchange.subscribe("next_round", self._next_round)
 
@@ -463,8 +491,8 @@ class CocosGui(object):
                                      fullscreen=self.fullscreen)
         cocos.director.director.set_show_FPS(True)
 
-        #self.show_ticker_scene()
-        self.show_mix_scene()
+        self.show_ticker_scene()
+        #self.show_mix_scene()
 
     def show_ticker_scene(self, new_ticker=False):
         if not self.ticker_layer or new_ticker:
@@ -481,6 +509,8 @@ class CocosGui(object):
 
         scene = cocos.scene.Scene(self.ticker_layer, self.graph_layer, self.title_layer)
         self.ticker_layer.graph_layer = self.graph_layer
+
+        scene.do(Delay(60) + CallFunc(self.show_mix_scene))
 
         self._display_scene(scene)
 
@@ -509,7 +539,13 @@ class CocosGui(object):
 
     def _update_drinks(self, drinks):
         self.drinks = drinks
-        self.ticker_layer.update_drinks(drinks)
+        if self.ticker_layer:
+            self.ticker_layer.update_drinks(drinks)
+
+    def _update_mixes(self, mixes):
+        self.mixes = mixes
+        if self.mix_layer:
+            self.mix_layer.update_mixes(mixes)
 
     def _next_round(self, drinks):
         self.drinks = drinks

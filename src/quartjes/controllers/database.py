@@ -162,18 +162,23 @@ class Database:
         print("Resetting database")
         names = ['Cola','Sinas','Cassis','7up','Safari','Bacardi lemon','Bacardi','Whiskey','Jenever','Oude Jenever']
         alc_perc = [0,0,0,0,14,20,40,40,40,40]
-        price_per_liter = [3.50,3.50,3.50,3.50,20,25,40,50,35,45]
+        unit_price = [0.75 ,0.75, 0.75, 0.75, 3.00, 3.00 , 3.00, 4.0,2.5,3.5]
         color = [(0,0,0),(255,128,0),(128,0,128),(255,255,255),(255,200,0),(255,255,255),(255,255,255),(255,128,0),(255,255,255),(255,255,255)]
         amount = [200,200,200,200,100,40,40,40,40,40]
 
         drinks = []
         for i in range(len(names)):
-            drinks.append(Drink(name = names[i], alc_perc = alc_perc[i],unit_price = price_per_liter[i],color=color[i],unit_amount=amount[i]))
+            drinks.append(Drink(name = names[i], alc_perc = alc_perc[i],unit_price = unit_price[i],color=color[i],unit_amount=amount[i]))
         self.replace_drinks(drinks)
 
+        mixes = []
         d1 = self._drinks[0]
         d2 = self._drinks[6]
-        self._mixes.append(Mix('Baco',[d1,d1,d1,d2]))
+        mixes.append(Mix('Baco',[d1,d1,d1,d2]))
+        d1 = self._drinks[2]
+        d2 = self._drinks[4]
+        mixes.append(Mix('Safari Cassis',[d1,d1,d1,d2]))
+        self.replace_mixes(mixes)
 
         self.store()
 
