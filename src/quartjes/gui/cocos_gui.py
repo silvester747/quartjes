@@ -510,7 +510,7 @@ class CocosGui(object):
         scene = cocos.scene.Scene(self.ticker_layer, self.graph_layer, self.title_layer)
         self.ticker_layer.graph_layer = self.graph_layer
 
-        scene.do(Delay(60) + CallFunc(self.show_mix_scene))
+        #scene.do(Delay(60) + CallFunc(self.show_mix_scene))
 
         self._display_scene(scene)
 
@@ -539,8 +539,8 @@ class CocosGui(object):
 
     def _update_drinks(self, drinks):
         self.drinks = drinks
-        if self.ticker_layer:
-            self.ticker_layer.update_drinks(drinks)
+        #if self.ticker_layer:
+        #    self.ticker_layer.update_drinks(drinks)
 
     def _update_mixes(self, mixes):
         self.mixes = mixes
