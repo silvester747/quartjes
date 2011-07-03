@@ -16,6 +16,7 @@ import cocos.cocosnode
 import pyglet.text
 from pyglet.gl import *
 import datetime
+from quartjes.models.drink import Mix
 
 class TitleLayer(cocos.layer.Layer):
 
@@ -180,13 +181,19 @@ class GraphLayer(cocos.layer.base_layers.Layer):
             return
 
         if self.current_graph:
-            self.current_graph.do(CallFunc(self.current_graph.hide_text) +
-                                  MoveTo(self._points[2], 0.5 * self.move_time) +
+            self.current_graph.do(MoveTo(self._points[2], 0.5 * self.move_time) +
                                   CallFunc(self.current_graph.kill))
 
         if drink == None:
             print("No drink")
             return
+
+        if isinstance(drink, Mix):
+        #    self.show_mix(drink)
+            return
+
+
+
         if drink.history == None:
             print("No history")
             return
@@ -196,10 +203,46 @@ class GraphLayer(cocos.layer.base_layers.Layer):
                                           height=self.graph_height,
                                           data=drink.history)
         self.current_graph.do(Delay(0.5 * self.move_time) +
-                              MoveTo(self._points[1], 0.5 * self.move_time) +
-                              CallFunc(self.current_graph.show_text))
+                              MoveTo(self._points[1], 0.5 * self.move_time))
 
         self.add(self.current_graph)
+
+    def show_mix(self, mix):
+
+
+        labels = GraphLabels(position=self._points[0])
+        labels.add_text(mix.name,
+                        font_name='Times New Roman',
+                        font_size=62,
+                        anchor_x='center', anchor_y='top',
+                        position = (420, 450))
+        labels.add_text("Alcohol: %2.1f %%" % mix.alc_perc,
+                        font_name='Times New Roman',
+                        font_size=20,
+                        anchor_x='center', anchor_y='top',
+                        position = (420, 340))
+
+        y = 280
+        for d in mix.drinks:
+            labels.add_text(d.name,
+                            font_name='Times New Roman',
+                            font_size=20,
+                            anchor_x='right', anchor_y='top',
+                            position = (400, y))
+            y -= 30
+
+        labels.add_text("%d" % mix.sellprice_quartjes(),
+                        font_name='Times New Roman',
+                        font_size=100,
+                        anchor_x='left', anchor_y='top',
+                        position = (440, 300))
+
+
+        labels.do(Delay(0.5 * self.move_time) +
+                              MoveTo(self._points[1], 0.5 * self.move_time))
+
+        self.add(labels)
+        self.current_graph = labels
 
     def reset(self):
         return # unsafe
@@ -346,6 +389,8 @@ class HistoryGraph(cocos.draw.Canvas):
             self.line_to((x, y))
             x += x_spacing
 
+        self.show_text()
+
 class GraphLabels(cocos.cocosnode.CocosNode):
     """
     Special CocosNode to contain a number of text objects
@@ -466,7 +511,7 @@ class CocosGui(object):
 
         self.drinks = None
         self.mixes = None
-
+        self.all = None
 
     def start(self):
         self.connector = ClientConnector(self.hostname, self.port)
@@ -481,6 +526,9 @@ class CocosGui(object):
         self.drinks = database.get_drinks()
         print("get_mixes")
         self.mixes = database.get_mixes()
+
+        self.all = self.drinks + self.mixes
+
         print("subscribe drinks_updated")
         database.subscribe("drinks_updated", self._update_drinks)
         database.subscribe("mixes_updated", self._update_mixes)
@@ -539,16 +587,23 @@ class CocosGui(object):
 
     def _update_drinks(self, drinks):
         self.drinks = drinks
-        #if self.ticker_layer:
-        #    self.ticker_layer.update_drinks(drinks)
+        self.all = self.mixes + self.drinks
+        if self.ticker_layer:
+            self.ticker_layer.update_drinks(self.all)
 
     def _update_mixes(self, mixes):
         self.mixes = mixes
-        if self.mix_layer:
-            self.mix_layer.update_mixes(mixes)
+        self.all = self.mixes + self.drinks
+        if self.ticker_layer:
+            self.ticker_layer.update_drinks(self.all)
+        #if self.mix_layer:
+        #    self.mix_layer.update_mixes(mixes)
 
     def _next_round(self, drinks):
         self.drinks = drinks
+        self.all = self.mixes + self.drinks
+        if self.ticker_layer:
+            self.ticker_layer.update_drinks(self.all)
         #self.show_ticker_scene(True)
 
 def run_cocos_gui():
