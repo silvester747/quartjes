@@ -7,33 +7,53 @@ __date__ ="$Jul 3, 2011 3:03:58 PM$"
 from Tkinter import *
 
 class dialog(Frame):
-    def __init__(self, root, type):
+    def __init__(self, root, type, conn = None):
         root.title('Edit database')
         Frame.__init__(self, root)
         self.root = root
         self.pack()
+        self.conn = conn
+        self.db = self.conn.get_service_interface("database")
         self.createWidgets(type)
 
-    def connect_to_server(self):
+    def add_drink(self):
         print 'hoi'
 
-    def edit_db(self):
+    def add_mix(self):
         print 'hoi'
 
-    def sell(self):
+    def edit_drink(self):
         print 'hoi'
+
+    def remove_drink(self):
+        print 'hoi'
+
+    def fill_drinks_listbox(self,lb_drinks):
+        self.drinks = self.db.get_drinks()
+        names = []
+        for d in self.drinks:
+            names.append(d.name)
+        lb_drinks.insert(names)
 
     def createWidgets(self,type):
         font16 = ("Arial", 26, "bold")
         if type is "edit_db":
-            self.b_add_drink = Button(self, text = "Edit database",command =  self.edit_db, width = 20, height = 2, font = font16)
-            self.b_add_drink.grid(row = 1,column=0,sticky=EW, padx = 20, pady = 20)
+            self.lb_drinks = Listbox(self, height=40, width = 100)
+            self.lb_drinks.grid(row = 0,column=0,rowspan=10,sticky=EW, padx = 20, pady = 20)
 
-            self.b_remove_drink = Button(self, text = "Sell dialog", command = self.sell, width = 20, height = 2, font = font16)
-            self.b_remove_drink.grid(row = 2,column = 0,sticky=EW, padx = 20, pady = 20)
+            self.b_add_drink = Button(self, text = "Edit database",command =  self.add_drink, width = 20, height = 2, font = font16)
+            self.b_add_drink.grid(row = 0,column=1,sticky=EW, padx = 20, pady = 20)
 
-            self.b_connect_to_server = Button(self, text = "Not connected", bg="#ff0000", activebackground="#ff5555", command =  self.connect_to_server, width = 20, height = 2, font = font16)
-            self.b_connect_to_server.grid(row = 0,column=0,sticky=EW, padx = 20, pady = 20)
+            self.b_add_drink = Button(self, text = "Edit database",command =  self.add_mix, width = 20, height = 2, font = font16)
+            self.b_add_drink.grid(row = 1,column=1,sticky=EW, padx = 20, pady = 20)
+
+            self.b_add_drink = Button(self, text = "Edit database",command =  self.edit_drink, width = 20, height = 2, font = font16)
+            self.b_add_drink.grid(row = 2,column=1,sticky=EW, padx = 20, pady = 20)
+
+            self.b_remove_drink = Button(self, text = "Sell dialog", command = self.remove_drink, width = 20, height = 2, font = font16)
+            self.b_remove_drink.grid(row = 3,column = 1,sticky=EW, padx = 20, pady = 20)
+
+            self.fill_drinks_listbox(self.lb_drinks)
         elif type is "drink":
             self.b_add_drink = Button(self, text = "Edit database",command =  self.edit_db, width = 20, height = 2, font = font16)
             self.b_add_drink.grid(row = 1,column=0,sticky=EW, padx = 20, pady = 20)
@@ -63,4 +83,6 @@ class dialog(Frame):
             self.b_connect_to_server.grid(row = 0,column=0,sticky=EW, padx = 20, pady = 20)
 
 if __name__ == "__main__":
-    print "Hello World"
+    root = Tk()
+    app = dialog(root,"edit_db")
+    app.mainloop()

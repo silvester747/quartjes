@@ -16,7 +16,7 @@ class Application(Frame):
         self.root = root
         self.pack()
         self.createWidgets()
-        hostname = "localhost"
+        hostname = "192.168.20.134"
         port = 1234
 
         self.conn = ClientConnector(hostname,port)
@@ -35,11 +35,11 @@ class Application(Frame):
 
     def edit_db(self):
         root = Tk()
-        dialog(root,"edit_db")
+        dialog(root,"edit_db",conn=self.conn)
 
     def sell(self):
         root = Tk()
-        dialog(root,"edit_db")
+        dialog(root,"sell")
 
     def createWidgets(self):
         font16 = ("Arial", 26, "bold")
@@ -52,8 +52,9 @@ class Application(Frame):
 
         self.b_connect_to_server = Button(self, text = "Not connected", bg="#ff0000", activebackground="#ff5555", command =  self.connect_to_server, width = 20, height = 2, font = font16)
         self.b_connect_to_server.grid(row = 0,column=0,sticky=EW, padx = 20, pady = 20)
+        
 if __name__ == "__main__":
     root = Tk()
     app = Application(root=root)
-    app.mainloop()    
+    app.mainloop()
     
