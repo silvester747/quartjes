@@ -59,11 +59,20 @@ class StockExchange(object):
         total_factors = 0
         for (dr, amount) in sales.items():
             sales_factor = float(amount) / mean_sales
-            dr.price_factor *= sales_factor
-            if dr.price_factor < self.min_factor:
-                dr.price_factor = self.min_factor
-            if dr.price_factor > self.max_factor:
-                dr.price_factor = self.max_factor
+            #Als de huidige price factor hoog is: stijging dempen
+            #TODO: we kunnen ook alleen dempen als > 1,2 bijvoorbeeld
+            if dr.price_factor > 1: #prijs is hoger dan normaal
+                if sales_factor > 1: #hij blijft stijgen: dempen
+                    dampvalue = 1+((sales_factor-1)/dr.price_factor)
+                    dr.price_factor *= dampvalue
+                else: #hij gaat dalen: niet dempen
+                    dr.price_factor *= sales_factor
+            else: #prijs is lager dan normaal
+                if sales_factor > 1: #hij blijft dalen: dempen
+                    dampvalue = 1+((sales_factor-1)/dr.price_factor)
+                    dr.price_factor *= dampvalue
+                else: #hij gaat stijgen: niet dempen
+                    dr.price_factor *= sales_factor
             total_factors += dr.price_factor
             if not dr.history:
                 dr.history = []
