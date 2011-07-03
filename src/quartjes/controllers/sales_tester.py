@@ -26,10 +26,11 @@ if __name__ == "__main__":
     while True:
         i = random.randint(0, len(current_drinks) - 1)
 
-        if current_drinks[i].price_factor > 1.4:
-            continue
+        #if current_drinks[i].price_factor > 1.4:
+        #    continue
 
-        a = random.randint(1, 6 - int((current_drinks[i].price_factor - 1) * 10))
+        #a = random.randint(1, 6 - int((current_drinks[i].price_factor - 1) * 10))
+        a = random.randint(1, 6)
 
         exchange.sell(drink=current_drinks[i], amount=a)
-        time.sleep(0.5)
+        time.sleep(1.0)

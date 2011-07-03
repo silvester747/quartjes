@@ -17,7 +17,8 @@ class StockExchange(object):
         self.service = None
 
         self.min_factor = 0.5
-        self.max_factor = 1.5
+        self.max_factor = 2.0
+        self.max_history = 120
 
         self.round_time = 10
 
@@ -67,6 +68,8 @@ class StockExchange(object):
             if not dr.history:
                 dr.history = []
             dr.history.append((t, dr.sellprice()))
+            if len(dr.history) > self.max_history:
+                dr.history = dr.history[-self.max_history:]
 
         print("Total factors: %f" % total_factors)
 
