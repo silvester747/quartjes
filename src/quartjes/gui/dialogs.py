@@ -81,7 +81,7 @@ class drink_dialog(Frame):
         self.drink = drink
         print drink
         self.temp_color = self.drink.color
-        self.pack()
+        self.pack(padx = 20, pady = 20)
         self.createWidgets()
         self.reset_object_values()
 
@@ -92,11 +92,7 @@ class drink_dialog(Frame):
 
         for tag in self.tags:
             text = self.drink.__dict__[tag]
-            self.__dict__["sv_" + tag].set(text)
-            print text
-            print self.__dict__["e_" + tag].get()
-            print self.__dict__["sv_" + tag].get()
-
+            self.__dict__["e_" + tag].insert(END,text)
             
     def set_color(self):
         color = askcolor(master=self,initialcolor = self.temp_color)
@@ -114,8 +110,6 @@ class drink_dialog(Frame):
         self.root.destroy()
 
     def createWidgets(self):
-        self.config(padx = 20, pady = 20)
-
         self.l_color = Label(self,text = "Color")
         self.l_color.grid(row = len(self.tags)+1,column = 0,sticky=E)
         hexcolor = '#%02x%02x%02x' % self.temp_color
@@ -134,11 +128,8 @@ class drink_dialog(Frame):
         for tag in self.tags:
             self.__dict__["l_" + tag] = Label(self,text = tag)
             self.__dict__["l_" + tag].grid(row = self.tags.index(tag),column = 0,sticky=E)
-
-            sv = StringVar()
-            self.__dict__["e_" + tag] = Entry(self, textvariable = sv)
-            self.__dict__["sv_" + tag] = sv            
-
+            
+            self.__dict__["e_" + tag] = Entry(self)
             self.__dict__["e_" + tag].grid(row = self.tags.index(tag),column = 1,sticky=EW)
 
 if __name__ == "__main__":

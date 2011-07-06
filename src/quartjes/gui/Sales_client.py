@@ -11,14 +11,12 @@ from dialogs import dialog
 from dialogSell import dialogSell
 
 class Application(Frame):
-    def __init__(self, root):
+    def __init__(self, root,hostname,port):
         root.title('Sales client')
         Frame.__init__(self, root)
         self.root = root
         self.pack()
-        self.createWidgets()
-        hostname = "192.168.1.121"
-        port = 1234
+        self.createWidgets()     
 
         self.conn = ClientConnector(hostname,port)
 
@@ -55,7 +53,10 @@ class Application(Frame):
         self.b_connect_to_server.grid(row = 0,column=0,sticky=EW, padx = 20, pady = 20)
         
 if __name__ == "__main__":
+    hostname = "localhost"
+    port = 1234
+    
     root = Tk()
-    app = Application(root=root)
+    app = Application(root,hostname,port)
     app.mainloop()
     
