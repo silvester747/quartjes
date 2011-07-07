@@ -57,7 +57,7 @@ class Mix(Drink):
 
     def remove_drink(self,index):
         """Remove a drink from the mix"""
-        self.drinks.delete(index)
+        self.drinks.pop(index)
         self.update_properties()
 
     def update_properties(self):
