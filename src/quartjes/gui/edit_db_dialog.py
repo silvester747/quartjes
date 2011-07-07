@@ -32,6 +32,7 @@ class edit_db_dialog(Frame):
     def add_mix(self):
         mix = Mix()
         master = Tk()
+        master.drinks = self.master.drinks
         mix_dialog(master,mix)
         master.wait_window()
 
@@ -50,7 +51,6 @@ class edit_db_dialog(Frame):
             selected = int(selection[0])            
             self.master.drinks.pop(selected)
             self.update_listbox()
-
 
     def update_listbox(self):
         self.lb_drinks.delete(0,END)
