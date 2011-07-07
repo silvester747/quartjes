@@ -53,11 +53,12 @@ class Mix(Drink):
     def insert_drink(self,drink):
         """Add a drink to the mix"""
         self.drinks.append(drink)
-        update_properties()
+        self.update_properties()
 
-    def remove_drink(self):
+    def remove_drink(self,index):
         """Remove a drink from the mix"""
-        update_properties()
+        self.drinks.delete(index)
+        self.update_properties()
 
     def update_properties(self):
         """Recalculate mix properties"""

@@ -9,8 +9,9 @@ from Tkinter import *
 from quartjes.connector.client import ClientConnector
 from dialogs import dialog
 from dialogSell import dialogSell
+import tkMessageBox
 
-class Application(Frame):
+class Sales_client(Frame):
     def __init__(self, root,hostname,port):
         root.title('Sales client')
         Frame.__init__(self, root)
@@ -33,12 +34,19 @@ class Application(Frame):
             self.b_connect_to_server.config(text = "Connected", bg="#00ff00",activebackground="#55ff55")
 
     def edit_db(self):
-        root = Tk()
-        dialog(root,"edit_db",conn=self.conn)
+        if self.conn.is_connected():
+            root = Tk()
+            dialog(root,"edit_db",conn=self.conn)
+        else:
+            tkMessageBox.showwarning("Not connected to server","Please connected to a server first.")
 
     def sell(self):
-        root = Tk()
-        dialogSell(root, conn=self.conn)
+        if self.conn.is_connected():
+            root = Tk()
+            dialogSell(root, conn=self.conn)
+        else:
+            tkMessageBox.showwarning("Not connected to server","Please connected to a server first.")
+
 
     def createWidgets(self):
         font16 = ("Arial", 26, "bold")
@@ -52,11 +60,11 @@ class Application(Frame):
         self.b_connect_to_server = Button(self, text = "Not connected", bg="#ff0000", activebackground="#ff5555", command =  self.connect_to_server, width = 20, height = 2, font = font16)
         self.b_connect_to_server.grid(row = 0,column=0,sticky=EW, padx = 20, pady = 20)
         
-if __name__ == "__main__":
+if __name__ == "__main__":    
     hostname = "localhost"
     port = 1234
     
     root = Tk()
-    app = Application(root,hostname,port)
+    app = Sales_client(root,hostname,port)
     app.mainloop()
     
