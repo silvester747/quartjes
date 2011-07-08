@@ -38,8 +38,9 @@ class drink_dialog(Frame):
 
     def save(self):
         self.drink.color = self.temp_color
-        for tag in self.tags:
-            self.drink.__dict__[tag] = self.__dict__["e_" + tag].get()
+        self.drink.name = self.e_name.get()
+        for tag in self.tags[1:]:
+            self.drink.__dict__[tag] = float(self.__dict__["e_" + tag].get())
 
         self.master.destroy()
 

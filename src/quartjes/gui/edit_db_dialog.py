@@ -39,11 +39,19 @@ class edit_db_dialog(Frame):
         self.master.drinks.append(mix)
         self.update_listbox()
 
-    def edit_drink(self):
+    def edit_drink(self):        
         selection = self.lb_drinks.curselection()
         if len(selection) > 0:
-            selected = int(selection[0])            
-            drink_dialog(Tk(),self.drinks[selected])
+            master = Tk()
+            master.drinks = self.master.drinks
+            selected = int(selection[0])
+            drink = self.master.drinks[selected]
+            if drink.__class__.__name__ == "Drink":
+                drink_dialog(master,drink)
+            elif drink.__class__.__name__ == "Mix":
+                mix_dialog(master,drink)
+            master.wait_window()
+            self.update_listbox()
 
     def remove_drink(self):
         selection = self.lb_drinks.curselection()
@@ -77,7 +85,7 @@ class edit_db_dialog(Frame):
 if __name__ == "__main__":
     master = Tk()
     master.conn = None
-    master.drinks = [Drink(),Drink(),Mix()]
+    master.drinks = [Drink(name="cola"),Drink(name="bacardi",alc_perc=40)]
     
     app = edit_db_dialog(master)
     app.mainloop()

@@ -14,6 +14,11 @@ class mix_dialog(Frame):
     def __init__(self, root, mix):
         Frame.__init__(self, root)
         self.mix = mix
+        self.orig_mix_drinks_list = self.mix.drinks[:]
+        self.drinks = []
+        for drink in self.master.drinks:
+            if drink.__class__.__name__ == "Drink":
+                self.drinks.append(drink)
         self.create_widgets()
         self.pack()
 
@@ -40,6 +45,16 @@ class mix_dialog(Frame):
         for d in drinks:
             lb.insert(END,d.name)
 
+    def cancel(self):
+        self.mix.drinks = self.orig_mix_drinks_list
+        print self.mix
+        self.mix.update_properties()
+        self.master.destroy()
+
+    def save(self):
+        print self.mix
+        self.master.destroy()
+
     def create_widgets(self):
         font16 = ("Arial", 16, "bold")        
         self.l_drinks = Label(self,text="Drinks",font = font16)
@@ -60,16 +75,16 @@ class mix_dialog(Frame):
         self.lb_mix = Listbox(self,font = font16)
         self.lb_mix.grid(row = 1,column=2,sticky=EW, padx = 20, pady = 20)
 
-        self.b_cancel = Button(self, text = "cancel", width = 20, height = 2, font = font16)
+        self.b_cancel = Button(self, text = "cancel",  command = self.cancel, width = 20, height = 2, font = font16)
         self.b_cancel.grid(row = 2,column=0,sticky=EW, padx = 20, pady = 20)
 
-        self.b_save = Button(self, text = "Save mix", width = 20, height = 2, font = font16)
+        self.b_save = Button(self, text = "Save mix", command = self.save, width = 20, height = 2, font = font16)
         self.b_save.grid(row = 2,column=2,sticky=EW, padx = 20, pady = 20)
         self.update_listboxes()
 
 if __name__ == "__main__":
     master = Tk()
-    master.drinks = [Drink(),Drink(),Mix()]
+    master.drinks = [Drink(name="cola"),Drink(name="bacardi",alc_perc=40),Mix(name="baco1")]
     d = Mix()
     app = mix_dialog(master,d)
     app.mainloop()
