@@ -43,3 +43,13 @@ class QuartjesBaseClass(AttrDisplay):
 
     def __hash__(self):
         return hash(self.id)
+
+    def __eq__(self, other):
+        if not other:
+            return False
+        return vars(self) == vars(other)
+
+    def __ne__(self, other):
+        if not other:
+            return True
+        return vars(self) != vars(other)
