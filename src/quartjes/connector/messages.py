@@ -16,7 +16,7 @@ class Message(QuartjesBaseClass):
     """
 
     def __init__(self, id=None):
-        QuartjesBaseClass.__init__(self, id)
+        super(Message, self).__init__(id)
 
 
 class ActionRequestMessage(Message):
@@ -24,30 +24,21 @@ class ActionRequestMessage(Message):
     Message type used to send requests from clients to the server.
     """
 
-    __serialize__ = ["service_name", "action", "params"]
-
-    def __init__(self, service_name=None, action=None, params=None):
-        Message.__init__(self)
+    def __init__(self, service_name=None, action=None, pargs=None, kwargs=None):
+        super(ActionRequestMessage, self).__init__()
         
         self.service_name = service_name
         self.action = action
-        self.params = params
-
-    def __eq__(self, other):
-        return other != None and self.id == other.id and self.service_name == other.service_name and self.action == other.action and self.params == other.params
-
-    def __ne__(self, other):
-        return other == None or self.id != other.id or self.service_name != other.service_name or self.action != other.action or self.params != other.params
+        self.pargs = pargs
+        self.kwargs = kwargs
 
 class ResponseMessage(Message):
     """
     Message used to respond to server request messages.
     """
 
-    __serialize__ = ["result_code", "result", "response_to"]
-
     def __init__(self, result_code = 0, result=None, response_to=None):
-        Message.__init__(self)
+        super(ResponseMessage, self).__init__()
 
         self.result_code = result_code
         self.result = result
@@ -58,10 +49,8 @@ class SubscribeMessage(Message):
     Message used to subscribe to update feeds
     """
 
-    __serialize__ = ["service_name", "topic"]
-
     def __init__(self, service_name=None, topic=None):
-        Message.__init__(self)
+        super(SubscribeMessage, self).__init__()
 
         self.service_name = service_name
         self.topic = topic
@@ -71,24 +60,21 @@ class TopicUpdateMessage(Message):
     Message used to send updates on topics
     """
 
-    __serialize__ = ["service_name", "topic", "params"]
-
-    def __init__(self, service_name=None, topic=None, params=None):
-        Message.__init__(self)
+    def __init__(self, service_name=None, topic=None, pargs=None, kwargs=None):
+        super(TopicUpdateMessage, self).__init__()
 
         self.service_name = service_name
         self.topic = topic
-        self.params = params
+        self.pargs = pargs
+        self.kwargs = kwargs
 
 class ServerMotdMessage(Message):
     """
     MOTD message received from the server upon connection.
     """
 
-    __serialize__ = ["motd", "client_id"]
-
     def __init__(self, motd="Hello there!", client_id=None):
-        Message.__init__(self)
+        super(ServerMotdMessage, self).__init__()
 
         self.motd = motd
         self.client_id = client_id

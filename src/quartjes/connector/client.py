@@ -56,12 +56,12 @@ class ClientConnector(object):
         threads.blockingCallFromThread(reactor, self.factory.stopTrying)
         threads.blockingCallFromThread(reactor, reactor.stop)
 
-    def send_action_request(self, service_name, action, params):
+    def send_action_request(self, service_name, action, *pargs, **kwargs):
         """
         Send an action request to the server and wait for the response.
         This method is usually called from a service interface.
         """
-        return self.factory.send_action_request_from_thread(service_name, action, params)
+        return self.factory.send_action_request_from_thread(service_name, action, *pargs, **kwargs)
 
     def subscribe(self, service_name, topic, callback):
         """
@@ -115,6 +115,8 @@ if __name__ == "__main__":
     print("Sending message")
     result = testService.test(text="Spam")
     print(result)
+    result = testService.test("Spam")
+    print(result)
 
     time.sleep(1)
     print("Subscribe to topic")
@@ -123,6 +125,7 @@ if __name__ == "__main__":
     time.sleep(1)
     print("Trigger topic")
     testService.callback(text="Eggs")
+    testService.callback2("Ham")
 
     time.sleep(10)
     print("Stopping client")

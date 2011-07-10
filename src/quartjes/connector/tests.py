@@ -13,7 +13,7 @@ class ServicesTestCase(unittest.TestCase):
 
     def test_correct_service_call(self):
         input = "this is input"
-        output = self.ts.call("test", {"text":input})
+        output = self.ts.call("test", text=input)
         self.assertEqual(input, output)
 
     def test_incorrect_action(self):
@@ -26,7 +26,7 @@ class ServicesTestCase(unittest.TestCase):
         from quartjes.connector.protocol import MessageHandleError
 
         with self.assertRaises(MessageHandleError):
-            self.ts.call("test", {})
+            self.ts.call("test", bla=12)
 
 class SerializerTestCase(unittest.TestCase):
     def setUp(self):

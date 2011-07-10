@@ -122,7 +122,7 @@ class QuartjesServerFactory(ServerFactory):
             raise MessageHandleError(MessageHandleError.RESULT_UNKNOWN_SERVICE, msg)
 
         try:
-            return service.call(msg.action, msg.params)
+            return service.call(msg.action, *msg.pargs, **msg.kwargs)
         except MessageHandleError as error:
             error.original_message = msg
             raise error
@@ -151,12 +151,12 @@ class QuartjesServerFactory(ServerFactory):
         msg = ResponseMessage(result_code=error.error_code, response_to=id, result=error.error_details)
         protocol.send_message(create_message_string(msg))
 
-    def send_topic_update_from_thread(self, service_name, topic, **kwargs):
+    def send_topic_update_from_thread(self, service_name, topic, *pargs, **kwargs):
         listeners = self.topic_listeners.get((service_name, topic))
         if listeners == None:
             return
 
-        msg = TopicUpdateMessage(service_name, topic, kwargs)
+        msg = TopicUpdateMessage(service_name, topic, pargs, kwargs)
         string = create_message_string(msg)
         reactor.callFromThread(self.multicast_message, listeners, string)
 
@@ -220,7 +220,7 @@ class QuartjesClientFactory(ReconnectingClientFactory):
         elif isinstance(msg, TopicUpdateMessage):
             callback = self.topic_callbacks.get((msg.service_name, msg.topic))
             if callback != None:
-                threads.deferToThread(callback, **msg.params)
+                threads.deferToThread(callback, *msg.pargs, **msg.kwargs)
             
     def successful_connection(self):
         self.resetDelay()
@@ -256,14 +256,14 @@ class QuartjesClientFactory(ReconnectingClientFactory):
         self.current_protocol.send_message(serial_message)
         return d
 
-    def send_action_request_from_thread(self, service_name, action, params):
+    def send_action_request_from_thread(self, service_name, action, *pargs, **kwargs):
         """
         Call from another thread to request an action to be performed at the server
         and wait for the result.
 
         Can throw either a MessageHandleError or a ConnectionError
         """
-        msg = ActionRequestMessage(service_name=service_name, action=action, params=params)
+        msg = ActionRequestMessage(service_name=service_name, action=action, pargs=pargs, kwargs=kwargs)
         return self.send_message_blocking_from_thread(msg)
 
     def subscribe_from_thread(self, service_name, topic, callback):

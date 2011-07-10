@@ -4,7 +4,6 @@ The quartjes server is capable of offering multiple services. Each service
 is identified by its service name.
 """
 import traceback
-import sys
 __author__="rob"
 __date__ ="$Jun 13, 2011 12:14:15 PM$"
 
@@ -26,21 +25,21 @@ class Service(object):
         self.name = name
         self.factory = None
 
-    def call(self, action, params):
+    def call(self, action, *pargs, **kwargs):
         meth = getattr(self, "action_%s" % action, None)
         if meth == None:
             raise MessageHandleError(MessageHandleError.RESULT_UNKNOWN_ACTION)
 
         try:
-            return meth(**params)
+            return meth(*pargs, **kwargs)
         except TypeError as err:
             raise MessageHandleError(MessageHandleError.RESULT_INVALID_PARAMS, error_details=err.message)
         except Exception as err:
             traceback.print_exc()
             raise MessageHandleError(MessageHandleError.RESULT_EXCEPTION_RAISED, error_details=str(err))
 
-    def send_topic_update(self, topic, **kwargs):
-        self.factory.send_topic_update_from_thread(self.name, topic, **kwargs)
+    def send_topic_update(self, topic, *pargs, **kwargs):
+        self.factory.send_topic_update_from_thread(self.name, topic, *pargs, **kwargs)
 
 
 class ServiceInterface(object):
@@ -94,11 +93,9 @@ class ServiceInterfaceMethod(object):
         self.service_name = service_name
         self.action = action
 
-    def __call__(self, *pargs, **kargs):
-        if len(pargs) > 0:
-            raise TypeError("Positional arguments not allowed by automatic ServiceInterface methods.")
+    def __call__(self, *pargs, **kwargs):
         try:
-            return self.client_connector.send_action_request(self.service_name, self.action, kargs)
+            return self.client_connector.send_action_request(self.service_name, self.action, *pargs, **kwargs)
         except MessageHandleError as err:
             if err.error_code == MessageHandleError.RESULT_UNKNOWN_ACTION:
                 raise AttributeError("Action %s does not exist in service %s." % (self.action, self.service_name))
@@ -121,5 +118,9 @@ class TestService(Service):
 
     def action_callback(self, text):
         self.send_topic_update("testtopic", text="Callback: %s" % text)
+        return text
+
+    def action_callback2(self, text):
+        self.send_topic_update("testtopic", "Callback2: %s" % text)
         return text
 
