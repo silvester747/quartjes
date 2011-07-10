@@ -23,21 +23,20 @@ class TitleLayer(cocos.layer.Layer):
     def __init__(self):
         super(TitleLayer, self).__init__()
         
-        demo_label = cocos.text.Label("QuartjesAvond",
+        title_label = cocos.text.Label("QuartjesAvond",
                                       font_name='Times New Roman',
                                       font_size=80,
                                       anchor_x='center', anchor_y='top')
-        demo_label.position = (512, 768)
-        self.add(demo_label)
-        #demo_label.do(Repeat(Waves3D(duration=2, waves=1) + RandomDelay(30, 90)))
-        demo_label.do(Repeat(Waves3D(duration=200, waves=100)))
+        title_label.position = (512, 768)
+        self.add(title_label)
+        title_label.do(Repeat(Waves3D(duration=200, waves=100)))
 
 
 class BottomTicker(cocos.layer.Layer):
 
     def __init__(self, display_time=1.0, display_y=0, screen_width=1024, drinks=None,
                  visible_segments=10, margin=2, interval=3, focus_start=3,
-                 focus_length=2, focus_height=40, reset_on_update=False, graph_layer=None):
+                 focus_length=2, focus_height=40, drink_layer=None):
         super(BottomTicker, self).__init__()
 
         self.display_time = display_time
@@ -49,8 +48,7 @@ class BottomTicker(cocos.layer.Layer):
         self.focus_start = focus_start + self.margin
         self.focus_length = focus_length
         self.focus_height = focus_height
-        self.reset_on_update = reset_on_update
-        self.graph_layer = graph_layer
+        self.drink_layer = drink_layer
 
         self._calculate_points()
 
@@ -80,25 +78,6 @@ class BottomTicker(cocos.layer.Layer):
         if cur_drink >= len(drinks):
             cur_drink = 0
         self.drinks, self.current_drink_index = drinks, cur_drink
-        if self.reset_on_update:
-            self.do(CallFunc(self.reset))
-
-    def reset(self):
-        """
-        WARNING: Currently causes invalid operation in GL.
-        """
-        return
-        self._resetting = True
-        for child in self.get_children():
-            child.do(FadeOut(1) + CallFunc(self._safe_kill, child))
-            #child.do(Kill())
-
-        if self.graph_layer != None:
-            self.graph_layer.reset()
-
-        time.sleep(1)
-        self._resetting = False
-        self.do(CallFunc(self.next_drink))
 
     def _safe_kill(self, child):
         try:
@@ -111,9 +90,8 @@ class BottomTicker(cocos.layer.Layer):
             drink = None
 
         self.focussed_drink = drink
-        if drink != None:
-            if self.graph_layer != None:
-                self.graph_layer.show_drink_history(drink)
+        if self.drink_layer:
+            self.drink_layer.show_drink(drink)
 
     def next_drink(self):
 
@@ -151,12 +129,12 @@ class BottomTicker(cocos.layer.Layer):
                          Delay(self.display_time / 2)))
         move_actions += MoveTo(self.points[-1], self.display_time * (self.segment_count - self.focus_end))
 
-        next_label.do((spawn_actions | move_actions) + CallFunc(next_label.kill))
+        next_label.do((spawn_actions | move_actions) + CallFunc(self._safe_kill, next_label))
 
-class GraphLayer(cocos.layer.base_layers.Layer):
+class DrinkLayer(cocos.layer.base_layers.Layer):
     def __init__(self, graph_position=(50,150), graph_width=940, graph_height=500,
                  screen_width=1024, move_time=1.0):
-        super(GraphLayer, self).__init__()
+        super(DrinkLayer, self).__init__()
 
         self.graph_position = graph_position
         self.graph_width = graph_width
@@ -169,58 +147,68 @@ class GraphLayer(cocos.layer.base_layers.Layer):
         self._points.append(graph_position)
         self._points.append((0-graph_width, graph_position[1]))
 
-        self.current_graph = None
+        self.current_node = None
 
-    def show_drink_history(self, drink):
+    def show_drink(self, drink):
         if not self.is_running:
             print("Not running")
-            if self.current_graph:
-                self.current_graph.kill
-                self.current_graph = None
+            if self.current_node:
+                self.current_node.kill
+                self.current_node = None
 
             return
 
-        if self.current_graph:
-            self.current_graph.do(MoveTo(self._points[2], 0.5 * self.move_time) +
-                                  CallFunc(self.current_graph.kill))
+        if self.current_node:
+            self.current_node.do(MoveTo(self._points[2], 0.5 * self.move_time) +
+                                 CallFunc(self.current_node.kill))
 
         if drink == None:
             print("No drink")
             return
 
         if isinstance(drink, Mix):
-        #    self.show_mix(drink)
-            return
+            self.show_mix(drink)
+        else:
+            self.show_drink_history(drink)
 
-
+    def show_drink_history(self, drink):
 
         if drink.history == None:
             print("No history")
             return
 
-        self.current_graph = HistoryGraph(position=self._points[0],
+        self.current_node = HistoryGraph(position=self._points[0],
                                           width = self.graph_width,
                                           height=self.graph_height,
                                           data=drink.history)
-        self.current_graph.do(Delay(0.5 * self.move_time) +
+        self.current_node.do(Delay(0.5 * self.move_time) +
                               MoveTo(self._points[1], 0.5 * self.move_time))
 
-        self.add(self.current_graph)
+        self.add(self.current_node)
 
     def show_mix(self, mix):
 
+        print("Show_mix1")
 
         labels = GraphLabels(position=self._points[0])
+
+        print("Show_mix2")
+
         labels.add_text(mix.name,
                         font_name='Times New Roman',
                         font_size=62,
                         anchor_x='center', anchor_y='top',
                         position = (420, 450))
+
+        print("Show_mix3")
+
         labels.add_text("Alcohol: %2.1f %%" % mix.alc_perc,
                         font_name='Times New Roman',
                         font_size=20,
                         anchor_x='center', anchor_y='top',
                         position = (420, 340))
+
+        print("Show_mix4")
 
         y = 280
         for d in mix.drinks:
@@ -230,6 +218,8 @@ class GraphLayer(cocos.layer.base_layers.Layer):
                             anchor_x='right', anchor_y='top',
                             position = (400, y))
             y -= 30
+
+        print("Show_mix5")
 
         labels.add_text("%d" % mix.sellprice_quartjes(),
                         font_name='Times New Roman',
@@ -241,20 +231,15 @@ class GraphLayer(cocos.layer.base_layers.Layer):
         labels.do(Delay(0.5 * self.move_time) +
                               MoveTo(self._points[1], 0.5 * self.move_time))
 
-        self.add(labels)
-        self.current_graph = labels
+        print("Show_mix6")
 
-    def reset(self):
-        return # unsafe
-        for child in self.get_children():
-            if self.is_running:
-                child.do(FadeOut(1) + CallFunc(child.kill))
-            else:
-                child.kill()
+        self.add(labels)
+        self.current_node = labels
+
 
 class HistoryGraph(cocos.draw.Canvas):
 
-    def __init__(self, position=(0,0), width=400, height=300, margin=30, data=None):
+    def __init__(self, position=(0,0), width=400, height=300, margin=30, data=None, initial_visible=True):
         super(HistoryGraph, self).__init__()
         self.position = position
         self.width = width
@@ -262,6 +247,7 @@ class HistoryGraph(cocos.draw.Canvas):
         self.margin = margin
         self.labels = None
         self.text_visible = False
+        self.initial_visible = initial_visible
 
         # a list containing either lists or tuples
         # each list or tuple should contain exactly 2 values
@@ -273,16 +259,12 @@ class HistoryGraph(cocos.draw.Canvas):
         if not self.text_visible:
             self.text_visible = True
             if self.labels != None:
-                #for lbl in self.labels:
-                #    self.add(lbl)
                 self.add(self.labels)
 
     def hide_text(self):
         if self.text_visible:
             self.text_visible = False
             if self.labels != None:
-                #for lbl in self.labels:
-                #    lbl.kill()
                 self.labels.kill()
 
     def render(self):
@@ -389,7 +371,8 @@ class HistoryGraph(cocos.draw.Canvas):
             self.line_to((x, y))
             x += x_spacing
 
-        self.show_text()
+        if self.initial_visible:
+            self.show_text()
 
 class GraphLabels(cocos.cocosnode.CocosNode):
     """
@@ -416,81 +399,6 @@ class GraphLabels(cocos.cocosnode.CocosNode):
 
     klass = pyglet.text.Label
 
-class MixLayer(cocos.layer.base_layers.Layer):
-    def __init__(self):
-        super(MixLayer, self).__init__()
-        self.mixes = None
-        self.mix_index = 0
-
-    def update_mixes(self, mixes):
-
-        restart = self.mixes == None
-
-        index = self.mix_index
-        if index > len(mixes):
-            index = 0
-        self.mixes, self.mix_index = mixes, index
-
-        if restart:
-            self.show_mix()
-
-
-    def show_mix(self):
-
-        if not self.mixes:
-            return
-
-        self.mix_index += 1
-        if self.mix_index >= len(self.mixes):
-            self.mix_index = 0
-
-        mix = self.mixes[self.mix_index]
-
-        labels = GraphLabels(position=(1024, 100))
-        labels.add_text(mix.name,
-                        font_name='Times New Roman',
-                        font_size=62,
-                        anchor_x='center', anchor_y='top',
-                        position = (420, 450))
-        labels.add_text("Alcohol: %2.1f %%" % mix.alc_perc,
-                        font_name='Times New Roman',
-                        font_size=20,
-                        anchor_x='center', anchor_y='top',
-                        position = (420, 340))
-
-        y = 280
-        for d in mix.drinks:
-            labels.add_text(d.name,
-                            font_name='Times New Roman',
-                            font_size=20,
-                            anchor_x='right', anchor_y='top',
-                            position = (400, y))
-            y -= 30
-
-        labels.add_text("%d" % mix.sellprice_quartjes(),
-                        font_name='Times New Roman',
-                        font_size=100,
-                        anchor_x='left', anchor_y='top',
-                        position = (440, 300))
-
-
-        labels.do(MoveTo((100, 100), 0.5) + Delay(10.0) +
-                  CallFunc(self.show_mix) +
-                  MoveTo((-840, 100), 0.5) +
-                  CallFunc(labels.kill))
-
-        self.add(labels)
-
-
-class Kill(cocos.actions.base_actions.InstantAction):
-
-    def start(self):
-        self.target.pause_scheduler()
-        for a in self.target.actions:
-            self.target.remove_action(a)
-        #self.target.do(Delay(0.1) + CallFunc(self.target.kill))
-        self.target.resume_scheduler()
-        #self.target.kill()
 
 class CocosGui(object):
 
@@ -505,7 +413,7 @@ class CocosGui(object):
         self.refresh_ticker_on_update = True
 
         self.ticker_layer = None
-        self.graph_layer = None
+        self.drink_layer = None
         self.title_layer = None
         self.mix_layer = None
 
@@ -540,41 +448,22 @@ class CocosGui(object):
         cocos.director.director.set_show_FPS(True)
 
         self.show_ticker_scene()
-        #self.show_mix_scene()
 
     def show_ticker_scene(self, new_ticker=False):
         if not self.ticker_layer or new_ticker:
             self.ticker_layer = BottomTicker()
-        if not self.graph_layer:
-            self.graph_layer = GraphLayer()
+        if not self.drink_layer:
+            self.drink_layer = DrinkLayer()
         if not self.title_layer:
             self.title_layer = TitleLayer()
 
         self.ticker_layer.update_drinks(self.drinks)
 
         if new_ticker:
-            self.graph_layer.show_drink_history(None)
+            self.drink_layer.show_drink_history(None)
 
-        scene = cocos.scene.Scene(self.ticker_layer, self.graph_layer, self.title_layer)
-        self.ticker_layer.graph_layer = self.graph_layer
-
-        #scene.do(Delay(60) + CallFunc(self.show_mix_scene))
-
-        self._display_scene(scene)
-
-    def show_mix_scene(self):
-        if not self.ticker_layer:
-            self.ticker_layer = BottomTicker()
-        if not self.mix_layer:
-            self.mix_layer = MixLayer()
-        if not self.title_layer:
-            self.title_layer = TitleLayer()
-
-        self.ticker_layer.update_drinks(self.drinks)
-        self.mix_layer.update_mixes(self.mixes)
-
-        scene = cocos.scene.Scene(self.ticker_layer, self.mix_layer, self.title_layer)
-        self.ticker_layer.graph_layer = None
+        scene = cocos.scene.Scene(self.ticker_layer, self.drink_layer, self.title_layer)
+        self.ticker_layer.drink_layer = self.drink_layer
 
         self._display_scene(scene)
 
@@ -596,15 +485,12 @@ class CocosGui(object):
         self.all = self.mixes + self.drinks
         if self.ticker_layer:
             self.ticker_layer.update_drinks(self.all)
-        #if self.mix_layer:
-        #    self.mix_layer.update_mixes(mixes)
 
     def _next_round(self, drinks):
         self.drinks = drinks
         self.all = self.mixes + self.drinks
         if self.ticker_layer:
             self.ticker_layer.update_drinks(self.all)
-        #self.show_ticker_scene(True)
 
 def run_cocos_gui():
     gui = CocosGui()
