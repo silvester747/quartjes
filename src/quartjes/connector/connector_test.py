@@ -76,10 +76,6 @@ class SerializerTestCase(unittest.TestCase):
         d.history = [(1, 10), (2, 14)]
         self.base_serialize_test([d, d])
 
-    def test_serialize_instance_by_dict(self):
-        obj = DictObject()
-        self.base_serialize_test(obj)
-
     def base_serialize_test(self, value):
         import quartjes.connector.serializer as serializer
         from quartjes.connector.serializer import et
@@ -94,16 +90,6 @@ class SerializerTestCase(unittest.TestCase):
         xml = et.fromstring(string)
         output = serializer.deserialize(xml)
         self.assertEqual(input, output)
-
-class DictObject(object):
-    def __init__(self):
-        self.a = 2
-        self.b = 12
-        self.c = [23, 22]
-        self.d = (43, 32)
-
-    def __eq__(self, other):
-        return self.a == other.a and self.b == other.b and self.c == other.c and self.d == other.d
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
