@@ -61,14 +61,14 @@ class ClientConnector(object):
         Send an action request to the server and wait for the response.
         This method is usually called from a service interface.
         """
-        return self.factory.send_action_request_from_thread(service_name, action, *pargs, **kwargs)
+        return self.factory.send_action_request(service_name, action, *pargs, **kwargs)
 
     def subscribe(self, service_name, topic, callback):
         """
         Subscribe to a topic to receive updates from the server.
         This method is usually called from a service interface.
         """
-        self.factory.subscribe_from_thread(service_name, topic, callback)
+        self.factory.subscribe(service_name, topic, callback)
 
     def get_service_interface(self, service_name):
         """

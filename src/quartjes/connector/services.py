@@ -39,7 +39,7 @@ class Service(object):
             raise MessageHandleError(MessageHandleError.RESULT_EXCEPTION_RAISED, error_details=str(err))
 
     def send_topic_update(self, topic, *pargs, **kwargs):
-        self.factory.send_topic_update_from_thread(self.name, topic, *pargs, **kwargs)
+        self.factory.send_topic_update(self.name, topic, *pargs, **kwargs)
 
 
 class ServiceInterface(object):
