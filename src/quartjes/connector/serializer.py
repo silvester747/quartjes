@@ -301,11 +301,18 @@ class ValueSerializer(object):
     Create your custom version of this class to add unsupported data types.
     """
 
-    def __init__(self, klass, serialize_method, deserialize_method):
+    def __init__(self, klass, serialize_method, deserialize_method, klass_name=None):
         self.klass = klass
         self.serialize_method = serialize_method
         self.deserialize_method = deserialize_method
-        self.klass_name = "%s.%s" % (klass.__module__, klass.__name__)
+
+        if klass_name:
+            self.klass_name = klass_name
+        else:
+            if klass.__module__ == "__builtin__":
+                self.klass_name = klass.__name__
+            else:
+                self.klass_name = "%s.%s" % (klass.__module__, klass.__name__)
 
     def serialize(self, value):
         """
@@ -319,10 +326,11 @@ class ValueSerializer(object):
         """
         return self.deserialize_method(string)
 
+# Already included value serializers. Mostly for builtin python data types.
 _int_serializer = ValueSerializer(int, str, int)
 _string_serializer = ValueSerializer(str, lambda x: x, lambda x: x)
 _float_serializer = ValueSerializer(float, str, float)
-_uuid_serializer = ValueSerializer(uuid.UUID, lambda x: x.urn, uuid.UUID)
+_uuid_serializer = ValueSerializer(uuid.UUID, lambda x: x.urn, uuid.UUID, klass_name="uuid")
 
 add_value_serializer(_int_serializer)
 add_value_serializer(_string_serializer)

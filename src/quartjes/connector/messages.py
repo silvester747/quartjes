@@ -91,28 +91,9 @@ def parse_message_string(string):
 
 
 def create_message_string(msg):
+    """
+    Create an xml string to represent the given message.
+    """
     root = serializer.serialize(msg, parent=None, tag_name="message")
     return et.tostring(root)
 
-
-
-def self_test():
-
-    from quartjes.drink import Drink
-
-    params = {"what":"that", "howmany":3, "price":2.10, "drink":Drink("Cola")}
-
-    msg = ActionRequestMessage("myservice", "myaction", params)
-    assert msg == msg
-    assert not msg != msg
-    print(msg)
-
-    string = create_message_string(msg)
-    print(string)
-
-    msg2 = parse_message_string(string)
-    print(msg2)
-    assert msg == msg2
-
-if __name__ == "__main__":
-    self_test()
