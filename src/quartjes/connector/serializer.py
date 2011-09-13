@@ -239,7 +239,7 @@ def add_value_element(value, parent=None, tag_name="value", cache=None):
 
     else:
 
-        return add_element(tag_name, None, parent, "NoneType")
+        return add_element(tag_name, None, parent, None)
 
 def parse_value_element(node, cache=None):
     """
@@ -277,10 +277,10 @@ def get_serialized_value(value):
     """
     
     if value == None:
-        return (None, "NoneType")
+        return (None, None)
     
     if not value.__class__ in value_serializers_by_klass:
-        return (None, "NoneType")
+        return (None, None)
     
     ser = value_serializers_by_klass[value.__class__]
     return (ser.serialize(value), ser.klass_name)
