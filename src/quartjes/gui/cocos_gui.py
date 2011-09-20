@@ -194,6 +194,12 @@ class BottomTicker(cocos.layer.Layer):
 
 
 class DrinkLayer(cocos.layer.base_layers.Layer):
+    """
+    Layer to display details on the currently focussed drink.
+    In case a normal drink is focussed, the price graph is displayed.
+    In case a mix drink is focussed, the details of the mix are displayed.
+    """
+
     def __init__(self, graph_position=(50,150), graph_width=940, graph_height=500,
                  screen_width=1024, move_time=1.0):
         super(DrinkLayer, self).__init__()
@@ -264,47 +270,40 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
         font = 'Times New Roman'
         #font = 'Verdana'
 
-        print("Show_mix1")
+        center_x = self.graph_width / 2
+        max_y = self.graph_height
 
         labels = GraphLabels(position=self._points[0])
-
-        print("Show_mix2")
 
         labels.add_text(mix.name,
                         font_name=font,
                         font_size=62,
                         anchor_x='center', anchor_y='top',
-                        position = (420, 450))
-
-        print("Show_mix3")
+                        position = (center_x, max_y))
 
         labels.add_text("Alcohol: %2.1f %%" % mix.alc_perc,
                         font_name=font,
                         font_size=20,
                         anchor_x='center', anchor_y='top',
-                        position = (420, 340))
+                        position = (center_x, max_y - 100))
 
-        print("Show_mix4")
-
-        y = 280
+        y = max_y - 150
         for d in mix.drinks:
             labels.add_text(d.name,
                             font_name=font,
                             font_size=20,
                             anchor_x='right', anchor_y='top',
-                            position = (400, y))
+                            position = (center_x - 20, y))
             y -= 30
-
-        print("Show_mix5")
 
         labels.add_text("%d" % mix.sellprice_quartjes(),
                         font_name=font,
                         font_size=100,
                         anchor_x='left', anchor_y='top',
-                        position = (440, 300))
+                        position = (center_x + 20, max_y - 150))
 
 
-        print("Show_mix6")
+        labels.add(MixGlass(position=(100, 0), height=max_y-150, width=200, mix=mix))
 
         self.add(labels)
         self.current_node = labels
@@ -450,6 +449,44 @@ class HistoryGraph(cocos.draw.Canvas):
 
         if self.initial_visible:
             self.show_text()
+
+class MixGlass(cocos.draw.Canvas):
+
+    def __init__(self, position=(0,0), width=400, height=300, taper=0.1, mix=None):
+        super(MixGlass, self).__init__()
+        self.position = position
+        self.width = width
+        self.height = height
+        self.taper = taper
+        self.mix = mix
+
+    def render(self):
+
+        h, w, t = self.height, self.width, self.taper
+
+        # draw contents
+        middle_x = w / 2
+        fill = 0.8
+        current_radius = lambda y_fact: w * (0.5 - ((1- y_fact) * t))
+        y_fact = lambda y: float(y) / float(h)
+
+        self.set_stroke_width(1.0)
+        self.set_color(self.mix.color + (255,))
+
+        for y in range(0, int(h*fill)):
+            r = current_radius(y_fact(y))
+            self.move_to((middle_x - r, y))
+            self.line_to((middle_x + r, y))
+
+
+        # draw the glass
+        self.set_stroke_width(5.0)
+        self.set_color((255, 255, 255, 255))
+        self.move_to((0, h))
+        self.line_to((t*w, 0))
+        self.line_to(((1-t)*w, 0))
+        self.line_to((w, h))
+
 
 class GraphLabels(cocos.cocosnode.CocosNode):
     """
@@ -597,11 +634,11 @@ def test_mix():
             current = 0
 
             while True:
-                time.sleep(2)
                 current += 1
                 if current >= len(mixes):
                     current = 0
                 self.drink_layer.show_drink(mixes[current])
+                time.sleep(20)
 
     t = TestThread(drink_layer)
     t.start()
@@ -613,5 +650,5 @@ def test_mix():
 
 
 if __name__ == "__main__":
-    run_cocos_gui()
-    #test_mix()
+    #run_cocos_gui()
+    test_mix()
