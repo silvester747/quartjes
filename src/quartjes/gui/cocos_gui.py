@@ -1,3 +1,9 @@
+import pyglet
+#pyglet.options['debug_font'] = True
+#pyglet.options['debug_gl'] = True
+#pyglet.options['debug_gl_trace'] = True
+#pyglet.options['debug_graphics_batch'] = True
+
 import math
 import cocos.actions.base_actions
 import cocos.layer.base_layers
@@ -17,8 +23,24 @@ import pyglet.text
 from pyglet.gl import *
 import datetime
 from quartjes.models.drink import Mix
+from axel import Event
+
+# Preload fonts and keep a reference
+# Otherwise some fonts are evicted from memory when not used for a short while,
+# causing Pyglet to reload them. During reload a seg fault can occur in
+# libfontconfig.
+import pyglet.font
+tnr62 = pyglet.font.load(name="Times New Roman", size=62, bold=False, italic=False, dpi=96)
+tnr20 = pyglet.font.load(name="Times New Roman", size=20, bold=False, italic=False, dpi=96)
+tnr100 = pyglet.font.load(name="Times New Roman", size=100, bold=False, italic=False, dpi=96)
+tnr12 = pyglet.font.load(name="Times New Roman", size=12, bold=False, italic=False, dpi=96)
+tnr80 = pyglet.font.load(name="Times New Roman", size=80, bold=False, italic=False, dpi=96)
+tnr64 = pyglet.font.load(name="Times New Roman", size=64, bold=False, italic=False, dpi=96)
 
 class TitleLayer(cocos.layer.Layer):
+    """
+    Simple layer to display a title at the top of the display.
+    """
 
     def __init__(self):
         super(TitleLayer, self).__init__()
@@ -33,36 +55,70 @@ class TitleLayer(cocos.layer.Layer):
 
 
 class BottomTicker(cocos.layer.Layer):
+    """
+    Layer containing a ticker of drinks.
+    The list of drinks scrolls from the right of the screen to the left. In the
+    middle one of the drinks will gain focus and is shown larger.
+    """
 
     def __init__(self, display_time=1.0, display_y=0, screen_width=1024, drinks=None,
                  visible_segments=10, margin=2, interval=3, focus_start=3,
                  focus_length=2, focus_height=40, drink_layer=None):
+        """
+        Initialize the ticker.
+        """
         super(BottomTicker, self).__init__()
 
+        # Time in pyglet units between each point on the ticker.
         self.display_time = display_time
+
+        # Y coordinate on the screen where the ticker is shown.
         self.display_y = display_y
+
+        # Width of the screen. This width is used to calculate the path the items
+        # in the ticker follow.
         self.screen_width = screen_width
+
+        # Number of segments to divide the visible screen in. Used to create the
+        # path to follow.
         self.visible_segments = visible_segments
+
+        # Number of segments outside the visible screen at each side.
         self.margin = margin
+
+        # Number of segments between each item on the ticker.
         self.interval = interval
+
+        # Number of the segment where the item starts to have focus. This includes
+        # segments outside the visible screen.
         self.focus_start = focus_start + self.margin
+
+        # Number of segments an item has focus.
         self.focus_length = focus_length
+
+        # Increase in y position on the screen for items with focus.
         self.focus_height = focus_height
-        self.drink_layer = drink_layer
-
-        self._calculate_points()
-
+        
+        # List of drinks to show on the ticker
         self.drinks = drinks
+
+        # Index of the drink last added to the ticker
         self.current_drink_index = 0
+
+        # Drink currently having focus.
         self.focussed_drink = None
 
-        # True if a reset is currently in progress, should block all creation
-        # of new nodes until reset is finished
-        self._resetting = False
+        # Event fired when the currently focused drink has changed. Listeners
+        # should have two parameters: the sender and the new drink.
+        self.on_focus_changed = Event(sender=self)
 
-        self.next_drink()
+        self._calculate_points()
+        self._next_drink()
 
     def _calculate_points(self):
+        """
+        Prepare the ticker by calculating all points on the path.
+        """
 
         distance = self.screen_width / self.visible_segments
         self.points = [(x*distance, self.display_y) for x in range(self.visible_segments + self.margin, -1 - self.margin, -1)]
@@ -73,6 +129,10 @@ class BottomTicker(cocos.layer.Layer):
             self.points[pnt] = (self.points[pnt][0], self.focus_height)
 
     def update_drinks(self, drinks):
+        """
+        Replace the current list of drinks to show on the ticker. Will not remove
+        already visible drinks.
+        """
         print("Receiving update")
         cur_drink = self.current_drink_index
         if cur_drink >= len(drinks):
@@ -80,24 +140,25 @@ class BottomTicker(cocos.layer.Layer):
         self.drinks, self.current_drink_index = drinks, cur_drink
 
     def _safe_kill(self, child):
+        """
+        Safely remove a node from the tree.
+        """
         try:
             child.kill()
         except:
             pass
 
     def _set_focussed_drink(self, drink):
-        if self._resetting:
-            drink = None
-
+        """
+        Update the currently focussed drink and notify all listeners.
+        """
         self.focussed_drink = drink
-        if self.drink_layer:
-            self.drink_layer.show_drink(drink)
+        self.on_focus_changed(drink)
 
-    def next_drink(self):
-
-        if self._resetting:
-            return
-
+    def _next_drink(self):
+        """
+        Prepare the next drink on the list to be shown on screen.
+        """
         text = ""
         drink = None
 
@@ -116,7 +177,7 @@ class BottomTicker(cocos.layer.Layer):
         next_label.scale = 0.5
         self.add(next_label)
 
-        spawn_actions = Delay(self.display_time * self.interval) + CallFunc(self.next_drink)
+        spawn_actions = Delay(self.display_time * self.interval) + CallFunc(self._next_drink)
 
         move_actions = MoveTo(self.points[self.focus_start], self.display_time * self.focus_start)
         move_actions += (MoveTo(self.points[self.focus_start + 1], self.display_time) |
@@ -130,6 +191,7 @@ class BottomTicker(cocos.layer.Layer):
         move_actions += MoveTo(self.points[-1], self.display_time * (self.segment_count - self.focus_end))
 
         next_label.do((spawn_actions | move_actions) + CallFunc(self._safe_kill, next_label))
+
 
 class DrinkLayer(cocos.layer.base_layers.Layer):
     def __init__(self, graph_position=(50,150), graph_width=940, graph_height=500,
@@ -149,7 +211,18 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
 
         self.current_node = None
 
+        self.next_drink = None
+
     def show_drink(self, drink):
+        self.next_drink = drink
+
+    def draw(self, *args, **kwargs):
+        if self.next_drink:
+            self._show_drink(self.next_drink)
+            self.next_drink = None
+
+    def _show_drink(self, drink):
+        print("_show_drink called")
         if not self.is_running:
             print("Not running")
             if self.current_node:
@@ -167,11 +240,11 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
             return
 
         if isinstance(drink, Mix):
-            self.show_mix(drink)
+            self._show_mix(drink)
         else:
-            self.show_drink_history(drink)
+            self._show_drink_history(drink)
 
-    def show_drink_history(self, drink):
+    def _show_drink_history(self, drink):
 
         if drink.history == None:
             print("No history")
@@ -186,7 +259,10 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
 
         self.add(self.current_node)
 
-    def show_mix(self, mix):
+    def _show_mix(self, mix):
+
+        font = 'Times New Roman'
+        #font = 'Verdana'
 
         print("Show_mix1")
 
@@ -195,7 +271,7 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
         print("Show_mix2")
 
         labels.add_text(mix.name,
-                        font_name='Times New Roman',
+                        font_name=font,
                         font_size=62,
                         anchor_x='center', anchor_y='top',
                         position = (420, 450))
@@ -203,7 +279,7 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
         print("Show_mix3")
 
         labels.add_text("Alcohol: %2.1f %%" % mix.alc_perc,
-                        font_name='Times New Roman',
+                        font_name=font,
                         font_size=20,
                         anchor_x='center', anchor_y='top',
                         position = (420, 340))
@@ -213,7 +289,7 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
         y = 280
         for d in mix.drinks:
             labels.add_text(d.name,
-                            font_name='Times New Roman',
+                            font_name=font,
                             font_size=20,
                             anchor_x='right', anchor_y='top',
                             position = (400, y))
@@ -222,19 +298,20 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
         print("Show_mix5")
 
         labels.add_text("%d" % mix.sellprice_quartjes(),
-                        font_name='Times New Roman',
+                        font_name=font,
                         font_size=100,
                         anchor_x='left', anchor_y='top',
                         position = (440, 300))
 
 
-        labels.do(Delay(0.5 * self.move_time) +
-                              MoveTo(self._points[1], 0.5 * self.move_time))
-
         print("Show_mix6")
 
         self.add(labels)
         self.current_node = labels
+
+        labels.do(Delay(0.5 * self.move_time) +
+                              MoveTo(self._points[1], 0.5 * self.move_time))
+
 
 
 class HistoryGraph(cocos.draw.Canvas):
@@ -388,16 +465,15 @@ class GraphLabels(cocos.cocosnode.CocosNode):
 
     def add_text(self, text='', position=(0,0), **kwargs):
         kwargs['text']=text
-        self.elements.append(self.klass(group=self.group, batch=self.batch,
-                                        x=position[0], y=position[1], **kwargs))
+        element = pyglet.text.Label(group=self.group, batch=self.batch,
+                                    x=position[0], y=position[1], **kwargs)
+        self.elements.append(element)
 
     def draw(self):
         glPushMatrix()
         self.transform()
         self.batch.draw()
         glPopMatrix()
-
-    klass = pyglet.text.Label
 
 
 class CocosGui(object):
@@ -463,7 +539,8 @@ class CocosGui(object):
             self.drink_layer.show_drink_history(None)
 
         scene = cocos.scene.Scene(self.ticker_layer, self.drink_layer, self.title_layer)
-        self.ticker_layer.drink_layer = self.drink_layer
+
+        self.ticker_layer.on_focus_changed += lambda sender, drink: self.drink_layer.show_drink(drink)
 
         self._display_scene(scene)
 
@@ -497,5 +574,44 @@ def run_cocos_gui():
     gui.start()
     #gui.show_ticker_scene()
 
+def test_mix():
+    cocos.director.director.init(width=1024, height=768,
+                                     fullscreen=True)
+    cocos.director.director.set_show_FPS(True)
+
+    drink_layer = DrinkLayer()
+    
+    from threading import Thread
+
+    class TestThread(Thread):
+
+        def __init__(self, drink_layer):
+            Thread.__init__(self, name="TestThread")
+            self.daemon = True
+            self.drink_layer = drink_layer
+
+        def run(self):
+            from quartjes.controllers.database import database
+            mixes = database.get_mixes()[:]
+            #mixes += database.get_drinks()[:]
+            current = 0
+
+            while True:
+                time.sleep(2)
+                current += 1
+                if current >= len(mixes):
+                    current = 0
+                self.drink_layer.show_drink(mixes[current])
+
+    t = TestThread(drink_layer)
+    t.start()
+
+    scene = cocos.scene.Scene(drink_layer)
+    cocos.director.director.run(scene)
+
+    print("Killed")
+
+
 if __name__ == "__main__":
     run_cocos_gui()
+    #test_mix()
