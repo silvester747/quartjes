@@ -228,7 +228,7 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
             self.next_drink = None
 
     def _show_drink(self, drink):
-        print("_show_drink called")
+        #print("_show_drink called")
         if not self.is_running:
             print("Not running")
             if self.current_node:
@@ -296,8 +296,7 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
                             position = (center_x - 20, y))
             y -= 30
 
-        #labels.add_text("%d" % mix.sellprice_quartjes(),
-        labels.add_text("Test",
+        labels.add_text("%d" % mix.sellprice_quartjes(),
                         font_name=font,
                         font_size=100,
                         anchor_x='left', anchor_y='top',
@@ -500,8 +499,8 @@ class GraphLabels(cocos.cocosnode.CocosNode):
         self.group = None
         self.elements = []
 
-        #self.batch = pyglet.graphics.Batch()
-        self.batch = None
+        self.batch = pyglet.graphics.Batch()
+        #self.batch = None
 
     def add_text(self, text='', position=(0,0), **kwargs):
         kwargs['text']=text
