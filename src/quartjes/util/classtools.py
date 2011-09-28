@@ -53,3 +53,15 @@ class QuartjesBaseClass(AttrDisplay):
         if not other:
             return True
         return vars(self) != vars(other)
+
+def trace(method):
+    def on_call(*args, **kwargs):
+        mylevel = trace.level
+        trace.level = trace.level + 1
+        print("%sMethod %s called with args=%s and kwargs=%s" % ("." * mylevel, method.__name__, args, kwargs))
+        result = method(*args, **kwargs)
+        print("%sMethod %s returned: %s" % ("." * mylevel, method.__name__, result))
+        trace.level = trace.level - 1
+        return result
+    return on_call
+trace.level = 0

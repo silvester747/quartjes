@@ -29,13 +29,13 @@ from axel import Event
 # Otherwise some fonts are evicted from memory when not used for a short while,
 # causing Pyglet to reload them. During reload a seg fault can occur in
 # libfontconfig.
-import pyglet.font
-tnr62 = pyglet.font.load(name="Times New Roman", size=62, bold=False, italic=False, dpi=96)
-tnr20 = pyglet.font.load(name="Times New Roman", size=20, bold=False, italic=False, dpi=96)
-tnr100 = pyglet.font.load(name="Times New Roman", size=100, bold=False, italic=False, dpi=96)
-tnr12 = pyglet.font.load(name="Times New Roman", size=12, bold=False, italic=False, dpi=96)
-tnr80 = pyglet.font.load(name="Times New Roman", size=80, bold=False, italic=False, dpi=96)
-tnr64 = pyglet.font.load(name="Times New Roman", size=64, bold=False, italic=False, dpi=96)
+#import pyglet.font
+#tnr62 = pyglet.font.load(name="Times New Roman", size=62, bold=False, italic=False, dpi=96)
+#tnr20 = pyglet.font.load(name="Times New Roman", size=20, bold=False, italic=False, dpi=96)
+#tnr100 = pyglet.font.load(name="Times New Roman", size=100, bold=False, italic=False, dpi=96)
+#tnr12 = pyglet.font.load(name="Times New Roman", size=12, bold=False, italic=False, dpi=96)
+#tnr80 = pyglet.font.load(name="Times New Roman", size=80, bold=False, italic=False, dpi=96)
+#tnr64 = pyglet.font.load(name="Times New Roman", size=64, bold=False, italic=False, dpi=96)
 
 class TitleLayer(cocos.layer.Layer):
     """
@@ -277,7 +277,7 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
 
         labels.add_text(mix.name,
                         font_name=font,
-                        font_size=62,
+                        font_size=64,
                         anchor_x='center', anchor_y='top',
                         position = (center_x, max_y))
 
@@ -296,7 +296,8 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
                             position = (center_x - 20, y))
             y -= 30
 
-        labels.add_text("%d" % mix.sellprice_quartjes(),
+        #labels.add_text("%d" % mix.sellprice_quartjes(),
+        labels.add_text("Test",
                         font_name=font,
                         font_size=100,
                         anchor_x='left', anchor_y='top',
@@ -360,16 +361,16 @@ class HistoryGraph(cocos.draw.Canvas):
         self.line_to((w - margin, margin))
 
         if self.data == None:
-            print("No data")
+            #print("No data")
             return
         if len(self.data) < 2:
-            print("Not enough data")
+            #print("Not enough data")
             return
 
         self.labels = GraphLabels()
 
         # draw x axis marks
-        print("draw x axis")
+        #print("draw x axis")
         max_x = 0
         for (x, y) in self.data:
             if x > max_x:
@@ -399,7 +400,7 @@ class HistoryGraph(cocos.draw.Canvas):
                                       position = (x, margin * 3/4))
 
         # draw y axis marks
-        print("draw y axis")
+        #print("draw y axis")
         max_y = 0
         for (x, y) in self.data:
             if y > max_y:
@@ -418,12 +419,12 @@ class HistoryGraph(cocos.draw.Canvas):
             y_count += 1
 
         y_spacing = float(h - 2 * margin) / (y_count - 1)
-        print(y_spacing)
+        #print(y_spacing)
         y_label_interval = 1
         while y_spacing * y_label_interval < 50:
             y_label_interval += 1
 
-        print("start drawing y")
+        #print("start drawing y")
         for y_val in range(max_y, min_y, 0 - y_label_interval):
             y = margin + (y_val - min_y) * y_spacing
             self.move_to((margin, y))
@@ -435,7 +436,7 @@ class HistoryGraph(cocos.draw.Canvas):
                                       position = (margin * 3/4, y))
 
         # draw the graph
-        print("draw graph")
+        #print("draw graph")
         self.set_stroke_width(1.0)
         self.set_color((255, 0, 0, 255))
 
@@ -470,6 +471,7 @@ class MixGlass(cocos.draw.Canvas):
         current_radius = lambda y_fact: w * (0.5 - ((1- y_fact) * t))
         y_fact = lambda y: float(y) / float(h)
 
+        self.mix.update_properties()
         self.set_stroke_width(1.0)
         self.set_color(self.mix.color + (255,))
 
@@ -498,7 +500,8 @@ class GraphLabels(cocos.cocosnode.CocosNode):
         self.group = None
         self.elements = []
 
-        self.batch = pyglet.graphics.Batch()
+        #self.batch = pyglet.graphics.Batch()
+        self.batch = None
 
     def add_text(self, text='', position=(0,0), **kwargs):
         kwargs['text']=text
@@ -509,7 +512,11 @@ class GraphLabels(cocos.cocosnode.CocosNode):
     def draw(self):
         glPushMatrix()
         self.transform()
-        self.batch.draw()
+        if self.batch:
+            self.batch.draw()
+        else:
+            for e in self.elements:
+                e.draw()
         glPopMatrix()
 
 
@@ -650,5 +657,5 @@ def test_mix():
 
 
 if __name__ == "__main__":
-    #run_cocos_gui()
-    test_mix()
+    run_cocos_gui()
+    #test_mix()
