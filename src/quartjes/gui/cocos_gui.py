@@ -470,15 +470,23 @@ class MixGlass(cocos.draw.Canvas):
         current_radius = lambda y_fact: w * (0.5 - ((1- y_fact) * t))
         y_fact = lambda y: float(y) / float(h)
 
+        count = len(self.mix.drinks)
+        current_drink_id = lambda y: int(math.floor((float(y) / (float(h) * fill)) * count) % count)
+
         self.mix.update_properties()
         self.set_stroke_width(1.0)
-        self.set_color(self.mix.color + (255,))
+        self.set_color(self.mix.color + (140,))
 
         for y in range(0, int(h*fill)):
             r = current_radius(y_fact(y))
             self.move_to((middle_x - r, y))
-            self.line_to((middle_x + r, y))
+            self.line_to((middle_x, y))
 
+        for y in range(0, int(h*fill)):
+            self.set_color(self.mix.drinks[-1 - current_drink_id(y)].color + (140,))
+            r = current_radius(y_fact(y))
+            self.move_to((middle_x, y))
+            self.line_to((middle_x + r, y))
 
         # draw the glass
         self.set_stroke_width(5.0)
