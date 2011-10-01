@@ -10,13 +10,16 @@ from mix_dialog import *
 from drink_dialog import *
 
 class edit_db_dialog(Frame):
-    def __init__(self, master):
-        Frame.__init__(self, master)
-        
-        #if master.conn is not None:
-        #   self.db = self.master.conn.get_service_interface("database")
-        #  drinks = self.db.get_drinks()
-        
+    def __init__(self, root):
+        Frame.__init__(self, root)
+
+        if root.conn != None:
+            print root.conn
+            self.master.db = root.conn.get_service_interface("database")
+            print self.master.db
+            self.master.drinks = self.master.db.get_drinks()
+            
+        print self.master.drinks
         self.createWidgets(type)
         self.pack()
 

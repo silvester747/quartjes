@@ -7,7 +7,7 @@ __date__ ="$5-jun-2011 22:04:13$"
 
 from Tkinter import *
 from quartjes.connector.client import ClientConnector
-#from dialogs import dialog
+from edit_db_dialog import edit_db_dialog
 from sell_dialog import dialogSell
 import tkMessageBox
 
@@ -36,7 +36,8 @@ class Sales_client(Frame):
     def edit_db(self):
         if self.conn.is_connected():
             root = Tk()
-            dialog(root,"edit_db",conn=self.conn)
+            root.conn = self.conn
+            edit_db_dialog(root)
         else:
             tkMessageBox.showwarning("Not connected to server","Please connected to a server first.")
 
