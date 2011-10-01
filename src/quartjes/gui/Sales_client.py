@@ -7,8 +7,8 @@ __date__ ="$5-jun-2011 22:04:13$"
 
 from Tkinter import *
 from quartjes.connector.client import ClientConnector
-from dialogs import dialog
-from dialogSell import dialogSell
+#from dialogs import dialog
+from sell_dialog import dialogSell
 import tkMessageBox
 
 class Sales_client(Frame):
