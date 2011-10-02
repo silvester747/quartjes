@@ -12,12 +12,7 @@ from drink_dialog import *
 class edit_db_dialog(Frame):
     def __init__(self, root):
         Frame.__init__(self, root)
-
-        if root.conn != None:
-            print root.conn
-            self.master.db = root.conn.get_service_interface("database")
-            print self.master.db
-            self.master.drinks = self.master.db.get_drinks()
+        self.master.drinks = self.master.conn.database.get_drinks()
             
         print self.master.drinks
         self.createWidgets(type)
@@ -86,9 +81,9 @@ class edit_db_dialog(Frame):
         self.update_listbox()
 
 if __name__ == "__main__":
+    from quartjes.connector.client import ClientConnector
     master = Tk()
-    master.conn = None
-    master.drinks = [Drink(name="cola"),Drink(name="bacardi",alc_perc=40)]
-    
+    master.conn = ClientConnector(None)
+    master.conn.start()
     app = edit_db_dialog(master)
     app.mainloop()

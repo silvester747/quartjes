@@ -62,7 +62,7 @@ class Sales_client(Frame):
         self.b_connect_to_server.grid(row = 0,column=0,sticky=EW, padx = 20, pady = 20)
         
 if __name__ == "__main__":    
-    hostname = "localhost"
+    hostname = None
     port = 1234
     
     root = Tk()
