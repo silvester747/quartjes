@@ -534,7 +534,7 @@ class GraphLabels(cocos.cocosnode.CocosNode):
 
 class CocosGui(object):
 
-    def __init__(self, hostname="localhost", port=1234, width=1024, height=768,
+    def __init__(self, hostname=None, port=1234, width=1024, height=768,
                  fullscreen=True):
         self.width = width
         self.height = height
@@ -557,23 +557,16 @@ class CocosGui(object):
         self.connector = ClientConnector(self.hostname, self.port)
         self.connector.start()
 
-        while not self.connector.is_connected():
-            time.sleep(1)
-
-        stock_exchange = self.connector.get_service_interface("stock_exchange")
-        database = self.connector.get_service_interface("database")
-        print("get_drinks")
-        self.drinks = database.get_drinks()
-        print("get_mixes")
-        self.mixes = database.get_mixes()
+        self.drinks = self.connector.database.get_drinks()
+        self.mixes = self.connector.database.get_mixes()
 
         self.all = self.drinks + self.mixes
 
         print("subscribe drinks_updated")
-        database.subscribe("drinks_updated", self._update_drinks)
-        database.subscribe("mixes_updated", self._update_mixes)
+        #database.subscribe("drinks_updated", self._update_drinks)
+        #database.subscribe("mixes_updated", self._update_mixes)
         print("subscribe next_round")
-        stock_exchange.subscribe("next_round", self._next_round)
+        #stock_exchange.subscribe("next_round", self._next_round)
 
         cocos.director.director.init(width=self.width, height=self.height,
                                      fullscreen=self.fullscreen)
@@ -666,7 +659,6 @@ def test_mix():
     cocos.director.director.run(scene)
 
     print("Killed")
-
 
 if __name__ == "__main__":
     run_cocos_gui()

@@ -100,8 +100,12 @@ class ClientConnector(object):
         """
         Stop the connector, closing the connection. Stops the reactor loop.
         """
-        threads.blockingCallFromThread(reactor, self.factory.stopTrying)
-        threads.blockingCallFromThread(reactor, reactor.stop)
+        if self.host:
+            threads.blockingCallFromThread(reactor, self.factory.stopTrying)
+            threads.blockingCallFromThread(reactor, reactor.stop)
+        else:
+            self.database = None
+            self.stock_exchange = None
 
     def send_action_request(self, service_name, action, *pargs, **kwargs):
         """
