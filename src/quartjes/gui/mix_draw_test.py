@@ -4,7 +4,8 @@
 __author__="rob"
 __date__ ="$Oct 2, 2011 12:35:43 AM$"
 
-import Image, ImageDraw
+import Image
+import ImageDraw
 import subprocess
 
 def draw_gradient(draw, xy_rail1, xy_rail2, start_color, end_color):
@@ -25,12 +26,20 @@ def draw_gradient(draw, xy_rail1, xy_rail2, start_color, end_color):
             (xy_rail2[1][0] - xy_rail2[0][0]))
         y2 = xy_rail2[0][1] + (x1_factor *
             (xy_rail2[1][1] - xy_rail2[0][1]))
-        r = int(start_color[0] + (x1_factor * (end_color[0] - start_color[0])))
-        g = int(start_color[1] + (x1_factor * (end_color[1] - start_color[1])))
-        b = int(start_color[2] + (x1_factor * (end_color[2] - start_color[2])))
-        a = int(start_color[3] + (x1_factor * (end_color[3] - start_color[3])))
 
-        print("%f (%i, %i) - (%i, %i)" % (x1_factor, x1, y1, x2, y2))
+        if x1_factor < 0.25:
+            color_factor = 0
+        elif x1_factor > 0.75:
+            color_factor = 1
+        else:
+            color_factor = (x1_factor - 0.25) * 2
+
+        r = int(start_color[0] + (color_factor * (end_color[0] - start_color[0])))
+        g = int(start_color[1] + (color_factor * (end_color[1] - start_color[1])))
+        b = int(start_color[2] + (color_factor * (end_color[2] - start_color[2])))
+        a = int(start_color[3] + (color_factor * (end_color[3] - start_color[3])))
+
+        #print("%f (%i, %i) - (%i, %i)" % (x1_factor, x1, y1, x2, y2))
         draw.line(((x1, y1), (x2, y2)), fill=(r, g, b, a))
 
         
@@ -39,6 +48,12 @@ width = 250
 height = 400
 taper = 30
 thickness = 5
+fill = 0.9
+
+colors = (((255, 0, 0, 255), (255, 255, 0, 255)),
+          ((0, 255, 0, 255), (255, 255, 0, 255)),
+          ((0, 255, 0, 255), (255, 255, 0, 255)),
+          ((0, 255, 0, 255), (255, 255, 0, 255)))
 
 im = Image.new("RGBA", (width, height))
 
@@ -52,14 +67,18 @@ draw.polygon(((thickness,0), (width-thickness, 0),
     fill=(222,222,255,255))
 
 taper_from_y = lambda y: int((float(y) / height) * taper)
+start_x_from_y = lambda y: taper_from_y(y) + thickness
+end_x_from_y = lambda y: width - taper_from_y(y) - thickness
 
-draw_gradient(draw, ((thickness, 0), (width-thickness, 0)),
-        ((taper_from_y(100)+thickness, 100), (width-taper_from_y(100)-thickness, 100)),
-        (255, 0, 0, 255), (255, 255, 0, 255))
+delta_y = int (((height - thickness) * fill) / len(colors))
+y = thickness + (1-fill) * (height - thickness)
 
-draw_gradient(draw, ((thickness + taper_from_y(100), 100), (width-thickness-taper_from_y(100), 100)),
-        ((taper_from_y(200)+thickness, 200), (width-taper_from_y(200)-thickness, 200)),
-        (0, 255, 0, 255), (255, 255, 0, 255))
+for (start_color, end_color) in colors:
+
+    draw_gradient(draw, ((start_x_from_y(y), y), (end_x_from_y(y), y)),
+        ((start_x_from_y(y+delta_y), y + delta_y), (end_x_from_y(y+delta_y), y + delta_y)),
+        start_color, end_color)
+    y += delta_y
 
 del draw
 
