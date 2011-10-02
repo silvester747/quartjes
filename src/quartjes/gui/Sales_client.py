@@ -24,13 +24,9 @@ class Sales_client(Frame):
     def connect_to_server(self):
         if self.conn.is_connected():
             self.conn.stop()
-            while self.conn.is_connected():
-                time.sleep(1)
             self.b_connect_to_server.config(text = "Not connected", bg="#ff0000",activebackground="#ff5555")
         else:            
             self.conn.start()
-            while not self.conn.is_connected():
-                time.sleep(1)
             self.b_connect_to_server.config(text = "Connected", bg="#00ff00",activebackground="#55ff55")
 
     def edit_db(self):

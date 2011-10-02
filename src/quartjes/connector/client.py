@@ -129,7 +129,13 @@ class ClientConnector(object):
         """
         Determine whether a connection is active.
         """
-        return self.factory.is_connected()
+        if not self.host:
+            if self.database:
+                return True
+            else:
+                return False
+        else:
+            return self.factory.is_connected()
 
     class ReactorThread(Thread):
         """
