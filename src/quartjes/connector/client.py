@@ -6,6 +6,8 @@ from quartjes.connector.protocol import QuartjesClientFactory
 from twisted.internet import reactor, threads
 from threading import Thread
 from quartjes.connector.services import ServiceInterface
+import quartjes.controllers.database
+import quartjes.controllers.stock_exchange
 
 __author__="rob"
 __date__ ="$Jun 12, 2011 9:37:38 PM$"
@@ -14,33 +16,78 @@ class ClientConnector(object):
     """
     Client side endpoint of the Quartjes connector.
 
-    To create a connection to a Quartjes server, create an instance of this object
-    and start it. An application can have at most one running ClientConnector.
+    =Usage=
+    Create an instance of this object with the host and port to connect to.
+    Call the start() method to establish the connection.
+    Now the database and the stock_exchange variable can be used to communicate
+    with the server.
 
-    Use the method get_service_interface to retrieve an interface to a server side
+    If you do not wish to connect to a server, but run a local server instead,
+    create the object without any arguments.
+
+    =Example=
+    conn = ClientConnector("192.168.1.1")
+    conn.start()
+    conn.database.get_drinks()
+
+    =Available server methods=
+
+    ==database==
+    get_drinks()
+    update_drink(drink)
+    add_drink(drink)
+    remove_drink(drink)
+
+    get_mixes()
+    update_mix(mix)
+    add_mix(mix)
+    remove_mix(mix)
+
+    add(obj)
+    remove(obj)
+    update(obj)
+
+    ==stock_exchange==
+    sell(drink, amount)
+
+    =Advanced=
+
+    Use the method get_service_interface to retrieve additional interfaces to a server side
     service.
 
     As long as the connector is running, it will keep trying to reconnect any
     lost connections using an exponential back-off.
     """
 
-    def __init__(self, host, port):
+    def __init__(self, host=None, port=1234):
         """
         Construct a new ClientConnector to connect to the given host and port number.
+        If no host is given a local server is started.
         """
         self.host = host
         self.port = port
         self.factory = QuartjesClientFactory()
+        self.database = None
+        self.stock_exchange = None
 
     def start(self):
         """
         Start the connector and create a connection to the server. Starts a
         reactor loop in a separate thread.
         """
-        reactor.callLater(0, self._connect)
-        if not reactor.running:
-            self._reactor_thread = ClientConnector.ReactorThread()
-            self._reactor_thread.start()
+        if not self.host:
+            print("No host selected, starting local instance.")
+            self.database = quartjes.controllers.database.database
+            self.stock_exchange = quartjes.controllers.stock_exchange.StockExchange()
+        else:
+            reactor.callLater(0, self._connect)
+            if not reactor.running:
+                self._reactor_thread = ClientConnector.ReactorThread()
+                self._reactor_thread.start()
+            self.factory.wait_for_connection()
+
+            self.database = self.get_service_interface("database")
+            self.stock_exchange = self.get_service_interface("stock_exchange")
 
     def _connect(self):
         """
