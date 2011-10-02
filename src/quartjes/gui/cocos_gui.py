@@ -501,14 +501,19 @@ class GraphLabels(cocos.cocosnode.CocosNode):
     """
     Special CocosNode to contain a number of text objects
     """
+
+    use_batch_rendering = True
+
     def __init__(self, position=(0,0)):
         super(GraphLabels, self).__init__()
         self.position = position
         self.group = None
         self.elements = []
 
-        self.batch = pyglet.graphics.Batch()
-        #self.batch = None
+        if self.use_batch_rendering:
+            self.batch = pyglet.graphics.Batch()
+        else:
+            self.batch = None
 
     def add_text(self, text='', position=(0,0), **kwargs):
         kwargs['text']=text
