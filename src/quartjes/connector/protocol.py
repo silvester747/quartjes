@@ -370,9 +370,9 @@ class QuartjesClientFactory(ReconnectingClientFactory):
         """
         if not timeout:
             timeout = self.timeout
-
+            
         d = defer.Deferred()
-        timeout_call = reactor.callLater(timeout, d.errback(TimeoutError()))
+        timeout_call = reactor.callLater(timeout, d.errback, TimeoutError())
 
         def cb(result, timeout_call):
             timeout_call.cancel()
