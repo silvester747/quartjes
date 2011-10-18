@@ -7,6 +7,8 @@ __date__ ="$Oct 2, 2011 12:35:43 AM$"
 import Image
 import ImageDraw
 import subprocess
+from numpy import array
+import numpy.linalg
 
 def draw_gradient(draw, xy_rail1, xy_rail2, start_color, end_color):
     """
@@ -18,31 +20,42 @@ def draw_gradient(draw, xy_rail1, xy_rail2, start_color, end_color):
     end_color = color at the end of the gradient.
     """
 
-    for x1 in range(xy_rail1[0][0], xy_rail1[1][0]):
-        x1_factor = (float(x1 - xy_rail1[0][0]) / float(xy_rail1[1][0] - xy_rail1[0][0]))
-        y1 = xy_rail1[0][1] + (x1_factor *
-            (xy_rail1[1][1] - xy_rail1[0][1]))
-        x2 = xy_rail2[0][0] + (x1_factor *
-            (xy_rail2[1][0] - xy_rail2[0][0]))
-        y2 = xy_rail2[0][1] + (x1_factor *
-            (xy_rail2[1][1] - xy_rail2[0][1]))
+    rail1_start = array(xy_rail1[0])
+    rail1_end = array(xy_rail1[1])
+    rail2_start = array(xy_rail2[0])
+    rail2_end = array(xy_rail2[1])
+    
+    rail1 = rail1_end - rail1_start
+    rail2 = rail2_end - rail2_start
+    
+    len1 = numpy.linalg.norm(rail1)
+    len2 = numpy.linalg.norm(rail2)
 
-        if x1_factor < 0.25:
-            color_factor = 0
-        elif x1_factor > 0.75:
-            color_factor = 1
-        else:
-            color_factor = (x1_factor - 0.25) * 2
-
-        r = int(start_color[0] + (color_factor * (end_color[0] - start_color[0])))
-        g = int(start_color[1] + (color_factor * (end_color[1] - start_color[1])))
-        b = int(start_color[2] + (color_factor * (end_color[2] - start_color[2])))
-        a = int(start_color[3] + (color_factor * (end_color[3] - start_color[3])))
-
-        #print("%f (%i, %i) - (%i, %i)" % (x1_factor, x1, y1, x2, y2))
-        draw.line(((x1, y1), (x2, y2)), fill=(r, g, b, a))
-
+    if len2 > len1:
+        xy_rail1, xy_rail2 = xy_rail2, xy_rail1
+        rail1_start, rail2_start = rail2_start, rail1_start
+        rail1_end, rail2_end = rail2_end, rail1_end
+        rail1, rail2 = rail2, rail1
+        len1, len2 = len2, len1
         
+    delta1 = rail1 / len1
+    delta2 = rail2 / len1
+    
+    point1 = rail1_start
+    point2 = rail2_start
+    
+    start_color = array(start_color)
+    end_color = array(end_color)
+    color_delta = (end_color - start_color) / len1
+    color = start_color
+    
+    for _ in range(0, int(len1)):
+        draw.line((tuple(point1.tolist()), tuple(point2.tolist())), fill=tuple(color.tolist()))
+    
+        color += color_delta
+        point1 += delta1
+        point2 += delta2
+    
 
 width = 250
 height = 400
