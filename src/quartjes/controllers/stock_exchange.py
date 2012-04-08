@@ -119,6 +119,10 @@ class StockExchange(object):
             self.service = StockExchangeService(self)
         return self.service
     
+    def stop(self):
+        print("Stock exchange stopping after next round...")
+        self.thread.stop()
+    
     def _notify_next_round(self):
         if self.service:
             self.service.notify_next_round(self.db.get_drinks())
@@ -127,11 +131,15 @@ class StockExchangeUpdateThread(threading.Thread):
     def __init__(self, exchange):
         super(StockExchangeUpdateThread, self).__init__()
         self.exchange = exchange
+        self.running = True
 
     def run(self):
-        while (True):
+        while (self.running):
             time.sleep(self.exchange.round_time)
             self.exchange.recalculate_factors()
+            
+    def stop(self):
+        self.running = False
 
 class StockExchangeService(quartjes.connector.services.Service):
     """

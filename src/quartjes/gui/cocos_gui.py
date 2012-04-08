@@ -1,41 +1,22 @@
-import pyglet
-#pyglet.options['debug_font'] = True
-#pyglet.options['debug_gl'] = True
-#pyglet.options['debug_gl_trace'] = True
-#pyglet.options['debug_graphics_batch'] = True
-
-import math
-import cocos.actions.base_actions
-import cocos.layer.base_layers
 __author__="rob"
 __date__ ="$Jun 23, 2011 10:13:35 PM$"
 
-import cocos
-from cocos.actions import *
-from cocos.particle_systems import *
+import argparse
+from axel import Event
 import cocos.scenes.transitions
 import cocos.director
 import cocos.text
-from quartjes.connector.client import ClientConnector
-import time
 import cocos.cocosnode
-import pyglet.text
-from pyglet.gl import *
+import cocos.layer.base_layers
+from cocos.actions import Repeat, Waves3D, Delay, CallFunc, MoveTo, ScaleTo
 import datetime
+import math
+import pyglet.text
+from pyglet.gl import glPushMatrix, glPopMatrix
+from quartjes.connector.client import ClientConnector
 from quartjes.models.drink import Mix
-from axel import Event
+import time
 
-# Preload fonts and keep a reference
-# Otherwise some fonts are evicted from memory when not used for a short while,
-# causing Pyglet to reload them. During reload a seg fault can occur in
-# libfontconfig.
-#import pyglet.font
-#tnr62 = pyglet.font.load(name="Times New Roman", size=62, bold=False, italic=False, dpi=96)
-#tnr20 = pyglet.font.load(name="Times New Roman", size=20, bold=False, italic=False, dpi=96)
-#tnr100 = pyglet.font.load(name="Times New Roman", size=100, bold=False, italic=False, dpi=96)
-#tnr12 = pyglet.font.load(name="Times New Roman", size=12, bold=False, italic=False, dpi=96)
-#tnr80 = pyglet.font.load(name="Times New Roman", size=80, bold=False, italic=False, dpi=96)
-#tnr64 = pyglet.font.load(name="Times New Roman", size=64, bold=False, italic=False, dpi=96)
 
 class TitleLayer(cocos.layer.Layer):
     """
@@ -554,6 +535,11 @@ class CocosGui(object):
         self.all = None
 
     def start(self):
+        print("Starting Cocos GUI")
+        print("\nUsing following settings:")
+        print("\tConnection: %s:%d" % (self.hostname, self.port))
+        print("\tGraphics: (%d, %d) fullscreen=%s" %(self.width, self.height, self.fullscreen))
+        
         self.connector = ClientConnector(self.hostname, self.port)
         self.connector.start()
 
@@ -573,6 +559,8 @@ class CocosGui(object):
         cocos.director.director.set_show_FPS(True)
 
         self.show_ticker_scene()
+        
+        self.connector.stop()
 
     def show_ticker_scene(self, new_ticker=False):
         if not self.ticker_layer or new_ticker:
@@ -617,9 +605,22 @@ class CocosGui(object):
         self.all = self.mixes + self.drinks
         if self.ticker_layer:
             self.ticker_layer.update_drinks(self.all)
+            
+def parse_command_line():
+    parser = argparse.ArgumentParser(description="2D OpenGL accelerated GUI for Quartjesavond.")
+    parser.add_argument("--hostname", help="Hostname to connect too. Default runs local server.")
+    parser.add_argument("--port", type=int, default=1234, help="Port to connect to.")
+    parser.add_argument("--no-fullscreen", action="store_false", dest="fullscreen", 
+                        help="Do not run in fullscreen mode.")
+    parser.add_argument("--width", type=int, default=1024, help="Width of the display window.")
+    parser.add_argument("--height", type=int, default=768, help="Height of the display window.")
+    args = parser.parse_args()
+    return args
 
 def run_cocos_gui():
-    gui = CocosGui()
+    args = parse_command_line()
+    gui = CocosGui(hostname=args.hostname, port = args.port, width=args.width, height=args.height,
+                   fullscreen=args.fullscreen)
     gui.start()
     #gui.show_ticker_scene()
 

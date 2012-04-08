@@ -105,6 +105,7 @@ class ClientConnector(object):
             threads.blockingCallFromThread(reactor, reactor.stop)
         else:
             self.database = None
+            self.stock_exchange.stop()
             self.stock_exchange = None
 
     def send_action_request(self, service_name, action, *pargs, **kwargs):
