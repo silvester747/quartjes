@@ -564,9 +564,9 @@ class CocosGui(object):
 
     def show_ticker_scene(self, new_ticker=False):
         if not self.ticker_layer or new_ticker:
-            self.ticker_layer = BottomTicker()
+            self.ticker_layer = BottomTicker(screen_width=self.width)
         if not self.drink_layer:
-            self.drink_layer = DrinkLayer()
+            self.drink_layer = DrinkLayer(screen_width=self.width)
         if not self.title_layer:
             self.title_layer = TitleLayer()
 
