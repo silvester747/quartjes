@@ -16,7 +16,7 @@ from pyglet.gl import glPushMatrix, glPopMatrix
 from quartjes.connector.client import ClientConnector
 from quartjes.models.drink import Mix
 import time
-
+from quartjes.gui.mix_drawer import create_mix_drawing
 
 class TitleLayer(cocos.layer.Layer):
     """
@@ -284,7 +284,10 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
                         position = (center_x + 20, max_y - 150))
 
 
-        labels.add(MixGlass(position=(100, 0), height=max_y-150, width=200, mix=mix))
+        mix_drawing = cocos.sprite.Sprite(image=create_mix_drawing(height=max_y-150, width=200, mix=mix),
+                                          position=(100, 0))
+        labels.add(mix_drawing)
+        #labels.add(MixGlass(position=(100, 0), height=max_y-150, width=200, mix=mix))
 
         self.add(labels)
         self.current_node = labels
@@ -662,5 +665,5 @@ def test_mix():
     print("Killed")
 
 if __name__ == "__main__":
-    run_cocos_gui()
-    #test_mix()
+    #run_cocos_gui()
+    test_mix()
