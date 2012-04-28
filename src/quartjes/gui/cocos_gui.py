@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 __author__="rob"
 __date__ ="$Jun 23, 2011 10:13:35 PM$"
 
@@ -543,6 +545,15 @@ class CocosGui(object):
         print("\tConnection: %s:%d" % (self.hostname, self.port))
         print("\tGraphics: (%d, %d) fullscreen=%s" %(self.width, self.height, self.fullscreen))
         
+        print()
+        print("Included libraries:")
+        print("\tPyglet:\t%s" % pyglet.version)
+        print("\tCocos:\t%s" % cocos.version)
+        import twisted
+        print("\tTwisted:%s" % twisted.version.short())
+        
+        print()
+        print("Opening connection to server...")
         self.connector = ClientConnector(self.hostname, self.port)
         self.connector.start()
 
@@ -551,19 +562,49 @@ class CocosGui(object):
 
         self.all = self.drinks + self.mixes
 
-        print("subscribe drinks_updated")
+        #print("subscribe drinks_updated")
         #database.subscribe("drinks_updated", self._update_drinks)
         #database.subscribe("mixes_updated", self._update_mixes)
-        print("subscribe next_round")
+        #print("subscribe next_round")
         #stock_exchange.subscribe("next_round", self._next_round)
 
+        print()
+        print("Initializing graphics...")
         cocos.director.director.init(width=self.width, height=self.height,
                                      fullscreen=self.fullscreen)
         cocos.director.director.set_show_FPS(True)
+        self.show_gl_info()
 
+        print()
+        print("Starting the show!")
         self.show_ticker_scene()
         
+        print()
+        print("Shut down in progress...")
+        print()
+        
         self.connector.stop()
+
+    def show_gl_info(self):
+        from pyglet.gl.gl_info import GLInfo
+        info = GLInfo()
+        info.set_active_context()
+        
+        print("GL Info:")
+        print("\tVersion:\t%s" % info.get_version())
+        print("\tRenderer:\t%s" % info.get_renderer())
+        print("\tVendor:\t\t%s" % info.get_vendor())
+        print("\tExtensions:\t%s" % info.get_extensions())
+        
+        from pyglet.gl.glu_info import GLUInfo
+        info = GLUInfo()
+        info.set_active_context()
+        
+        print()
+        print("GLU Info:")
+        print("\tVersion:\t%s" % info.get_version())
+        print("\tExtensions:\t%s" % info.get_extensions())
+        
 
     def show_ticker_scene(self, new_ticker=False):
         if not self.ticker_layer or new_ticker:
