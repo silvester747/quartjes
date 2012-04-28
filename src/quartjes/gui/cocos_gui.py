@@ -287,7 +287,7 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
 
 
         mix_drawing = cocos.sprite.Sprite(image=create_mix_drawing(height=max_y-150, width=200, mix=mix),
-                                          position=(100, 0))
+                                          position=(100, 0),anchor=(0,0))
         labels.add(mix_drawing)
         #labels.add(MixGlass(position=(100, 0), height=max_y-150, width=200, mix=mix))
 

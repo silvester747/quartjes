@@ -92,12 +92,17 @@ def create_image(width, height, taper, thickness, fill, colors):
     
     width -= 1
     
+    #glass_outer_color = (200,200,255,255)
+    #glass_inner_color = (222,222,255,255)
+    glass_outer_color = (200,200,255,200)
+    glass_inner_color = (200,200,255,100)
+    
     draw = ImageDraw.Draw(im)
     draw.polygon(((0,0), (width, 0), (width-taper, height), (taper, height)),
-        fill=(200,200,255,255))
+        fill=glass_outer_color)
     draw.polygon(((thickness,0), (width-thickness, 0),
         (width-taper-thickness, height-thickness), (taper+thickness, height-thickness)),
-        fill=(222,222,255,255))
+        fill=glass_inner_color)
     
     taper_from_y = lambda y: int((float(y) / height) * taper)
     start_x_from_y = lambda y: taper_from_y(y) + thickness
@@ -115,7 +120,7 @@ def create_image(width, height, taper, thickness, fill, colors):
                       rail2_end = (end_x_from_y(y+delta_y), y + delta_y),
                       start_color = start_color, 
                       end_color = end_color,
-                      gradient_start = 0.3,
+                      gradient_start = 0.1,
                       gradient_end = 0.7)
         y += delta_y
     
