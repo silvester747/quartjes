@@ -1,8 +1,9 @@
-# To change this template, choose Tools | Templates
-# and open the template in the editor.
+"""
+Module for drawing a mix drink.
+"""
 
-__author__="rob"
-__date__ ="$Oct 2, 2011 12:35:43 AM$"
+__author__ = "rob"
+__date__ = "$Oct 2, 2011 12:35:43 AM$"
 
 import Image
 import ImageDraw
@@ -10,10 +11,10 @@ import subprocess
 from numpy import array
 import numpy.linalg
 from pyglet.image.codecs import ImageDecodeException
-from pyglet.gl.gl import GL_UNSIGNED_BYTE
 from pyglet.image import ImageData
 
-def draw_gradient(draw, rail1_start, rail1_end, rail2_start, rail2_end, start_color, end_color,
+def draw_gradient(draw, rail1_start, rail1_end, rail2_start, rail2_end, 
+                  start_color, end_color,
                   gradient_start=0.0, gradient_end=1.0):
     """
     Draw a gradient sweeping over two rails.
@@ -60,7 +61,8 @@ def draw_gradient(draw, rail1_start, rail1_end, rail2_start, rail2_end, start_co
     color = start_color
     
     for pos in range(0, int(len1)):
-        draw.line((tuple(point1.tolist()), tuple(point2.tolist())), fill=to_int_tuple4(color))
+        draw.line((tuple(point1.tolist()), tuple(point2.tolist())), 
+                  fill=to_int_tuple4(color))
     
         if pos > gradient_start_pos and pos < gradient_end_pos:
             color += color_delta
@@ -68,39 +70,50 @@ def draw_gradient(draw, rail1_start, rail1_end, rail2_start, rail2_end, start_co
         point2 += delta2
 
 def to_float_array4(arr):
+    """
+    Convert an iterable object of 4 nnumeric values into a NumPy array of 4 doubles.
+    """
     return array((float(arr[0]), float(arr[1]), float(arr[2]), float(arr[3])))
 
 def to_int_tuple4(arr):
+    """
+    Convert an iterable object of 4 numeric values into a tuple of 4 integers.
+    """
     return (int(arr[0]), int(arr[1]), int(arr[2]), int(arr[3]))
     
 def get_image_data(image):
-        image = image.transpose(Image.FLIP_TOP_BOTTOM)
+    """
+    Retrieve image data from a PIL Image so it can be loaded into a Pyglet image.
+    Returns the data wrapped in a Pyglet ImageData object.
+    """
+    image = image.transpose(Image.FLIP_TOP_BOTTOM)
 
-        # Convert bitmap and palette images to component
-        if image.mode in ('1', 'P'):
-            image = image.convert()
+    # Convert bitmap and palette images to component
+    if image.mode in ('1', 'P'):
+        image = image.convert()
 
-        if image.mode not in ('L', 'LA', 'RGB', 'RGBA'):
-            raise ImageDecodeException('Unsupported mode "%s"' % image.mode)
-        type = GL_UNSIGNED_BYTE
-        width, height = image.size
+    if image.mode not in ('L', 'LA', 'RGB', 'RGBA'):
+        raise ImageDecodeException('Unsupported mode "%s"' % image.mode)
+    width, height = image.size
 
-        return ImageData(width, height, image.mode, image.tostring())
+    return ImageData(width, height, image.mode, image.tostring())
 
 def create_image(width, height, taper, thickness, fill, colors):
-    im = Image.new("RGBA", (width, height))
+    """
+    Construct an image of a mix drink in a glass.
+    Returns a PIL Image object.
+    """
+    image = Image.new("RGBA", (width, height))
     
     width -= 1
     
-    #glass_outer_color = (200,200,255,255)
-    #glass_inner_color = (222,222,255,255)
-    glass_outer_color = (200,200,255,200)
-    glass_inner_color = (200,200,255,100)
+    glass_outer_color = (200, 200, 255, 200)
+    glass_inner_color = (200, 200, 255, 100)
     
-    draw = ImageDraw.Draw(im)
-    draw.polygon(((0,0), (width, 0), (width-taper, height), (taper, height)),
+    draw = ImageDraw.Draw(image)
+    draw.polygon(((0, 0), (width, 0), (width-taper, height), (taper, height)),
         fill=glass_outer_color)
-    draw.polygon(((thickness,0), (width-thickness, 0),
+    draw.polygon(((thickness, 0), (width-thickness, 0),
         (width-taper-thickness, height-thickness), (taper+thickness, height-thickness)),
         fill=glass_inner_color)
     
@@ -126,22 +139,29 @@ def create_image(width, height, taper, thickness, fill, colors):
     
     del draw
     
-    return im
+    return image
 
 def create_mix_drawing(height, width, mix):
+    """
+    Construct an image for the given mix drink.
+    Returns the image wrapped in a Pyglet ImageData object.
+    """
     taper = 30
     thickness = 5
     fill = 0.9
     
     mix.update_properties()
     colors = []
-    for drink in mix.drinks:
+    for drink in mix._drinks:
         colors.append((drink.color + (140,), mix.color + (140,)))
     
     im = create_image(width, height, taper, thickness, fill, colors)
     return get_image_data(im)
 
-if __name__ == "__main__":
+def self_test():
+    """
+    Do a simple self test, store the result on disk and open Eye of Gnome to display the result.
+    """
     
     width = 250
     height = 400
@@ -160,3 +180,6 @@ if __name__ == "__main__":
     
     im.save('test.png')
     subprocess.Popen(['/usr/bin/eog', 'test.png'])
+    
+if __name__ == "__main__":
+    self_test()

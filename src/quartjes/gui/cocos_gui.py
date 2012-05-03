@@ -1,7 +1,12 @@
+"""
+Graphical user interface using Cocos2D.
+Displays the current prices of all _drinks in a ticker at the bottom. As each
+drink passes the center of the ticker, related information is shown in the
+center of the screen.
+"""
 from __future__ import print_function
 
-__author__="rob"
-__date__ ="$Jun 23, 2011 10:13:35 PM$"
+__author__ = "Rob van der Most"
 
 import argparse
 from axel import Event
@@ -46,47 +51,56 @@ class BottomTicker(cocos.layer.Layer):
 
     def __init__(self, display_time=1.0, display_y=0, screen_width=1024, drinks=None,
                  visible_segments=10, margin=2, interval=3, focus_start=3,
-                 focus_length=2, focus_height=40, drink_layer=None):
+                 focus_length=2, focus_height=40):
         """
         Initialize the ticker.
         """
         super(BottomTicker, self).__init__()
 
         # Time in pyglet units between each point on the ticker.
-        self.display_time = display_time
+        self._display_time = display_time
 
         # Y coordinate on the screen where the ticker is shown.
-        self.display_y = display_y
+        self._display_y = display_y
 
         # Width of the screen. This width is used to calculate the path the items
         # in the ticker follow.
-        self.screen_width = screen_width
+        self._screen_width = screen_width
 
         # Number of segments to divide the visible screen in. Used to create the
         # path to follow.
-        self.visible_segments = visible_segments
+        self._visible_segments = visible_segments
 
         # Number of segments outside the visible screen at each side.
-        self.margin = margin
+        self._margin = margin
 
         # Number of segments between each item on the ticker.
-        self.interval = interval
+        self._interval = interval
 
         # Number of the segment where the item starts to have focus. This includes
         # segments outside the visible screen.
-        self.focus_start = focus_start + self.margin
+        self._focus_start = focus_start + self._margin
 
         # Number of segments an item has focus.
-        self.focus_length = focus_length
+        self._focus_length = focus_length
 
         # Increase in y position on the screen for items with focus.
-        self.focus_height = focus_height
+        self._focus_height = focus_height
         
-        # List of drinks to show on the ticker
-        self.drinks = drinks
+        # List of _drinks to show on the ticker
+        self._drinks = drinks
 
         # Index of the drink last added to the ticker
-        self.current_drink_index = 0
+        self._current_drink_index = 0
+        
+        # List of points followed by the ticker
+        self._points = []
+        
+        # Total number of segments
+        self._segment_count = 0
+        
+        # Segment the focus ends
+        self._focus_end = 0
 
         # Drink currently having focus.
         self.focussed_drink = None
@@ -103,13 +117,13 @@ class BottomTicker(cocos.layer.Layer):
         Prepare the ticker by calculating all points on the path.
         """
 
-        distance = self.screen_width / self.visible_segments
-        self.points = [(x*distance, self.display_y) for x in range(self.visible_segments + self.margin, -1 - self.margin, -1)]
-        self.segment_count = len(self.points) - 1
+        distance = self._screen_width / self._visible_segments
+        self._points = [(x*distance, self._display_y) for x in range(self._visible_segments + self._margin, -1 - self._margin, -1)]
+        self._segment_count = len(self._points) - 1
 
-        self.focus_end = self.focus_start + 2 + self.focus_length
-        for pnt in range(self.focus_start + 1, self.focus_end):
-            self.points[pnt] = (self.points[pnt][0], self.focus_height)
+        self._focus_end = self._focus_start + 2 + self._focus_length
+        for pnt in range(self._focus_start + 1, self._focus_end):
+            self._points[pnt] = (self._points[pnt][0], self._focus_height)
 
     def update_drinks(self, drinks):
         """
@@ -117,10 +131,10 @@ class BottomTicker(cocos.layer.Layer):
         already visible drinks.
         """
         print("Receiving update")
-        cur_drink = self.current_drink_index
+        cur_drink = self._current_drink_index
         if cur_drink >= len(drinks):
             cur_drink = 0
-        self.drinks, self.current_drink_index = drinks, cur_drink
+        self._drinks, self._current_drink_index = drinks, cur_drink
 
     def _safe_kill(self, child):
         """
@@ -145,33 +159,33 @@ class BottomTicker(cocos.layer.Layer):
         text = ""
         drink = None
 
-        if self.drinks != None and len(self.drinks) > 0:
-            self.current_drink_index += 1
-            if self.current_drink_index >= len(self.drinks):
-                self.current_drink_index = 0
-            drink = self.drinks[self.current_drink_index]
+        if self._drinks != None and len(self._drinks) > 0:
+            self._current_drink_index += 1
+            if self._current_drink_index >= len(self._drinks):
+                self._current_drink_index = 0
+            drink = self._drinks[self._current_drink_index]
             text = "%s - %d" % (drink.name, drink.sellprice_quartjes())
 
         next_label = cocos.text.Label(text,
                                  font_name='Times New Roman',
                                  font_size=64,
                                  anchor_x='center', anchor_y='bottom')
-        next_label.position = self.points[0]
+        next_label.position = self._points[0]
         next_label.scale = 0.5
         self.add(next_label)
 
-        spawn_actions = Delay(self.display_time * self.interval) + CallFunc(self._next_drink)
+        spawn_actions = Delay(self._display_time * self._interval) + CallFunc(self._next_drink)
 
-        move_actions = MoveTo(self.points[self.focus_start], self.display_time * self.focus_start)
-        move_actions += (MoveTo(self.points[self.focus_start + 1], self.display_time) |
-                         (Delay(self.display_time / 2) +
-                         ScaleTo(1, self.display_time / 2)) |
+        move_actions = MoveTo(self._points[self._focus_start], self._display_time * self._focus_start)
+        move_actions += (MoveTo(self._points[self._focus_start + 1], self._display_time) |
+                         (Delay(self._display_time / 2) +
+                         ScaleTo(1, self._display_time / 2)) |
                          CallFunc(self._set_focussed_drink, drink))
-        move_actions += (MoveTo(self.points[self.focus_end - 1], self.display_time * self.focus_length))
-        move_actions += (MoveTo(self.points[self.focus_end], self.display_time) |
-                         (ScaleTo(0.5, self.display_time / 2) +
-                         Delay(self.display_time / 2)))
-        move_actions += MoveTo(self.points[-1], self.display_time * (self.segment_count - self.focus_end))
+        move_actions += (MoveTo(self._points[self._focus_end - 1], self._display_time * self._focus_length))
+        move_actions += (MoveTo(self._points[self._focus_end], self._display_time) |
+                         (ScaleTo(0.5, self._display_time / 2) +
+                         Delay(self._display_time / 2)))
+        move_actions += MoveTo(self._points[-1], self._display_time * (self._segment_count - self._focus_end))
 
         next_label.do((spawn_actions | move_actions) + CallFunc(self._safe_kill, next_label))
 
@@ -183,46 +197,57 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
     In case a mix drink is focussed, the details of the mix are displayed.
     """
 
-    def __init__(self, graph_position=(50,150), graph_width=940, graph_height=500,
+    def __init__(self, graph_position=(50, 150), graph_width=940, graph_height=500,
                  screen_width=1024, move_time=1.0):
+        """
+        Initialize the drink layer.
+        """
         super(DrinkLayer, self).__init__()
 
-        self.graph_position = graph_position
-        self.graph_width = graph_width
-        self.graph_height = graph_height
-        self.screen_width = screen_width
-        self.move_time = move_time
+        self._graph_position = graph_position
+        self._graph_width = graph_width
+        self._graph_height = graph_height
+        self._screen_width = screen_width
+        self._move_time = move_time
 
         self._points = []
         self._points.append((screen_width, graph_position[1]))
         self._points.append(graph_position)
         self._points.append((0-graph_width, graph_position[1]))
 
-        self.current_node = None
+        self._current_node = None
 
-        self.next_drink = None
+        self._next_drink = None
 
     def show_drink(self, drink):
-        self.next_drink = drink
+        """
+        Change the drink currently being shown.
+        """
+        self._next_drink = drink
 
     def draw(self, *args, **kwargs):
-        if self.next_drink:
-            self._show_drink(self.next_drink)
-            self.next_drink = None
+        """
+        Called by Cocos2D. Performs actions on next render loop.
+        """
+        if self._next_drink:
+            self._show_drink(self._next_drink)
+            self._next_drink = None
 
     def _show_drink(self, drink):
-        #print("_show_drink called")
+        """
+        Replace the current drink with the next drink to display.
+        """
         if not self.is_running:
             print("Not running")
-            if self.current_node:
-                self.current_node.kill
-                self.current_node = None
+            if self._current_node:
+                self._current_node.kill
+                self._current_node = None
 
             return
 
-        if self.current_node:
-            self.current_node.do(MoveTo(self._points[2], 0.5 * self.move_time) +
-                                 CallFunc(self.current_node.kill))
+        if self._current_node:
+            self._current_node.do(MoveTo(self._points[2], 0.5 * self._move_time) +
+                                 CallFunc(self._current_node.kill))
 
         if drink == None:
             print("No drink")
@@ -234,29 +259,35 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
             self._show_drink_history(drink)
 
     def _show_drink_history(self, drink):
+        """
+        Display the historic price graph for a drink.
+        """
 
         if drink.history == None:
             print("No history")
             return
 
-        self.current_node = HistoryGraph(position=self._points[0],
-                                          width = self.graph_width,
-                                          height=self.graph_height,
+        self._current_node = HistoryGraph(position=self._points[0],
+                                          width = self._graph_width,
+                                          height=self._graph_height,
                                           data=drink.history)
-        self.current_node.do(Delay(0.5 * self.move_time) +
-                              MoveTo(self._points[1], 0.5 * self.move_time))
+        self._current_node.do(Delay(0.5 * self._move_time) +
+                              MoveTo(self._points[1], 0.5 * self._move_time))
 
-        self.add(self.current_node)
+        self.add(self._current_node)
 
     def _show_mix(self, mix):
+        """
+        Show a mix drink.
+        """
 
         font = 'Times New Roman'
         #font = 'Verdana'
 
-        center_x = self.graph_width / 2
-        max_y = self.graph_height
+        center_x = self._graph_width / 2
+        max_y = self._graph_height
 
-        labels = GraphLabels(position=self._points[0])
+        labels = LabelBatch(position=self._points[0])
 
         labels.add_text(mix.name,
                         font_name=font,
@@ -271,7 +302,7 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
                         position = (center_x, max_y - 100))
 
         y = max_y - 150
-        for d in mix.drinks:
+        for d in mix._drinks:
             labels.add_text(d.name,
                             font_name=font,
                             font_size=20,
@@ -289,13 +320,12 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
         mix_drawing = cocos.sprite.Sprite(image=create_mix_drawing(height=max_y-150, width=200, mix=mix),
                                           position=(100, 0),anchor=(0,0))
         labels.add(mix_drawing)
-        #labels.add(MixGlass(position=(100, 0), height=max_y-150, width=200, mix=mix))
 
         self.add(labels)
-        self.current_node = labels
+        self._current_node = labels
 
-        labels.do(Delay(0.5 * self.move_time) +
-                              MoveTo(self._points[1], 0.5 * self.move_time))
+        labels.do(Delay(0.5 * self._move_time) +
+                              MoveTo(self._points[1], 0.5 * self._move_time))
 
 
 
@@ -306,7 +336,7 @@ class HistoryGraph(cocos.draw.Canvas):
         self.position = position
         self.width = width
         self.height = height
-        self.margin = margin
+        self._margin = margin
         self.labels = None
         self.text_visible = False
         self.initial_visible = initial_visible
@@ -335,7 +365,7 @@ class HistoryGraph(cocos.draw.Canvas):
     def _draw_graph(self):
 
         w, h = self.width, self.height
-        margin = self.margin
+        margin = self._margin
 
         # draw x and y axis lines
         self.set_color((255, 255, 255, 255))
@@ -352,7 +382,7 @@ class HistoryGraph(cocos.draw.Canvas):
             #print("Not enough data")
             return
 
-        self.labels = GraphLabels()
+        self.labels = LabelBatch()
 
         # draw x axis marks
         #print("draw x axis")
@@ -428,7 +458,7 @@ class HistoryGraph(cocos.draw.Canvas):
         x = margin
         self.move_to((x, margin + (self.data[0][1] - min_y) * y_spacing))
         x += x_spacing
-        for (x_val, y_val) in self.data[1:]:
+        for (_, y_val) in self.data[1:]:
             y = margin + (y_val - min_y) * y_spacing
             self.line_to((x, y))
             x += x_spacing
@@ -436,54 +466,8 @@ class HistoryGraph(cocos.draw.Canvas):
         if self.initial_visible:
             self.show_text()
 
-class MixGlass(cocos.draw.Canvas):
 
-    def __init__(self, position=(0,0), width=400, height=300, taper=0.1, mix=None):
-        super(MixGlass, self).__init__()
-        self.position = position
-        self.width = width
-        self.height = height
-        self.taper = taper
-        self.mix = mix
-
-    def render(self):
-
-        h, w, t = self.height, self.width, self.taper
-
-        # draw contents
-        middle_x = w / 2
-        fill = 0.8
-        current_radius = lambda y_fact: w * (0.5 - ((1- y_fact) * t))
-        y_fact = lambda y: float(y) / float(h)
-
-        count = len(self.mix.drinks)
-        current_drink_id = lambda y: int(math.floor((float(y) / (float(h) * fill)) * count) % count)
-
-        self.mix.update_properties()
-        self.set_stroke_width(1.0)
-        self.set_color(self.mix.color + (140,))
-
-        for y in range(0, int(h*fill)):
-            r = current_radius(y_fact(y))
-            self.move_to((middle_x - r, y))
-            self.line_to((middle_x, y))
-
-        for y in range(0, int(h*fill)):
-            self.set_color(self.mix.drinks[-1 - current_drink_id(y)].color + (140,))
-            r = current_radius(y_fact(y))
-            self.move_to((middle_x, y))
-            self.line_to((middle_x + r, y))
-
-        # draw the glass
-        self.set_stroke_width(5.0)
-        self.set_color((255, 255, 255, 255))
-        self.move_to((0, h))
-        self.line_to((t*w, 0))
-        self.line_to(((1-t)*w, 0))
-        self.line_to((w, h))
-
-
-class GraphLabels(cocos.cocosnode.CocosNode):
+class LabelBatch(cocos.cocosnode.CocosNode):
     """
     Special CocosNode to contain a number of text objects
     """
@@ -491,7 +475,7 @@ class GraphLabels(cocos.cocosnode.CocosNode):
     use_batch_rendering = True
 
     def __init__(self, position=(0,0)):
-        super(GraphLabels, self).__init__()
+        super(LabelBatch, self).__init__()
         self.position = position
         self.group = None
         self.elements = []
@@ -535,7 +519,7 @@ class CocosGui(object):
         self.title_layer = None
         self.mix_layer = None
 
-        self.drinks = None
+        self._drinks = None
         self.mixes = None
         self.all = None
 
@@ -557,10 +541,10 @@ class CocosGui(object):
         self.connector = ClientConnector(self.hostname, self.port)
         self.connector.start()
 
-        self.drinks = self.connector.database.get_drinks()
+        self._drinks = self.connector.database.get_drinks()
         self.mixes = self.connector.database.get_mixes()
 
-        self.all = self.drinks + self.mixes
+        self.all = self._drinks + self.mixes
 
         #print("subscribe drinks_updated")
         #database.subscribe("drinks_updated", self._update_drinks)
@@ -614,7 +598,7 @@ class CocosGui(object):
         if not self.title_layer:
             self.title_layer = TitleLayer()
 
-        self.ticker_layer.update_drinks(self.drinks)
+        self.ticker_layer.update_drinks(self._drinks)
 
         if new_ticker:
             self.drink_layer.show_drink_history(None)
@@ -633,20 +617,20 @@ class CocosGui(object):
             cocos.director.director.replace(cocos.scenes.transitions.FadeTransition(scene))
 
     def _update_drinks(self, drinks):
-        self.drinks = drinks
-        self.all = self.mixes + self.drinks
+        self._drinks = drinks
+        self.all = self.mixes + self._drinks
         if self.ticker_layer:
             self.ticker_layer.update_drinks(self.all)
 
     def _update_mixes(self, mixes):
         self.mixes = mixes
-        self.all = self.mixes + self.drinks
+        self.all = self.mixes + self._drinks
         if self.ticker_layer:
             self.ticker_layer.update_drinks(self.all)
 
     def _next_round(self, drinks):
-        self.drinks = drinks
-        self.all = self.mixes + self.drinks
+        self._drinks = drinks
+        self.all = self.mixes + self._drinks
         if self.ticker_layer:
             self.ticker_layer.update_drinks(self.all)
             
