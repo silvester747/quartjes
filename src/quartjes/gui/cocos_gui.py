@@ -16,8 +16,6 @@ import cocos.text
 import cocos.cocosnode
 import cocos.layer.base_layers
 from cocos.actions import Repeat, Waves3D, Delay, CallFunc, MoveTo, ScaleTo
-import datetime
-import math
 import pyglet.text
 from pyglet.gl import glPushMatrix, glPopMatrix
 from quartjes.connector.client import ClientConnector
@@ -198,23 +196,23 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
     In case a mix drink is focussed, the details of the mix are displayed.
     """
 
-    def __init__(self, graph_position=(50, 150), graph_width=940, graph_height=500,
+    def __init__(self, top=150, graph_width=940, graph_height=500,
                  screen_width=1024, move_time=1.0):
         """
         Initialize the drink layer.
         """
         super(DrinkLayer, self).__init__()
 
-        self._graph_position = graph_position
+        self._top = top
         self._graph_width = graph_width
         self._graph_height = graph_height
         self._screen_width = screen_width
         self._move_time = move_time
 
         self._points = []
-        self._points.append((screen_width, graph_position[1]))
-        self._points.append(graph_position)
-        self._points.append((0-graph_width, graph_position[1]))
+        self._points.append((screen_width + (graph_width / 2), top))
+        self._points.append((screen_width / 2, top))
+        self._points.append((0 - (graph_width / 2), top))
 
         self._current_node = None
 
@@ -255,13 +253,18 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
             return
 
         if isinstance(drink, Mix):
-            self._show_mix(drink)
+            self._current_node = self._get_mix(drink)
         else:
-            self._show_drink_history(drink)
+            self._current_node = self._get_drink_history(drink)
 
-    def _show_drink_history(self, drink):
+        self._current_node.do(Delay(0.5 * self._move_time) +
+                              MoveTo(self._points[1], 0.5 * self._move_time))
+        self.add(self._current_node)
+
+
+    def _get_drink_history(self, drink):
         """
-        Display the historic price graph for a drink.
+        Construct a node to display the historic price graph for a drink.
         """
 
         if drink.history == None:
@@ -270,24 +273,22 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
 
         graph = history_graph.create_pyglet_image(drink, self._graph_width, self._graph_height)
 
-        self._current_node = cocos.sprite.Sprite(image = graph,
-                                                 position=self._points[0],
-                                                 anchor=(0,0))
+        node = cocos.sprite.Sprite(image = graph,
+                                   position=self._points[0],
+                                   anchor=(self._graph_width / 2, 0))
 
-        self._current_node.do(Delay(0.5 * self._move_time) +
-                              MoveTo(self._points[1], 0.5 * self._move_time))
+        return node
 
-        self.add(self._current_node)
-
-    def _show_mix(self, mix):
+    def _get_mix(self, mix):
         """
-        Show a mix drink.
+        Construct a node to show a mix drink.
         """
 
         font = 'Times New Roman'
         #font = 'Verdana'
 
-        center_x = self._graph_width / 2
+        #center_x = self._graph_width / 2
+        center_x = 0
         max_y = self._graph_height
 
         labels = LabelBatch(position=self._points[0])
@@ -321,15 +322,10 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
 
 
         mix_drawing = cocos.sprite.Sprite(image=mix_drawer.create_mix_drawing(height=max_y-150, width=200, mix=mix),
-                                          position=(100, 0),anchor=(0,0))
+                                          position=(-400, 0),anchor=(0,0))
         labels.add(mix_drawing)
 
-        self.add(labels)
-        self._current_node = labels
-
-        labels.do(Delay(0.5 * self._move_time) +
-                              MoveTo(self._points[1], 0.5 * self._move_time))
-
+        return labels
 
 class LabelBatch(cocos.cocosnode.CocosNode):
     """
@@ -462,7 +458,7 @@ class CocosGui(object):
         if not self.title_layer:
             self.title_layer = TitleLayer()
 
-        self.ticker_layer.update_drinks(self._drinks)
+        self.ticker_layer.update_drinks(self.all)
 
         if new_ticker:
             self.drink_layer.show_drink_history(None)
@@ -499,6 +495,10 @@ class CocosGui(object):
             self.ticker_layer.update_drinks(self.all)
             
 def parse_command_line():
+    """
+    Parse the command line.
+    Returns a namespace object containing the arguments.
+    """
     parser = argparse.ArgumentParser(description="2D OpenGL accelerated GUI for Quartjesavond.")
     parser.add_argument("--hostname", help="Hostname to connect too. Default runs local server.")
     parser.add_argument("--port", type=int, default=1234, help="Port to connect to.")
@@ -510,13 +510,19 @@ def parse_command_line():
     return args
 
 def run_cocos_gui():
+    """
+    Do a normal startup of the Cocos GUI.
+    Parses the command line and starts the gui.
+    """
     args = parse_command_line()
     gui = CocosGui(hostname=args.hostname, port = args.port, width=args.width, height=args.height,
                    fullscreen=args.fullscreen)
     gui.start()
-    #gui.show_ticker_scene()
 
 def test_mix():
+    """
+    Self test for testing the mix drawing functionality.
+    """
     cocos.director.director.init(width=1024, height=768,
                                      fullscreen=True)
     cocos.director.director.set_show_FPS(True)
