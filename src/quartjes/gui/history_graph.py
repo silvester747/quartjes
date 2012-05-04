@@ -7,10 +7,20 @@ Created on May 3, 2012
 import Image
 import ImageDraw
 import datetime
+import math
 
-from quartjes.gui.mix_drawer import get_image_data, to_float_array4, to_int_tuple4
+from quartjes.models.drink import Drink
+from quartjes.gui.mix_drawer import get_image_data
 
-def create_history_graph(drink, width, height):
+def create_pyglet_image(drink, width, height):
+    """
+    Draw a price history graph for the given drink.
+    Returns Image data for use with Pyglet.
+    """
+    
+    return get_image_data(create_image(drink, width, height))
+
+def create_image(drink, width, height):
     """
     Draw a price history graph for the given drink.
     Returns a PIL Image object.
@@ -23,11 +33,14 @@ def create_history_graph(drink, width, height):
     axis_color = (255, 255, 255, 255)
     graph_color = (255, 0, 0, 255)
     
-    margin = 30
+    margin_x = 30
+    margin_y = 15
+    
+    
     
     # Draw axis
-    draw.line(((margin, 0), (margin, height - margin)), fill=axis_color, width=2)
-    draw.line(((margin, height - margin), (width, height - margin)), fill=axis_color, width=2)
+    draw.line(((margin_x, 0), (margin_x, height - margin_y)), fill=axis_color, width=2)
+    draw.line(((margin_x, height - margin_y), (width, height - margin_y)), fill=axis_color, width=2)
     
     data = drink.history
     
@@ -40,7 +53,6 @@ def create_history_graph(drink, width, height):
         return image
 
     # draw x axis marks
-    #print("draw x axis")
     max_x = 0
     for (x, y) in data:
         if x > max_x:
@@ -51,31 +63,27 @@ def create_history_graph(drink, width, height):
             min_x = x
 
     x_count = len(data)
-    x_spacing = (width - margin) / (x_count - 1)
+    x_spacing = (width - 2 * margin_x) / (x_count - 1)
     x_label_interval = 1
     while x_spacing * x_label_interval < 100:
         x_label_interval += 1
 
     for i in range(x_count -1, -1, 0 - x_label_interval):
-        x = margin + i * x_spacing
-        draw.line(((x, margin), (x, margin* 3/4)), fill=axis_color, width=1)
+        x = margin_x + i * x_spacing
+        draw.line(((x, height - margin_y), (x, height - (margin_y * 3/4))), fill=axis_color, width=1)
 
         txt = datetime.datetime.fromtimestamp(data[i][0]).strftime("%H:%M")
+        txt_size = draw.textsize(txt)
 
-        self.labels.add_text(txt,
-                                  font_name='Times New Roman',
-                                  font_size=12,
-                                  anchor_x='center', anchor_y='top',
-                                  position = (x, margin * 3/4))
-
+        draw.text((x - (txt_size[0] / 2), height - (margin_y * 3/4)), txt)
+        
     # draw y axis marks
-    #print("draw y axis")
     max_y = 0
-    for (x, y) in self.data:
+    for (x, y) in data:
         if y > max_y:
             max_y = y
     min_y = max_y
-    for (x, y) in self.data:
+    for (x, y) in data:
         if y < min_y:
             min_y = y
 
@@ -87,32 +95,63 @@ def create_history_graph(drink, width, height):
         min_y -= 1
         y_count += 1
 
-    y_spacing = float(h - 2 * margin) / (y_count - 1)
-    #print(y_spacing)
+    y_spacing = float(height - 2 * margin_y) / (y_count - 1)
     y_label_interval = 1
     while y_spacing * y_label_interval < 50:
         y_label_interval += 1
 
-    #print("start drawing y")
     for y_val in range(max_y, min_y, 0 - y_label_interval):
-        y = margin + (y_val - min_y) * y_spacing
-        self.move_to((margin, y))
-        self.line_to((margin * 3/4, y))
-        self.labels.add_text(str(y_val),
-                                  font_name='Times New Roman',
-                                  font_size=12,
-                                  anchor_x='right', anchor_y='center',
-                                  position = (margin * 3/4, y))
-
+        y = height - (margin_y + (y_val - min_y) * y_spacing)
+        draw.line(((margin_x * 3/4, y), (margin_x, y)), fill=axis_color, width=1)
+        
+        txt = str(y_val)
+        txt_size = draw.textsize(txt)
+        
+        draw.text(((margin_x * 3/4) - txt_size[0], y - (txt_size[1] / 2)), txt)
+        
     # draw the graph
-    #print("draw graph")
-    self.set_stroke_width(1.0)
-    self.set_color((255, 0, 0, 255))
-
-    x = margin
-    self.move_to((x, margin + (self.data[0][1] - min_y) * y_spacing))
-    x += x_spacing
-    for (_, y_val) in self.data[1:]:
-        y = margin + (y_val - min_y) * y_spacing
-        self.line_to((x, y))
+    line = []
+    x = margin_x
+    for (_, y_val) in data:
+        y = height - (margin_y + (y_val - min_y) * y_spacing)
+        line.append((x, y))
         x += x_spacing
+    
+    draw.line(line, fill=graph_color, width=3)
+        
+    return image
+
+
+def self_test():
+    """
+    Perform a self test.
+    """
+    drink = Drink()
+    
+    import time
+    import subprocess
+    t = time.time()
+    
+    history = []
+    history.append((t, 10))
+    t += 60
+    history.append((t, 8))
+    t += 60
+    history.append((t, 9))
+    t += 60
+    history.append((t, 5))
+    t += 60
+    history.append((t, 12))
+    t += 60
+    history.append((t, 15))
+    
+    drink.history = history
+    
+    image = create_image(drink, 800, 600)
+    
+    image.save('test.png')
+    subprocess.Popen(['/usr/bin/eog', 'test.png'])
+    
+if __name__ == "__main__":
+    self_test()
+    

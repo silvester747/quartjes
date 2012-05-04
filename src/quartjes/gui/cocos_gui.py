@@ -23,7 +23,8 @@ from pyglet.gl import glPushMatrix, glPopMatrix
 from quartjes.connector.client import ClientConnector
 from quartjes.models.drink import Mix
 import time
-from quartjes.gui.mix_drawer import create_mix_drawing
+import quartjes.gui.mix_drawer as mix_drawer
+import quartjes.gui.history_graph as history_graph
 
 class TitleLayer(cocos.layer.Layer):
     """
@@ -267,10 +268,12 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
             print("No history")
             return
 
-        self._current_node = HistoryGraph(position=self._points[0],
-                                          width = self._graph_width,
-                                          height=self._graph_height,
-                                          data=drink.history)
+        graph = history_graph.create_pyglet_image(drink, self._graph_width, self._graph_height)
+
+        self._current_node = cocos.sprite.Sprite(image = graph,
+                                                 position=self._points[0],
+                                                 anchor=(0,0))
+
         self._current_node.do(Delay(0.5 * self._move_time) +
                               MoveTo(self._points[1], 0.5 * self._move_time))
 
@@ -302,7 +305,7 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
                         position = (center_x, max_y - 100))
 
         y = max_y - 150
-        for d in mix._drinks:
+        for d in mix.drinks:
             labels.add_text(d.name,
                             font_name=font,
                             font_size=20,
@@ -317,7 +320,7 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
                         position = (center_x + 20, max_y - 150))
 
 
-        mix_drawing = cocos.sprite.Sprite(image=create_mix_drawing(height=max_y-150, width=200, mix=mix),
+        mix_drawing = cocos.sprite.Sprite(image=mix_drawer.create_mix_drawing(height=max_y-150, width=200, mix=mix),
                                           position=(100, 0),anchor=(0,0))
         labels.add(mix_drawing)
 
@@ -326,145 +329,6 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
 
         labels.do(Delay(0.5 * self._move_time) +
                               MoveTo(self._points[1], 0.5 * self._move_time))
-
-
-
-class HistoryGraph(cocos.draw.Canvas):
-
-    def __init__(self, position=(0,0), width=400, height=300, margin=30, data=None, initial_visible=True):
-        super(HistoryGraph, self).__init__()
-        self.position = position
-        self.width = width
-        self.height = height
-        self._margin = margin
-        self.labels = None
-        self.text_visible = False
-        self.initial_visible = initial_visible
-
-        # a list containing either lists or tuples
-        # each list or tuple should contain exactly 2 values
-        # the first value can be of any type implementing __str__
-        # the second value must be a numeric value
-        self.data = data
-
-    def show_text(self):
-        if not self.text_visible:
-            self.text_visible = True
-            if self.labels != None:
-                self.add(self.labels)
-
-    def hide_text(self):
-        if self.text_visible:
-            self.text_visible = False
-            if self.labels != None:
-                self.labels.kill()
-
-    def render(self):
-        self._draw_graph()
-
-    def _draw_graph(self):
-
-        w, h = self.width, self.height
-        margin = self._margin
-
-        # draw x and y axis lines
-        self.set_color((255, 255, 255, 255))
-        self.set_stroke_width(0.5)
-
-        self.move_to((margin, h - margin))
-        self.line_to((margin, margin))
-        self.line_to((w - margin, margin))
-
-        if self.data == None:
-            #print("No data")
-            return
-        if len(self.data) < 2:
-            #print("Not enough data")
-            return
-
-        self.labels = LabelBatch()
-
-        # draw x axis marks
-        #print("draw x axis")
-        max_x = 0
-        for (x, y) in self.data:
-            if x > max_x:
-                max_x = x
-        min_x = max_x
-        for (x, y) in self.data:
-            if x < min_x:
-                min_x = x
-
-        x_count = len(self.data)
-        x_spacing = (w - 2 * margin) / (x_count - 1)
-        x_label_interval = 1
-        while x_spacing * x_label_interval < 100:
-            x_label_interval += 1
-
-        for i in range(x_count -1, -1, 0 - x_label_interval):
-            x = margin + i * x_spacing
-            self.move_to((x, margin))
-            self.line_to((x, margin* 3/4))
-
-            txt = datetime.datetime.fromtimestamp(self.data[i][0]).strftime("%H:%M")
-
-            self.labels.add_text(txt,
-                                      font_name='Times New Roman',
-                                      font_size=12,
-                                      anchor_x='center', anchor_y='top',
-                                      position = (x, margin * 3/4))
-
-        # draw y axis marks
-        #print("draw y axis")
-        max_y = 0
-        for (x, y) in self.data:
-            if y > max_y:
-                max_y = y
-        min_y = max_y
-        for (x, y) in self.data:
-            if y < min_y:
-                min_y = y
-
-        max_y = int(math.ceil(max_y))
-        min_y = int(math.floor(min_y))
-
-        y_count = max_y - min_y + 1
-        if min_y > 0:   # only start from the bottom if we start at 0
-            min_y -= 1
-            y_count += 1
-
-        y_spacing = float(h - 2 * margin) / (y_count - 1)
-        #print(y_spacing)
-        y_label_interval = 1
-        while y_spacing * y_label_interval < 50:
-            y_label_interval += 1
-
-        #print("start drawing y")
-        for y_val in range(max_y, min_y, 0 - y_label_interval):
-            y = margin + (y_val - min_y) * y_spacing
-            self.move_to((margin, y))
-            self.line_to((margin * 3/4, y))
-            self.labels.add_text(str(y_val),
-                                      font_name='Times New Roman',
-                                      font_size=12,
-                                      anchor_x='right', anchor_y='center',
-                                      position = (margin * 3/4, y))
-
-        # draw the graph
-        #print("draw graph")
-        self.set_stroke_width(1.0)
-        self.set_color((255, 0, 0, 255))
-
-        x = margin
-        self.move_to((x, margin + (self.data[0][1] - min_y) * y_spacing))
-        x += x_spacing
-        for (_, y_val) in self.data[1:]:
-            y = margin + (y_val - min_y) * y_spacing
-            self.line_to((x, y))
-            x += x_spacing
-
-        if self.initial_visible:
-            self.show_text()
 
 
 class LabelBatch(cocos.cocosnode.CocosNode):

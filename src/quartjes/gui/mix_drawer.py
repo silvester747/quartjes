@@ -152,7 +152,7 @@ def create_mix_drawing(height, width, mix):
     
     mix.update_properties()
     colors = []
-    for drink in mix._drinks:
+    for drink in mix.drinks:
         colors.append((drink.color + (140,), mix.color + (140,)))
     
     im = create_image(width, height, taper, thickness, fill, colors)
