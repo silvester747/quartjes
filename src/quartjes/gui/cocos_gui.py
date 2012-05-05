@@ -338,6 +338,9 @@ class LabelBatch(cocos.cocosnode.CocosNode):
     use_batch_rendering = True
 
     def __init__(self, position=(0,0)):
+        """
+        Construct a label batch.
+        """
         super(LabelBatch, self).__init__()
         self.position = position
         self.group = None
@@ -349,12 +352,20 @@ class LabelBatch(cocos.cocosnode.CocosNode):
             self.batch = None
 
     def add_text(self, text='', position=(0,0), **kwargs):
+        """
+        Add a text label to the batch.
+        Accepts additional keyword arguments to pass on to a pyglet label.
+        """
         kwargs['text']=text
         element = pyglet.text.Label(group=self.group, batch=self.batch,
                                     x=position[0], y=position[1], **kwargs)
         self.elements.append(element)
 
     def draw(self):
+        """
+        This is where the magic happens.
+        Draw all labels in a single batch.
+        """
         glPushMatrix()
         self.transform()
         if self.batch:
@@ -366,31 +377,43 @@ class LabelBatch(cocos.cocosnode.CocosNode):
 
 
 class CocosGui(object):
+    """
+    Main object containing the Cocos2D GUI.
+    Initialize and start this object to start a show.
+    """
 
     def __init__(self, hostname=None, port=1234, width=1024, height=768,
                  fullscreen=True):
-        self.width = width
-        self.height = height
-        self.fullscreen = fullscreen
-        self.hostname = hostname
-        self.port = port
+        """
+        Set up all parameters and objects for the GUI.
+        """
+        self._width = width
+        self._height = height
+        self._fullscreen = fullscreen
+        self._hostname = hostname
+        self._port = port
 
-        self.refresh_ticker_on_update = True
+        self._refresh_ticker_on_update = True
 
-        self.ticker_layer = None
-        self.drink_layer = None
-        self.title_layer = None
-        self.mix_layer = None
+        self._ticker_layer = None
+        self._drink_layer = None
+        self._title_layer = None
+        self._mix_layer = None
 
         self._drinks = None
-        self.mixes = None
-        self.all = None
+        self._mixes = None
+        self._all = None
 
     def start(self):
+        """
+        Start running the Cocos GUI.
+        This method will block until the GUI has been shut down. After
+        returning there might still be some processes cleaning up.
+        """
         print("Starting Cocos GUI")
         print("\nUsing following settings:")
-        print("\tConnection: %s:%d" % (self.hostname, self.port))
-        print("\tGraphics: (%d, %d) fullscreen=%s" %(self.width, self.height, self.fullscreen))
+        print("\tConnection: %s:%d" % (self._hostname, self._port))
+        print("\tGraphics: (%d, %d) fullscreen=%s" %(self._width, self._height, self._fullscreen))
         
         print()
         print("Included libraries:")
@@ -401,24 +424,22 @@ class CocosGui(object):
         
         print()
         print("Opening connection to server...")
-        self.connector = ClientConnector(self.hostname, self.port)
-        self.connector.start()
+        self._connector = ClientConnector(self._hostname, self._port)
+        self._connector.start()
 
-        self._drinks = self.connector.database.get_drinks()
-        self.mixes = self.connector.database.get_mixes()
+        self._drinks = self._connector.database.get_drinks()
+        self._mixes = self._connector.database.get_mixes()
 
-        self.all = self._drinks + self.mixes
+        self._all = self._drinks + self._mixes
 
-        #print("subscribe drinks_updated")
-        #database.subscribe("drinks_updated", self._update_drinks)
-        #database.subscribe("mixes_updated", self._update_mixes)
-        #print("subscribe next_round")
-        #stock_exchange.subscribe("next_round", self._next_round)
+        #self._connector.database.subscribe("drinks_updated", self._update_drinks)
+        #self._connector.database.subscribe("mixes_updated", self._update_mixes)
+        #self._connector.stock_exchange.subscribe("next_round", self._next_round)
 
         print()
         print("Initializing graphics...")
-        cocos.director.director.init(width=self.width, height=self.height,
-                                     fullscreen=self.fullscreen)
+        cocos.director.director.init(width=self._width, height=self._height,
+                                     fullscreen=self._fullscreen)
         cocos.director.director.set_show_FPS(True)
         self.show_gl_info()
 
@@ -430,9 +451,12 @@ class CocosGui(object):
         print("Shut down in progress...")
         print()
         
-        self.connector.stop()
+        self._connector.stop()
 
     def show_gl_info(self):
+        """
+        Display some information about the GL renderer.
+        """
         from pyglet.gl.gl_info import GLInfo
         info = GLInfo()
         info.set_active_context()
@@ -454,26 +478,36 @@ class CocosGui(object):
         
 
     def show_ticker_scene(self, new_ticker=False):
-        if not self.ticker_layer or new_ticker:
-            self.ticker_layer = BottomTicker(screen_width=self.width)
-        if not self.drink_layer:
-            self.drink_layer = DrinkLayer(screen_width=self.width)
-        if not self.title_layer:
-            self.title_layer = TitleLayer()
+        """
+        Replace everything on screen with the scene displaying the drink ticker.
+        If the engine is not yet running, this method will start a new engine
+        and will block until the engine has stopped.
+        """
+        if not self._ticker_layer or new_ticker:
+            self._ticker_layer = BottomTicker(screen_width=self._width)
+        if not self._drink_layer:
+            self._drink_layer = DrinkLayer(screen_width=self._width)
+        if not self._title_layer:
+            self._title_layer = TitleLayer()
 
-        self.ticker_layer.update_drinks(self.all)
+        self._ticker_layer.update_drinks(self._all)
 
         if new_ticker:
-            self.drink_layer.show_drink_history(None)
+            self._drink_layer.show_drink_history(None)
 
-        scene = cocos.scene.Scene(self.ticker_layer, self.drink_layer, self.title_layer)
+        scene = cocos.scene.Scene(self._ticker_layer, self._drink_layer, self._title_layer)
 
-        self.ticker_layer.on_focus_changed += lambda sender, drink: self.drink_layer.show_drink(drink)
+        self._ticker_layer.on_focus_changed += lambda sender, drink: self._drink_layer.show_drink(drink)
 
         self._display_scene(scene)
 
 
     def _display_scene(self, scene):
+        """
+        Change the display to show the given scene.
+        If no engine is running yet, an engine will be started. In that case this method
+        will not return until the engine has stopped again.
+        """
         if cocos.director.director.scene == None:
             cocos.director.director.run(scene)
         else:
@@ -481,21 +515,21 @@ class CocosGui(object):
 
     def _update_drinks(self, drinks):
         self._drinks = drinks
-        self.all = self.mixes + self._drinks
-        if self.ticker_layer:
-            self.ticker_layer.update_drinks(self.all)
+        self._all = self._mixes + self._drinks
+        if self._ticker_layer:
+            self._ticker_layer.update_drinks(self._all)
 
     def _update_mixes(self, mixes):
-        self.mixes = mixes
-        self.all = self.mixes + self._drinks
-        if self.ticker_layer:
-            self.ticker_layer.update_drinks(self.all)
+        self._mixes = mixes
+        self._all = self._mixes + self._drinks
+        if self._ticker_layer:
+            self._ticker_layer.update_drinks(self._all)
 
     def _next_round(self, drinks):
         self._drinks = drinks
-        self.all = self.mixes + self._drinks
-        if self.ticker_layer:
-            self.ticker_layer.update_drinks(self.all)
+        self._all = self._mixes + self._drinks
+        if self.t_icker_layer:
+            self._ticker_layer.update_drinks(self._all)
             
 def parse_command_line():
     """
