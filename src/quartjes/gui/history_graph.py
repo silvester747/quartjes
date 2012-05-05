@@ -12,6 +12,13 @@ import math
 from quartjes.models.drink import Drink
 from quartjes.gui.mix_drawer import get_image_data
 
+grid_color = (127, 127, 127, 255)
+axis_color = (255, 255, 255, 255)
+graph_color = (255, 0, 0, 255)
+
+margin_x = 30
+margin_y = 15
+
 def create_pyglet_image(drink, width, height):
     """
     Draw a price history graph for the given drink.
@@ -28,15 +35,6 @@ def create_image(drink, width, height):
     
     image = Image.new("RGBA", (width, height))
     draw = ImageDraw.Draw(image)    
-    
-    grid_color = (127, 127, 127, 255)
-    axis_color = (255, 255, 255, 255)
-    graph_color = (255, 0, 0, 255)
-    
-    margin_x = 30
-    margin_y = 15
-    
-    
     
     # Draw axis
     draw.line(((margin_x, 0), (margin_x, height - margin_y)), fill=axis_color, width=2)
@@ -71,6 +69,7 @@ def create_image(drink, width, height):
     for i in range(x_count -1, -1, 0 - x_label_interval):
         x = margin_x + i * x_spacing
         draw.line(((x, height - margin_y), (x, height - (margin_y * 3/4))), fill=axis_color, width=1)
+        draw.line(((x, height - margin_y), (x, 0)), fill=grid_color, width=1)
 
         txt = datetime.datetime.fromtimestamp(data[i][0]).strftime("%H:%M")
         txt_size = draw.textsize(txt)
@@ -103,6 +102,7 @@ def create_image(drink, width, height):
     for y_val in range(max_y, min_y, 0 - y_label_interval):
         y = height - (margin_y + (y_val - min_y) * y_spacing)
         draw.line(((margin_x * 3/4, y), (margin_x, y)), fill=axis_color, width=1)
+        draw.line(((margin_x, y), (width, y)), fill=grid_color, width=1)
         
         txt = str(y_val)
         txt_size = draw.textsize(txt)
@@ -118,6 +118,10 @@ def create_image(drink, width, height):
         x += x_spacing
     
     draw.line(line, fill=graph_color, width=3)
+
+    # Draw axis again
+    draw.line(((margin_x, 0), (margin_x, height - margin_y)), fill=axis_color, width=2)
+    draw.line(((margin_x, height - margin_y), (width, height - margin_y)), fill=axis_color, width=2)
         
     return image
 
@@ -130,21 +134,19 @@ def self_test():
     
     import time
     import subprocess
+    import random
     t = time.time()
+    val = 10
     
     history = []
-    history.append((t, 10))
-    t += 60
-    history.append((t, 8))
-    t += 60
-    history.append((t, 9))
-    t += 60
-    history.append((t, 5))
-    t += 60
-    history.append((t, 12))
-    t += 60
-    history.append((t, 15))
     
+    for _ in range(0, 100):
+        history.append((t, val))
+        t += 60
+        val += random.randint(-5, 5)
+        if val < 0:
+            val = 0 - val
+        
     drink.history = history
     
     image = create_image(drink, 800, 600)
