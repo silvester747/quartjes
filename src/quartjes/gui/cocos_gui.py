@@ -306,23 +306,26 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
                         position = (center_x, max_y - 100))
 
         y = max_y - 150
+        y_spacing = y / len(mix.drinks)
+        y -= y_spacing / 2
         for d in mix.drinks:
             labels.add_text(d.name,
                             font_name=font,
                             font_size=20,
-                            anchor_x='right', anchor_y='top',
-                            position = (center_x - 20, y))
-            y -= 30
+                            anchor_x='center', anchor_y='top',
+                            position = (center_x, y))
+            y -= y_spacing
 
         labels.add_text("%d" % mix.sellprice_quartjes(),
                         font_name=font,
-                        font_size=100,
-                        anchor_x='left', anchor_y='top',
-                        position = (center_x + 20, max_y - 150))
+                        font_size=150,
+                        anchor_x='center', anchor_y='center',
+                        position = (center_x + 300, (max_y - 150) / 2))
 
-
-        mix_drawing = cocos.sprite.Sprite(image=mix_drawer.create_mix_drawing(height=max_y-150, width=200, mix=mix),
-                                          position=(-400, 0),anchor=(0,0))
+        image=mix_drawer.create_mix_drawing(height=max_y-150, width=200, mix=mix)
+        mix_drawing = cocos.sprite.Sprite(image=image,
+                                          position=(center_x - 300, (max_y - 150) / 2),
+                                          anchor=(100, (max_y - 150) / 2))
         labels.add(mix_drawing)
 
         return labels
