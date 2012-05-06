@@ -1,6 +1,55 @@
 """
 Client component of the Quartjes connector. Use the ClientConnector to create
 a connection to the Quartjes server.
+
+Usage
+-----
+Create an instance of this object with the host and port to connect to.
+Call the start() method to establish the connection.
+Now the database and the stock_exchange variable can be used to communicate
+with the server.
+
+If you do not wish to connect to a server, but run a local server instead,
+create the object without any arguments.
+
+Example
+-------
+>>> conn = ClientConnector("192.168.1.1")
+>>> conn.start()
+>>> conn.database.get_drinks()
+
+Available server methods
+------------------------
+
+database
+^^^^^^^^
+get_drinks()
+update_drink(drink)
+add_drink(drink)
+remove_drink(drink)
+
+get_mixes()
+update_mix(mix)
+add_mix(mix)
+remove_mix(mix)
+
+add(obj)
+remove(obj)
+update(obj)
+
+stock_exchange
+^^^^^^^^^^^^^^
+sell(drink, amount)
+
+Advanced
+--------
+
+Use the method get_service_interface to retrieve additional interfaces to a server side
+service.
+
+As long as the connector is running, it will keep trying to reconnect any
+lost connections using an exponential back-off.
+
 """
 from quartjes.connector.protocol import QuartjesClientFactory
 from twisted.internet import reactor, threads
@@ -12,55 +61,16 @@ import quartjes.controllers.stock_exchange
 class ClientConnector(object):
     """
     Client side endpoint of the Quartjes connector.
-
-    =Usage=
-    Create an instance of this object with the host and port to connect to.
-    Call the start() method to establish the connection.
-    Now the database and the stock_exchange variable can be used to communicate
-    with the server.
-
-    If you do not wish to connect to a server, but run a local server instead,
-    create the object without any arguments.
-
-    =Example=
-    conn = ClientConnector("192.168.1.1")
-    conn.start()
-    conn.database.get_drinks()
-
-    =Available server methods=
-
-    ==database==
-    get_drinks()
-    update_drink(drink)
-    add_drink(drink)
-    remove_drink(drink)
-
-    get_mixes()
-    update_mix(mix)
-    add_mix(mix)
-    remove_mix(mix)
-
-    add(obj)
-    remove(obj)
-    update(obj)
-
-    ==stock_exchange==
-    sell(drink, amount)
-
-    =Advanced=
-
-    Use the method get_service_interface to retrieve additional interfaces to a server side
-    service.
-
-    As long as the connector is running, it will keep trying to reconnect any
-    lost connections using an exponential back-off.
+    
+    Parameters
+    ----------
+    host : string
+        Host to connect to. If no host is specified, a local server is started.
+    port : int
+        Port to connect to.
     """
 
     def __init__(self, host=None, port=1234):
-        """
-        Construct a new ClientConnector to connect to the given host and port number.
-        If no host is given a local server is started.
-        """
         self._host = host
         self._port = port
         self._factory = QuartjesClientFactory()

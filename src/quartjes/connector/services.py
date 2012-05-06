@@ -1,8 +1,27 @@
 """
 Base definitions of services.
-The quartjes server is capable of offering multiple services. Each service
-is identified by its service name.
+
+A service is an object of which methods and events can be exposed for remote
+invocation. Quartjesavond uses services to let clients communicate with
+objects on the server.
+
+To define a service first create a class containing the functionality to be
+used by remote clients. Decorate this class with :meth:`remote_service`. Then decorate
+each method that should be available remotely with :meth:`remote_method`. 
+If the class contains any axel events, these can also be exposed. Define the
+event using :meth:`remote_event` instead of Event.
+
+The service can now be registered with the :class:`ServerConnector 
+<quartjes.connector.server.ServerConnector>`. 
+During registration a service name is given, which remote clients must use to gain access to
+the service.
+
+For an example, please see :class:`TestRemoteService`.
 """
+
+__author__ = "Rob van der Most"
+__docformat__ = "restructuredtext en"
+
 import traceback
 from quartjes.connector.exceptions import MessageHandleError
 from axel import Event
@@ -229,7 +248,9 @@ class ServiceInterfaceAttribute(object):
 
 @remote_service
 class TestRemoteService(object):
-    
+    """
+    Special class to test the remote service functionality.
+    """
     @remote_method
     def test(self, text):
         return text

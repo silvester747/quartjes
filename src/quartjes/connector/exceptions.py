@@ -16,6 +16,8 @@ class MessageHandleError(ProtocolError):
     This exception is recreated by the client if no appropriate builtin exception
     can be thrown.
     
+    Parameters
+    ----------
     error_code : int
         An error code stating what went wrong handling the message. Should be one of the
         codes in this class.
@@ -93,6 +95,8 @@ class ConnectionError(ProtocolError):
     """
     Exception thrown when an error occurs in the connection.
     
+    Parameters
+    ----------
     message : string
         Message describing the error.
     """
@@ -104,6 +108,8 @@ class TimeoutError(ProtocolError):
     """
     Exception thrown when an action on the server times out.
     
+    Parameters
+    ----------
     message : string
         Message describing the error.
     """
