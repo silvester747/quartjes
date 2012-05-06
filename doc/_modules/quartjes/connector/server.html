@@ -1,0 +1,167 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>quartjes.connector.server &mdash; Quartjesavond Python 2012 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2012',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Quartjesavond Python 2012 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for quartjes.connector.server</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Connector components used to run a Quartjes server.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__author__</span><span class="o">=</span><span class="s">&quot;Rob van der Most&quot;</span>
+<span class="n">__date__</span> <span class="o">=</span><span class="s">&quot;$May 27, 2011 9:24:25 PM$&quot;</span>
+
+<span class="kn">from</span> <span class="nn">twisted.internet</span> <span class="kn">import</span> <span class="n">reactor</span><span class="p">,</span> <span class="n">threads</span>
+<span class="kn">from</span> <span class="nn">twisted.internet.endpoints</span> <span class="kn">import</span> <span class="n">TCP4ServerEndpoint</span>
+<span class="kn">from</span> <span class="nn">quartjes.connector.protocol</span> <span class="kn">import</span> <span class="n">QuartjesServerFactory</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Thread</span>
+
+<div class="viewcode-block" id="ServerConnector"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.server.ServerConnector">[docs]</a><span class="k">class</span> <span class="nc">ServerConnector</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Server side endpoint of the quartjes connector.</span>
+
+<span class="sd">    A server needs at exactly one ServerConnector to be able to accept incoming</span>
+<span class="sd">    connections. The reactor used by the ServerConnector runs in its own thread</span>
+<span class="sd">    so you do not need to worry about blocking it.</span>
+
+<span class="sd">    Register Service instances with the ServerConnector to allow clients to</span>
+<span class="sd">    access the services.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">1234</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Construct a new ServerConnector for the given port number. The new</span>
+<span class="sd">        connector is not running yet!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">factory</span> <span class="o">=</span> <span class="n">QuartjesServerFactory</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ServerConnector.start"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.server.ServerConnector.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Start accepting incoming connections. Starts the reactor in a separate thread.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_endpoint</span> <span class="o">=</span> <span class="n">TCP4ServerEndpoint</span><span class="p">(</span><span class="n">reactor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_endpoint</span><span class="o">.</span><span class="n">listen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">factory</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">reactor</span><span class="o">.</span><span class="n">running</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_reactor_thread</span> <span class="o">=</span> <span class="n">ServerConnector</span><span class="o">.</span><span class="n">ReactorThread</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_reactor_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="ServerConnector.stop"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.server.ServerConnector.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Stop accepting incoming connections. Stops the reactor.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">threads</span><span class="o">.</span><span class="n">blockingCallFromThread</span><span class="p">(</span><span class="n">reactor</span><span class="p">,</span> <span class="n">reactor</span><span class="o">.</span><span class="n">stop</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ServerConnector.register_service"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.server.ServerConnector.register_service">[docs]</a>    <span class="k">def</span> <span class="nf">register_service</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Register a new Service instance to be accessible from clients.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">factory</span><span class="o">.</span><span class="n">register_service</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="ServerConnector.ReactorThread"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.server.ServerConnector.ReactorThread">[docs]</a>    <span class="k">class</span> <span class="nc">ReactorThread</span><span class="p">(</span><span class="n">Thread</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Thread for running the reactor loop. Does not run as a daemon, so you</span>
+<span class="sd">        need to manually stop it when closing the server application.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="n">Thread</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;ReactorThread&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="bp">False</span>
+
+<div class="viewcode-block" id="ServerConnector.ReactorThread.run"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.server.ServerConnector.ReactorThread.run">[docs]</a>        <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="c">#print(&quot;Starting reactor&quot;)</span>
+            <span class="n">reactor</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+            <span class="c">#print(&quot;Reactor stopped&quot;)</span>
+</div></div></div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">quartjes.connector.services</span> <span class="kn">import</span> <span class="n">TestRemoteService</span>
+
+    <span class="n">server</span> <span class="o">=</span> <span class="n">ServerConnector</span><span class="p">(</span><span class="mi">1234</span><span class="p">)</span>
+    <span class="n">server</span><span class="o">.</span><span class="n">register_service</span><span class="p">(</span><span class="n">TestRemoteService</span><span class="p">(),</span> <span class="s">&quot;test&quot;</span><span class="p">)</span>
+    <span class="n">server</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Rob van der Most, Piet Braat.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

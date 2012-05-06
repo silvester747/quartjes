@@ -1,0 +1,695 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>quartjes.gui.cocos_gui &mdash; Quartjesavond Python 2012 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2012',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Quartjesavond Python 2012 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for quartjes.gui.cocos_gui</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Graphical user interface using Cocos2D.</span>
+<span class="sd">Displays the current prices of all _drinks in a ticker at the bottom. As each</span>
+<span class="sd">drink passes the center of the ticker, related information is shown in the</span>
+<span class="sd">center of the screen.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;Rob van der Most&quot;</span>
+
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">from</span> <span class="nn">axel</span> <span class="kn">import</span> <span class="n">Event</span>
+<span class="kn">import</span> <span class="nn">cocos.scenes.transitions</span>
+<span class="kn">import</span> <span class="nn">cocos.director</span>
+<span class="kn">import</span> <span class="nn">cocos.text</span>
+<span class="kn">import</span> <span class="nn">cocos.cocosnode</span>
+<span class="kn">import</span> <span class="nn">cocos.layer.base_layers</span>
+<span class="kn">from</span> <span class="nn">cocos.actions</span> <span class="kn">import</span> <span class="n">Repeat</span><span class="p">,</span> <span class="n">Waves3D</span><span class="p">,</span> <span class="n">Delay</span><span class="p">,</span> <span class="n">CallFunc</span><span class="p">,</span> <span class="n">MoveTo</span><span class="p">,</span> <span class="n">ScaleTo</span>
+<span class="kn">import</span> <span class="nn">pyglet.text</span>
+<span class="kn">from</span> <span class="nn">pyglet.gl</span> <span class="kn">import</span> <span class="n">glPushMatrix</span><span class="p">,</span> <span class="n">glPopMatrix</span>
+<span class="kn">from</span> <span class="nn">quartjes.connector.client</span> <span class="kn">import</span> <span class="n">ClientConnector</span>
+<span class="kn">from</span> <span class="nn">quartjes.models.drink</span> <span class="kn">import</span> <span class="n">Mix</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">quartjes.gui.mix_drawer</span> <span class="kn">as</span> <span class="nn">mix_drawer</span>
+<span class="kn">import</span> <span class="nn">quartjes.gui.history_graph</span> <span class="kn">as</span> <span class="nn">history_graph</span>
+
+<div class="viewcode-block" id="TitleLayer"><a class="viewcode-back" href="../../../quartjes.gui.html#quartjes.gui.cocos_gui.TitleLayer">[docs]</a><span class="k">class</span> <span class="nc">TitleLayer</span><span class="p">(</span><span class="n">cocos</span><span class="o">.</span><span class="n">layer</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simple layer to display a title at the top of the display.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">TitleLayer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        
+        <span class="n">title_label</span> <span class="o">=</span> <span class="n">cocos</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="s">&quot;QuartjesAvond&quot;</span><span class="p">,</span>
+                                      <span class="n">font_name</span><span class="o">=</span><span class="s">&#39;Times New Roman&#39;</span><span class="p">,</span>
+                                      <span class="n">font_size</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span>
+                                      <span class="n">anchor_x</span><span class="o">=</span><span class="s">&#39;center&#39;</span><span class="p">,</span> <span class="n">anchor_y</span><span class="o">=</span><span class="s">&#39;top&#39;</span><span class="p">)</span>
+        <span class="n">title_label</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span> <span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">768</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">title_label</span><span class="p">)</span>
+        <span class="n">title_label</span><span class="o">.</span><span class="n">do</span><span class="p">(</span><span class="n">Repeat</span><span class="p">(</span><span class="n">Waves3D</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">waves</span><span class="o">=</span><span class="mi">100</span><span class="p">)))</span>
+
+</div>
+<div class="viewcode-block" id="BottomTicker"><a class="viewcode-back" href="../../../quartjes.gui.html#quartjes.gui.cocos_gui.BottomTicker">[docs]</a><span class="k">class</span> <span class="nc">BottomTicker</span><span class="p">(</span><span class="n">cocos</span><span class="o">.</span><span class="n">layer</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Layer containing a ticker of drinks.</span>
+<span class="sd">    The list of drinks scrolls from the right of the screen to the left. In the</span>
+<span class="sd">    middle one of the drinks will gain focus and is shown larger.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">display_time</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">display_y</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">screen_width</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">drinks</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">visible_segments</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">focus_start</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                 <span class="n">focus_length</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">focus_height</span><span class="o">=</span><span class="mi">40</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the ticker.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BottomTicker</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+
+        <span class="c"># Time in pyglet units between each point on the ticker.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_display_time</span> <span class="o">=</span> <span class="n">display_time</span>
+
+        <span class="c"># Y coordinate on the screen where the ticker is shown.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_display_y</span> <span class="o">=</span> <span class="n">display_y</span>
+
+        <span class="c"># Width of the screen. This width is used to calculate the path the items</span>
+        <span class="c"># in the ticker follow.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_screen_width</span> <span class="o">=</span> <span class="n">screen_width</span>
+
+        <span class="c"># Number of segments to divide the visible screen in. Used to create the</span>
+        <span class="c"># path to follow.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_visible_segments</span> <span class="o">=</span> <span class="n">visible_segments</span>
+
+        <span class="c"># Number of segments outside the visible screen at each side.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_margin</span> <span class="o">=</span> <span class="n">margin</span>
+
+        <span class="c"># Number of segments between each item on the ticker.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_interval</span> <span class="o">=</span> <span class="n">interval</span>
+
+        <span class="c"># Number of the segment where the item starts to have focus. This includes</span>
+        <span class="c"># segments outside the visible screen.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_focus_start</span> <span class="o">=</span> <span class="n">focus_start</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_margin</span>
+
+        <span class="c"># Number of segments an item has focus.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_focus_length</span> <span class="o">=</span> <span class="n">focus_length</span>
+
+        <span class="c"># Increase in y position on the screen for items with focus.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_focus_height</span> <span class="o">=</span> <span class="n">focus_height</span>
+        
+        <span class="c"># List of _drinks to show on the ticker</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_drinks</span> <span class="o">=</span> <span class="n">drinks</span>
+
+        <span class="c"># Index of the drink last added to the ticker</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_drink_index</span> <span class="o">=</span> <span class="mi">0</span>
+        
+        <span class="c"># List of points followed by the ticker</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_points</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="c"># Total number of segments</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_segment_count</span> <span class="o">=</span> <span class="mi">0</span>
+        
+        <span class="c"># Segment the focus ends</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_focus_end</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c"># Drink currently having focus.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">focussed_drink</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="c"># Event fired when the currently focused drink has changed. Listeners</span>
+        <span class="c"># should have two parameters: the sender and the new drink.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">on_focus_changed</span> <span class="o">=</span> <span class="n">Event</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_points</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_next_drink</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_calculate_points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prepare the ticker by calculating all points on the path.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">distance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_screen_width</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visible_segments</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_points</span> <span class="o">=</span> <span class="p">[(</span><span class="n">x</span><span class="o">*</span><span class="n">distance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_display_y</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_visible_segments</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_margin</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_margin</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_segment_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_focus_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_focus_start</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_focus_length</span>
+        <span class="k">for</span> <span class="n">pnt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_focus_start</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_focus_end</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">[</span><span class="n">pnt</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">[</span><span class="n">pnt</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_focus_height</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BottomTicker.update_drinks"><a class="viewcode-back" href="../../../quartjes.gui.html#quartjes.gui.cocos_gui.BottomTicker.update_drinks">[docs]</a>    <span class="k">def</span> <span class="nf">update_drinks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">drinks</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Replace the current list of drinks to show on the ticker. Will not remove</span>
+<span class="sd">        already visible drinks.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Receiving update&quot;</span><span class="p">)</span>
+        <span class="n">cur_drink</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_drink_index</span>
+        <span class="k">if</span> <span class="n">cur_drink</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">drinks</span><span class="p">):</span>
+            <span class="n">cur_drink</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_drinks</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_drink_index</span> <span class="o">=</span> <span class="n">drinks</span><span class="p">,</span> <span class="n">cur_drink</span>
+</div>
+    <span class="k">def</span> <span class="nf">_safe_kill</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Safely remove a node from the tree.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">child</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">_set_focussed_drink</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">drink</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the currently focussed drink and notify all listeners.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">focussed_drink</span> <span class="o">=</span> <span class="n">drink</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">on_focus_changed</span><span class="p">(</span><span class="n">drink</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_next_drink</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prepare the next drink on the list to be shown on screen.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+        <span class="n">drink</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_drinks</span> <span class="o">!=</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_drinks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_current_drink_index</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_drink_index</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_drinks</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_current_drink_index</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">drink</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_drinks</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_drink_index</span><span class="p">]</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> - </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">drink</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">drink</span><span class="o">.</span><span class="n">sellprice_quartjes</span><span class="p">())</span>
+
+        <span class="n">next_label</span> <span class="o">=</span> <span class="n">cocos</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="n">text</span><span class="p">,</span>
+                                 <span class="n">font_name</span><span class="o">=</span><span class="s">&#39;Times New Roman&#39;</span><span class="p">,</span>
+                                 <span class="n">font_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+                                 <span class="n">anchor_x</span><span class="o">=</span><span class="s">&#39;center&#39;</span><span class="p">,</span> <span class="n">anchor_y</span><span class="o">=</span><span class="s">&#39;bottom&#39;</span><span class="p">)</span>
+        <span class="n">next_label</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">next_label</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="mf">0.5</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">next_label</span><span class="p">)</span>
+
+        <span class="n">spawn_actions</span> <span class="o">=</span> <span class="n">Delay</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_display_time</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interval</span><span class="p">)</span> <span class="o">+</span> <span class="n">CallFunc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_next_drink</span><span class="p">)</span>
+
+        <span class="n">move_actions</span> <span class="o">=</span> <span class="n">MoveTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_focus_start</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_display_time</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_focus_start</span><span class="p">)</span>
+        <span class="n">move_actions</span> <span class="o">+=</span> <span class="p">(</span><span class="n">MoveTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_focus_start</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_display_time</span><span class="p">)</span> <span class="o">|</span>
+                         <span class="p">(</span><span class="n">Delay</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_display_time</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span>
+                         <span class="n">ScaleTo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_display_time</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span> <span class="o">|</span>
+                         <span class="n">CallFunc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_set_focussed_drink</span><span class="p">,</span> <span class="n">drink</span><span class="p">))</span>
+        <span class="n">move_actions</span> <span class="o">+=</span> <span class="p">(</span><span class="n">MoveTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_focus_end</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_display_time</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_focus_length</span><span class="p">))</span>
+        <span class="n">move_actions</span> <span class="o">+=</span> <span class="p">(</span><span class="n">MoveTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_focus_end</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_display_time</span><span class="p">)</span> <span class="o">|</span>
+                         <span class="p">(</span><span class="n">ScaleTo</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_display_time</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span>
+                         <span class="n">Delay</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_display_time</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)))</span>
+        <span class="n">move_actions</span> <span class="o">+=</span> <span class="n">MoveTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_display_time</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_segment_count</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_focus_end</span><span class="p">))</span>
+
+        <span class="n">next_label</span><span class="o">.</span><span class="n">do</span><span class="p">((</span><span class="n">spawn_actions</span> <span class="o">|</span> <span class="n">move_actions</span><span class="p">)</span> <span class="o">+</span> <span class="n">CallFunc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_safe_kill</span><span class="p">,</span> <span class="n">next_label</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="DrinkLayer"><a class="viewcode-back" href="../../../quartjes.gui.html#quartjes.gui.cocos_gui.DrinkLayer">[docs]</a><span class="k">class</span> <span class="nc">DrinkLayer</span><span class="p">(</span><span class="n">cocos</span><span class="o">.</span><span class="n">layer</span><span class="o">.</span><span class="n">base_layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Layer to display details on the currently focussed drink.</span>
+<span class="sd">    In case a normal drink is focussed, the price graph is displayed.</span>
+<span class="sd">    In case a mix drink is focussed, the details of the mix are displayed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">graph_width</span><span class="o">=</span><span class="mi">940</span><span class="p">,</span> <span class="n">graph_height</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+                 <span class="n">screen_width</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">move_time</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the drink layer.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DrinkLayer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_top</span> <span class="o">=</span> <span class="n">top</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph_width</span> <span class="o">=</span> <span class="n">graph_width</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph_height</span> <span class="o">=</span> <span class="n">graph_height</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_screen_width</span> <span class="o">=</span> <span class="n">screen_width</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_move_time</span> <span class="o">=</span> <span class="n">move_time</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_points</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">screen_width</span> <span class="o">+</span> <span class="p">(</span><span class="n">graph_width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="n">top</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">screen_width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">top</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="mi">0</span> <span class="o">-</span> <span class="p">(</span><span class="n">graph_width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="n">top</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_node</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_next_drink</span> <span class="o">=</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="DrinkLayer.show_drink"><a class="viewcode-back" href="../../../quartjes.gui.html#quartjes.gui.cocos_gui.DrinkLayer.show_drink">[docs]</a>    <span class="k">def</span> <span class="nf">show_drink</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">drink</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Change the drink currently being shown.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_next_drink</span> <span class="o">=</span> <span class="n">drink</span>
+</div>
+<div class="viewcode-block" id="DrinkLayer.draw"><a class="viewcode-back" href="../../../quartjes.gui.html#quartjes.gui.cocos_gui.DrinkLayer.draw">[docs]</a>    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called by Cocos2D. Performs actions on next render loop.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_next_drink</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_show_drink</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_next_drink</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_next_drink</span> <span class="o">=</span> <span class="bp">None</span>
+</div>
+    <span class="k">def</span> <span class="nf">_show_drink</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">drink</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Replace the current drink with the next drink to display.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_running</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;Not running&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_node</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_current_node</span><span class="o">.</span><span class="n">kill</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_current_node</span> <span class="o">=</span> <span class="bp">None</span>
+
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_node</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_current_node</span><span class="o">.</span><span class="n">do</span><span class="p">(</span><span class="n">MoveTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_move_time</span><span class="p">)</span> <span class="o">+</span>
+                                 <span class="n">CallFunc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_node</span><span class="o">.</span><span class="n">kill</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">drink</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;No drink&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">drink</span><span class="p">,</span> <span class="n">Mix</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_current_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_mix</span><span class="p">(</span><span class="n">drink</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_current_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_drink_history</span><span class="p">(</span><span class="n">drink</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_node</span><span class="o">.</span><span class="n">do</span><span class="p">(</span><span class="n">Delay</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_move_time</span><span class="p">)</span> <span class="o">+</span>
+                              <span class="n">MoveTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_move_time</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_node</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">_get_drink_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">drink</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Construct a node to display the historic price graph for a drink.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">drink</span><span class="o">.</span><span class="n">history</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;No history&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="n">graph</span> <span class="o">=</span> <span class="n">history_graph</span><span class="o">.</span><span class="n">create_pyglet_image</span><span class="p">(</span><span class="n">drink</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_height</span><span class="p">)</span>
+
+        <span class="n">node</span> <span class="o">=</span> <span class="n">cocos</span><span class="o">.</span><span class="n">sprite</span><span class="o">.</span><span class="n">Sprite</span><span class="p">(</span><span class="n">image</span> <span class="o">=</span> <span class="n">graph</span><span class="p">,</span>
+                                   <span class="n">position</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                   <span class="n">anchor</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">node</span>
+
+    <span class="k">def</span> <span class="nf">_get_mix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mix</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Construct a node to show a mix drink.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">font</span> <span class="o">=</span> <span class="s">&#39;Times New Roman&#39;</span>
+        <span class="c">#font = &#39;Verdana&#39;</span>
+
+        <span class="c">#center_x = self._graph_width / 2</span>
+        <span class="n">center_x</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">max_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_height</span>
+
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">LabelBatch</span><span class="p">(</span><span class="n">position</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">labels</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="n">mix</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                        <span class="n">font_name</span><span class="o">=</span><span class="n">font</span><span class="p">,</span>
+                        <span class="n">font_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+                        <span class="n">anchor_x</span><span class="o">=</span><span class="s">&#39;center&#39;</span><span class="p">,</span> <span class="n">anchor_y</span><span class="o">=</span><span class="s">&#39;top&#39;</span><span class="p">,</span>
+                        <span class="n">position</span> <span class="o">=</span> <span class="p">(</span><span class="n">center_x</span><span class="p">,</span> <span class="n">max_y</span><span class="p">))</span>
+
+        <span class="n">labels</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="s">&quot;Alcohol: </span><span class="si">%2.1f</span><span class="s"> </span><span class="si">%%</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">mix</span><span class="o">.</span><span class="n">alc_perc</span><span class="p">,</span>
+                        <span class="n">font_name</span><span class="o">=</span><span class="n">font</span><span class="p">,</span>
+                        <span class="n">font_size</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                        <span class="n">anchor_x</span><span class="o">=</span><span class="s">&#39;center&#39;</span><span class="p">,</span> <span class="n">anchor_y</span><span class="o">=</span><span class="s">&#39;top&#39;</span><span class="p">,</span>
+                        <span class="n">position</span> <span class="o">=</span> <span class="p">(</span><span class="n">center_x</span><span class="p">,</span> <span class="n">max_y</span> <span class="o">-</span> <span class="mi">100</span><span class="p">))</span>
+
+        <span class="n">y</span> <span class="o">=</span> <span class="n">max_y</span> <span class="o">-</span> <span class="mi">150</span>
+        <span class="n">y_spacing</span> <span class="o">=</span> <span class="n">y</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">mix</span><span class="o">.</span><span class="n">drinks</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">-=</span> <span class="n">y_spacing</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">mix</span><span class="o">.</span><span class="n">drinks</span><span class="p">:</span>
+            <span class="n">labels</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                            <span class="n">font_name</span><span class="o">=</span><span class="n">font</span><span class="p">,</span>
+                            <span class="n">font_size</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                            <span class="n">anchor_x</span><span class="o">=</span><span class="s">&#39;center&#39;</span><span class="p">,</span> <span class="n">anchor_y</span><span class="o">=</span><span class="s">&#39;top&#39;</span><span class="p">,</span>
+                            <span class="n">position</span> <span class="o">=</span> <span class="p">(</span><span class="n">center_x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+            <span class="n">y</span> <span class="o">-=</span> <span class="n">y_spacing</span>
+
+        <span class="n">labels</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">mix</span><span class="o">.</span><span class="n">sellprice_quartjes</span><span class="p">(),</span>
+                        <span class="n">font_name</span><span class="o">=</span><span class="n">font</span><span class="p">,</span>
+                        <span class="n">font_size</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span>
+                        <span class="n">anchor_x</span><span class="o">=</span><span class="s">&#39;center&#39;</span><span class="p">,</span> <span class="n">anchor_y</span><span class="o">=</span><span class="s">&#39;center&#39;</span><span class="p">,</span>
+                        <span class="n">position</span> <span class="o">=</span> <span class="p">(</span><span class="n">center_x</span> <span class="o">+</span> <span class="mi">300</span><span class="p">,</span> <span class="p">(</span><span class="n">max_y</span> <span class="o">-</span> <span class="mi">150</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span>
+
+        <span class="n">image</span><span class="o">=</span><span class="n">mix_drawer</span><span class="o">.</span><span class="n">create_mix_drawing</span><span class="p">(</span><span class="n">height</span><span class="o">=</span><span class="n">max_y</span><span class="o">-</span><span class="mi">150</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">mix</span><span class="o">=</span><span class="n">mix</span><span class="p">)</span>
+        <span class="n">mix_drawing</span> <span class="o">=</span> <span class="n">cocos</span><span class="o">.</span><span class="n">sprite</span><span class="o">.</span><span class="n">Sprite</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">,</span>
+                                          <span class="n">position</span><span class="o">=</span><span class="p">(</span><span class="n">center_x</span> <span class="o">-</span> <span class="mi">300</span><span class="p">,</span> <span class="p">(</span><span class="n">max_y</span> <span class="o">-</span> <span class="mi">150</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+                                          <span class="n">anchor</span><span class="o">=</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="p">(</span><span class="n">max_y</span> <span class="o">-</span> <span class="mi">150</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">labels</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">mix_drawing</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">labels</span>
+</div>
+<div class="viewcode-block" id="LabelBatch"><a class="viewcode-back" href="../../../quartjes.gui.html#quartjes.gui.cocos_gui.LabelBatch">[docs]</a><span class="k">class</span> <span class="nc">LabelBatch</span><span class="p">(</span><span class="n">cocos</span><span class="o">.</span><span class="n">cocosnode</span><span class="o">.</span><span class="n">CocosNode</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Special CocosNode to contain a number of text objects</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">use_batch_rendering</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Construct a label batch.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LabelBatch</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">position</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_batch_rendering</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">batch</span> <span class="o">=</span> <span class="n">pyglet</span><span class="o">.</span><span class="n">graphics</span><span class="o">.</span><span class="n">Batch</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">batch</span> <span class="o">=</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="LabelBatch.add_text"><a class="viewcode-back" href="../../../quartjes.gui.html#quartjes.gui.cocos_gui.LabelBatch.add_text">[docs]</a>    <span class="k">def</span> <span class="nf">add_text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a text label to the batch.</span>
+<span class="sd">        Accepts additional keyword arguments to pass on to a pyglet label.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;text&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">text</span>
+        <span class="n">element</span> <span class="o">=</span> <span class="n">pyglet</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch</span><span class="p">,</span>
+                                    <span class="n">x</span><span class="o">=</span><span class="n">position</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">y</span><span class="o">=</span><span class="n">position</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LabelBatch.draw"><a class="viewcode-back" href="../../../quartjes.gui.html#quartjes.gui.cocos_gui.LabelBatch.draw">[docs]</a>    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This is where the magic happens.</span>
+<span class="sd">        Draw all labels in a single batch.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">glPushMatrix</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">batch</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">:</span>
+                <span class="n">e</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+        <span class="n">glPopMatrix</span><span class="p">()</span>
+
+</div></div>
+<div class="viewcode-block" id="CocosGui"><a class="viewcode-back" href="../../../quartjes.gui.html#quartjes.gui.cocos_gui.CocosGui">[docs]</a><span class="k">class</span> <span class="nc">CocosGui</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Main object containing the Cocos2D GUI.</span>
+<span class="sd">    Initialize and start this object to start a show.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hostname</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">1234</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">768</span><span class="p">,</span>
+                 <span class="n">fullscreen</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set up all parameters and objects for the GUI.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_width</span> <span class="o">=</span> <span class="n">width</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_height</span> <span class="o">=</span> <span class="n">height</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fullscreen</span> <span class="o">=</span> <span class="n">fullscreen</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hostname</span> <span class="o">=</span> <span class="n">hostname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_port</span> <span class="o">=</span> <span class="n">port</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_ticker_on_update</span> <span class="o">=</span> <span class="bp">True</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ticker_layer</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_drink_layer</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_title_layer</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mix_layer</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_drinks</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mixes</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_all</span> <span class="o">=</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="CocosGui.start"><a class="viewcode-back" href="../../../quartjes.gui.html#quartjes.gui.cocos_gui.CocosGui.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Start running the Cocos GUI.</span>
+<span class="sd">        This method will block until the GUI has been shut down. After</span>
+<span class="sd">        returning there might still be some processes cleaning up.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Starting Cocos GUI&quot;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">Using following settings:&quot;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">Connection: </span><span class="si">%s</span><span class="s">:</span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_hostname</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_port</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">Graphics: (</span><span class="si">%d</span><span class="s">, </span><span class="si">%d</span><span class="s">) fullscreen=</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_height</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fullscreen</span><span class="p">))</span>
+        
+        <span class="k">print</span><span class="p">()</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Included libraries:&quot;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">Pyglet:</span><span class="se">\t</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">pyglet</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">Cocos:</span><span class="se">\t</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">cocos</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
+        <span class="kn">import</span> <span class="nn">twisted</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">Twisted:</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">twisted</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">short</span><span class="p">())</span>
+        
+        <span class="k">print</span><span class="p">()</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Opening connection to server...&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_connector</span> <span class="o">=</span> <span class="n">ClientConnector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_hostname</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_port</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_connector</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_drinks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connector</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">get_drinks</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mixes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connector</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">get_mixes</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_all</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_drinks</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mixes</span>
+
+        <span class="c">#self._connector.database.subscribe(&quot;drinks_updated&quot;, self._update_drinks)</span>
+        <span class="c">#self._connector.database.subscribe(&quot;mixes_updated&quot;, self._update_mixes)</span>
+        <span class="c">#self._connector.stock_exchange.subscribe(&quot;next_round&quot;, self._next_round)</span>
+
+        <span class="k">print</span><span class="p">()</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Initializing graphics...&quot;</span><span class="p">)</span>
+        <span class="n">cocos</span><span class="o">.</span><span class="n">director</span><span class="o">.</span><span class="n">director</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_width</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_height</span><span class="p">,</span>
+                                     <span class="n">fullscreen</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_fullscreen</span><span class="p">)</span>
+        <span class="n">cocos</span><span class="o">.</span><span class="n">director</span><span class="o">.</span><span class="n">director</span><span class="o">.</span><span class="n">set_show_FPS</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">show_gl_info</span><span class="p">()</span>
+
+        <span class="k">print</span><span class="p">()</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Starting the show!&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">show_ticker_scene</span><span class="p">()</span>
+        
+        <span class="k">print</span><span class="p">()</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Shut down in progress...&quot;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">()</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_connector</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="CocosGui.show_gl_info"><a class="viewcode-back" href="../../../quartjes.gui.html#quartjes.gui.cocos_gui.CocosGui.show_gl_info">[docs]</a>    <span class="k">def</span> <span class="nf">show_gl_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Display some information about the GL renderer.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">pyglet.gl.gl_info</span> <span class="kn">import</span> <span class="n">GLInfo</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="n">GLInfo</span><span class="p">()</span>
+        <span class="n">info</span><span class="o">.</span><span class="n">set_active_context</span><span class="p">()</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;GL Info:&quot;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">Version:</span><span class="se">\t</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">info</span><span class="o">.</span><span class="n">get_version</span><span class="p">())</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">Renderer:</span><span class="se">\t</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">info</span><span class="o">.</span><span class="n">get_renderer</span><span class="p">())</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">Vendor:</span><span class="se">\t\t</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">info</span><span class="o">.</span><span class="n">get_vendor</span><span class="p">())</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">Extensions:</span><span class="se">\t</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">info</span><span class="o">.</span><span class="n">get_extensions</span><span class="p">())</span>
+        
+        <span class="kn">from</span> <span class="nn">pyglet.gl.glu_info</span> <span class="kn">import</span> <span class="n">GLUInfo</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="n">GLUInfo</span><span class="p">()</span>
+        <span class="n">info</span><span class="o">.</span><span class="n">set_active_context</span><span class="p">()</span>
+        
+        <span class="k">print</span><span class="p">()</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;GLU Info:&quot;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">Version:</span><span class="se">\t</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">info</span><span class="o">.</span><span class="n">get_version</span><span class="p">())</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">Extensions:</span><span class="se">\t</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">info</span><span class="o">.</span><span class="n">get_extensions</span><span class="p">())</span>
+        
+</div>
+<div class="viewcode-block" id="CocosGui.show_ticker_scene"><a class="viewcode-back" href="../../../quartjes.gui.html#quartjes.gui.cocos_gui.CocosGui.show_ticker_scene">[docs]</a>    <span class="k">def</span> <span class="nf">show_ticker_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_ticker</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Replace everything on screen with the scene displaying the drink ticker.</span>
+<span class="sd">        If the engine is not yet running, this method will start a new engine</span>
+<span class="sd">        and will block until the engine has stopped.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ticker_layer</span> <span class="ow">or</span> <span class="n">new_ticker</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ticker_layer</span> <span class="o">=</span> <span class="n">BottomTicker</span><span class="p">(</span><span class="n">screen_width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_width</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_drink_layer</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_drink_layer</span> <span class="o">=</span> <span class="n">DrinkLayer</span><span class="p">(</span><span class="n">screen_width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_width</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_title_layer</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_title_layer</span> <span class="o">=</span> <span class="n">TitleLayer</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ticker_layer</span><span class="o">.</span><span class="n">update_drinks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_all</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">new_ticker</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_drink_layer</span><span class="o">.</span><span class="n">show_drink_history</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+
+        <span class="n">scene</span> <span class="o">=</span> <span class="n">cocos</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">Scene</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ticker_layer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_drink_layer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_title_layer</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ticker_layer</span><span class="o">.</span><span class="n">on_focus_changed</span> <span class="o">+=</span> <span class="k">lambda</span> <span class="n">sender</span><span class="p">,</span> <span class="n">drink</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_drink_layer</span><span class="o">.</span><span class="n">show_drink</span><span class="p">(</span><span class="n">drink</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_display_scene</span><span class="p">(</span><span class="n">scene</span><span class="p">)</span>
+
+</div>
+    <span class="k">def</span> <span class="nf">_display_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scene</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Change the display to show the given scene.</span>
+<span class="sd">        If no engine is running yet, an engine will be started. In that case this method</span>
+<span class="sd">        will not return until the engine has stopped again.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">cocos</span><span class="o">.</span><span class="n">director</span><span class="o">.</span><span class="n">director</span><span class="o">.</span><span class="n">scene</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">cocos</span><span class="o">.</span><span class="n">director</span><span class="o">.</span><span class="n">director</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">scene</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cocos</span><span class="o">.</span><span class="n">director</span><span class="o">.</span><span class="n">director</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">cocos</span><span class="o">.</span><span class="n">scenes</span><span class="o">.</span><span class="n">transitions</span><span class="o">.</span><span class="n">FadeTransition</span><span class="p">(</span><span class="n">scene</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_update_drinks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">drinks</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_drinks</span> <span class="o">=</span> <span class="n">drinks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_all</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mixes</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_drinks</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ticker_layer</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ticker_layer</span><span class="o">.</span><span class="n">update_drinks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_all</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_update_mixes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mixes</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mixes</span> <span class="o">=</span> <span class="n">mixes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_all</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mixes</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_drinks</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ticker_layer</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ticker_layer</span><span class="o">.</span><span class="n">update_drinks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_all</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_next_round</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">drinks</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_drinks</span> <span class="o">=</span> <span class="n">drinks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_all</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mixes</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_drinks</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_icker_layer</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ticker_layer</span><span class="o">.</span><span class="n">update_drinks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_all</span><span class="p">)</span>
+            </div>
+<div class="viewcode-block" id="parse_command_line"><a class="viewcode-back" href="../../../quartjes.gui.html#quartjes.gui.cocos_gui.parse_command_line">[docs]</a><span class="k">def</span> <span class="nf">parse_command_line</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse the command line.</span>
+<span class="sd">    Returns a namespace object containing the arguments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s">&quot;2D OpenGL accelerated GUI for Quartjesavond.&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;--hostname&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Hostname to connect too. Default runs local server.&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;--port&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1234</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Port to connect to.&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;--no-fullscreen&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_false&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;fullscreen&quot;</span><span class="p">,</span> 
+                        <span class="n">help</span><span class="o">=</span><span class="s">&quot;Do not run in fullscreen mode.&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;--width&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Width of the display window.&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;--height&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">768</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Height of the display window.&quot;</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">args</span>
+</div>
+<div class="viewcode-block" id="run_cocos_gui"><a class="viewcode-back" href="../../../quartjes.gui.html#quartjes.gui.cocos_gui.run_cocos_gui">[docs]</a><span class="k">def</span> <span class="nf">run_cocos_gui</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Do a normal startup of the Cocos GUI.</span>
+<span class="sd">    Parses the command line and starts the gui.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parse_command_line</span><span class="p">()</span>
+    <span class="n">gui</span> <span class="o">=</span> <span class="n">CocosGui</span><span class="p">(</span><span class="n">hostname</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">hostname</span><span class="p">,</span> <span class="n">port</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
+                   <span class="n">fullscreen</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">fullscreen</span><span class="p">)</span>
+    <span class="n">gui</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="test_mix"><a class="viewcode-back" href="../../../quartjes.gui.html#quartjes.gui.cocos_gui.test_mix">[docs]</a><span class="k">def</span> <span class="nf">test_mix</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Self test for testing the mix drawing functionality.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cocos</span><span class="o">.</span><span class="n">director</span><span class="o">.</span><span class="n">director</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">768</span><span class="p">,</span>
+                                     <span class="n">fullscreen</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">cocos</span><span class="o">.</span><span class="n">director</span><span class="o">.</span><span class="n">director</span><span class="o">.</span><span class="n">set_show_FPS</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="n">drink_layer</span> <span class="o">=</span> <span class="n">DrinkLayer</span><span class="p">()</span>
+    
+    <span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Thread</span>
+
+    <span class="k">class</span> <span class="nc">TestThread</span><span class="p">(</span><span class="n">Thread</span><span class="p">):</span>
+
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">drink_layer</span><span class="p">):</span>
+            <span class="n">Thread</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;TestThread&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">drink_layer</span> <span class="o">=</span> <span class="n">drink_layer</span>
+
+        <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="kn">from</span> <span class="nn">quartjes.controllers.database</span> <span class="kn">import</span> <span class="n">database</span>
+            <span class="n">mixes</span> <span class="o">=</span> <span class="n">database</span><span class="o">.</span><span class="n">get_mixes</span><span class="p">()[:]</span>
+            <span class="c">#mixes += database.get_drinks()[:]</span>
+            <span class="n">current</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="n">current</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">current</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">mixes</span><span class="p">):</span>
+                    <span class="n">current</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">drink_layer</span><span class="o">.</span><span class="n">show_drink</span><span class="p">(</span><span class="n">mixes</span><span class="p">[</span><span class="n">current</span><span class="p">])</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="n">TestThread</span><span class="p">(</span><span class="n">drink_layer</span><span class="p">)</span>
+    <span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="n">scene</span> <span class="o">=</span> <span class="n">cocos</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">Scene</span><span class="p">(</span><span class="n">drink_layer</span><span class="p">)</span>
+    <span class="n">cocos</span><span class="o">.</span><span class="n">director</span><span class="o">.</span><span class="n">director</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">scene</span><span class="p">)</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Killed&quot;</span><span class="p">)</span>
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c">#run_cocos_gui()</span>
+    <span class="n">test_mix</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Rob van der Most, Piet Braat.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,186 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>quartjes.models.drink &mdash; Quartjesavond Python 2012 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2012',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Quartjesavond Python 2012 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for quartjes.models.drink</h1><div class="highlight"><pre>
+<span class="c"># To change this template, choose Tools | Templates</span>
+<span class="c"># and open the template in the editor.</span>
+
+<span class="n">__author__</span><span class="o">=</span><span class="s">&quot;piet&quot;</span>
+<span class="n">__date__</span> <span class="o">=</span><span class="s">&quot;$5-jun-2011 12:34:35$&quot;</span>
+
+<span class="kn">from</span> <span class="nn">quartjes.util.classtools</span> <span class="kn">import</span> <span class="n">QuartjesBaseClass</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">array</span>
+
+<div class="viewcode-block" id="Drink"><a class="viewcode-back" href="../../../quartjes.models.html#quartjes.models.drink.Drink">[docs]</a><span class="k">class</span> <span class="nc">Drink</span><span class="p">(</span><span class="n">QuartjesBaseClass</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Drink class</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;Unnamed&quot;</span><span class="p">,</span> <span class="n">alc_perc</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span><span class="n">color</span> <span class="o">=</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span><span class="mi">255</span><span class="p">,</span><span class="mi">255</span><span class="p">),</span><span class="n">unit_price</span> <span class="o">=</span> <span class="mf">0.70</span><span class="p">,</span><span class="n">price_factor</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span><span class="n">unit_amount</span> <span class="o">=</span> <span class="mi">200</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Drink</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alc_perc</span> <span class="o">=</span> <span class="n">alc_perc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="n">color</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unit_price</span> <span class="o">=</span> <span class="n">unit_price</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unit_amount</span> <span class="o">=</span> <span class="n">unit_amount</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">price_factor</span> <span class="o">=</span> <span class="n">price_factor</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">history</span> <span class="o">=</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="Drink.price_per_liter"><a class="viewcode-back" href="../../../quartjes.models.html#quartjes.models.drink.Drink.price_per_liter">[docs]</a>    <span class="k">def</span> <span class="nf">price_per_liter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unit_price</span> <span class="o">/</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unit_amount</span><span class="p">)</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Drink.sellprice"><a class="viewcode-back" href="../../../quartjes.models.html#quartjes.models.drink.Drink.sellprice">[docs]</a>    <span class="k">def</span> <span class="nf">sellprice</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unit_price</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">price_factor</span>
+</div>
+<div class="viewcode-block" id="Drink.sellprice_quartjes"><a class="viewcode-back" href="../../../quartjes.models.html#quartjes.models.drink.Drink.sellprice_quartjes">[docs]</a>    <span class="k">def</span> <span class="nf">sellprice_quartjes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sellprice</span><span class="p">()</span><span class="o">*</span><span class="mi">10</span>
+</div>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">other</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="nb">vars</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">==</span><span class="nb">vars</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">other</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="nb">vars</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">!=</span><span class="nb">vars</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Mix"><a class="viewcode-back" href="../../../quartjes.models.html#quartjes.models.drink.Mix">[docs]</a><span class="k">class</span> <span class="nc">Mix</span><span class="p">(</span><span class="n">Drink</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Mix class</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;Unnamed&quot;</span><span class="p">,</span><span class="n">drinks</span> <span class="o">=</span> <span class="p">[],</span><span class="n">unit_amount</span> <span class="o">=</span> <span class="mi">200</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Mix</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">unit_amount</span> <span class="o">=</span> <span class="n">unit_amount</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">drinks</span> <span class="o">=</span> <span class="n">drinks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_properties</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Mix.insert_drink"><a class="viewcode-back" href="../../../quartjes.models.html#quartjes.models.drink.Mix.insert_drink">[docs]</a>    <span class="k">def</span> <span class="nf">insert_drink</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">drink</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add a drink to the mix&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">drinks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">drink</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_properties</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Mix.remove_drink"><a class="viewcode-back" href="../../../quartjes.models.html#quartjes.models.drink.Mix.remove_drink">[docs]</a>    <span class="k">def</span> <span class="nf">remove_drink</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove a drink from the mix&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">drinks</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_properties</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Mix.update_properties"><a class="viewcode-back" href="../../../quartjes.models.html#quartjes.models.drink.Mix.update_properties">[docs]</a>    <span class="k">def</span> <span class="nf">update_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Recalculate mix properties&quot;&quot;&quot;</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">drinks</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">parts</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">unit_price</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">alc_perc</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">price_factor</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">drinks</span><span class="p">:</span>
+                <span class="k">pass</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">alc_perc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alc_perc</span> <span class="o">+</span> <span class="n">d</span><span class="o">.</span><span class="n">alc_perc</span> <span class="o">/</span> <span class="n">parts</span>
+                <span class="n">color</span> <span class="o">+=</span> <span class="n">array</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">color</span><span class="p">)</span><span class="o">/</span><span class="n">parts</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">unit_price</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unit_price</span> <span class="o">+</span> <span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">price_per_liter</span><span class="p">()</span><span class="o">/</span><span class="n">parts</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unit_amount</span><span class="p">)</span><span class="o">/</span><span class="mi">1000</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">price_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">price_factor</span> <span class="o">+</span> <span class="n">d</span><span class="o">.</span><span class="n">price_factor</span><span class="o">/</span><span class="n">parts</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
+</div></div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">d1</span> <span class="o">=</span> <span class="n">Drink</span><span class="p">(</span><span class="s">&#39;cola&#39;</span><span class="p">,</span><span class="n">color</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">alc_perc</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span><span class="n">unit_price</span> <span class="o">=</span> <span class="mf">0.70</span><span class="p">,</span> <span class="n">unit_amount</span> <span class="o">=</span> <span class="mi">200</span><span class="p">)</span>
+    <span class="n">d2</span> <span class="o">=</span> <span class="n">Drink</span><span class="p">(</span><span class="s">&#39;bacardi&#39;</span><span class="p">,</span><span class="n">color</span> <span class="o">=</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span><span class="mi">255</span><span class="p">,</span><span class="mi">255</span><span class="p">),</span><span class="n">alc_perc</span> <span class="o">=</span> <span class="mi">40</span><span class="p">,</span><span class="n">unit_price</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">unit_amount</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span>
+    <span class="n">d1</span><span class="o">.</span><span class="n">price_factor</span> <span class="o">=</span> <span class="mf">0.8</span>
+    <span class="n">d2</span><span class="o">.</span><span class="n">price_factor</span> <span class="o">=</span> <span class="mf">0.9</span>
+    <span class="k">print</span> <span class="n">d1</span>
+    <span class="k">print</span> <span class="n">d2</span>
+
+    <span class="c"># example mix, 3 parts cola 1 part bacardi</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">Mix</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&#39;baco&#39;</span><span class="p">,</span><span class="n">drinks</span> <span class="o">=</span> <span class="p">[</span><span class="n">d1</span><span class="p">,</span><span class="n">d1</span><span class="p">,</span><span class="n">d1</span><span class="p">,</span><span class="n">d2</span><span class="p">],</span><span class="n">unit_amount</span> <span class="o">=</span> <span class="mi">200</span><span class="p">)</span>
+    
+    <span class="k">print</span> <span class="n">m</span>
+    <span class="k">print</span> <span class="s">&quot;Liter price = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">price_per_liter</span><span class="p">())</span> <span class="o">+</span> <span class="s">&quot; euro&quot;</span>
+    <span class="k">print</span> <span class="s">&quot;Selling price = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">sellprice</span><span class="p">())</span> <span class="o">+</span> <span class="s">&quot; euro&quot;</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Rob van der Most, Piet Braat.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

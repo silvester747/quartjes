@@ -1,0 +1,289 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>quartjes.connector.serializer_tests &mdash; Quartjesavond Python 2012 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2012',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Quartjesavond Python 2012 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for quartjes.connector.serializer_tests</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Test cases for the quartjes.connector.serializer module.</span>
+
+<span class="sd">This file ends with tests instead of test to make sure NetBeans does not use its built in</span>
+<span class="sd">test runner which does not support the new load_tests protocol.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">unittest</span>
+<span class="kn">import</span> <span class="nn">quartjes.connector.serializer</span> <span class="kn">as</span> <span class="nn">serializer</span>
+<span class="kn">from</span> <span class="nn">quartjes.connector.serializer</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
+<span class="kn">from</span> <span class="nn">quartjes.util.classtools</span> <span class="kn">import</span> <span class="n">QuartjesBaseClass</span>
+
+<div class="viewcode-block" id="ValueSerializerTestCase"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer_tests.ValueSerializerTestCase">[docs]</a><span class="k">class</span> <span class="nc">ValueSerializerTestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Test the value serializer system part of the serializer.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ValueSerializerTestCase.setUp"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer_tests.ValueSerializerTestCase.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">u</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_cases</span> <span class="o">=</span> <span class="p">[(</span><span class="s">&quot;int&quot;</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="s">&quot;12&quot;</span><span class="p">),</span>
+                           <span class="p">(</span><span class="s">&quot;str&quot;</span><span class="p">,</span> <span class="s">&quot;abcdefg234%$#$</span><span class="si">%s</span><span class="s">dfsadsa</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="s">&quot;abcdefg234%$#$</span><span class="si">%s</span><span class="s">dfsadsa</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">),</span>
+                           <span class="p">(</span><span class="s">&quot;float&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mf">12312.3424</span><span class="p">,</span> <span class="s">&quot;-12312.3424&quot;</span><span class="p">),</span>
+                           <span class="p">(</span><span class="s">&quot;uuid&quot;</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">urn</span><span class="p">)]</span>
+</div>
+<div class="viewcode-block" id="ValueSerializerTestCase.test_serializing"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer_tests.ValueSerializerTestCase.test_serializing">[docs]</a>    <span class="k">def</span> <span class="nf">test_serializing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_cases</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">get_serialized_value</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="nb">type</span><span class="p">),</span> <span class="s">&quot;Type </span><span class="si">%s</span><span class="s"> failed serializing.&quot;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ValueSerializerTestCase.test_deserializing"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer_tests.ValueSerializerTestCase.test_deserializing">[docs]</a>    <span class="k">def</span> <span class="nf">test_deserializing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_cases</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span> <span class="o">=</span> <span class="n">get_serialized_value</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+            <span class="n">ser</span> <span class="o">=</span> <span class="n">serializer</span><span class="o">.</span><span class="n">value_serializers_by_klass_name</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">ser</span><span class="o">.</span><span class="n">deserialize</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="s">&quot;Type </span><span class="si">%s</span><span class="s"> failed deserializing.&quot;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ValueSerializerTestCase.test_none"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer_tests.ValueSerializerTestCase.test_none">[docs]</a>    <span class="k">def</span> <span class="nf">test_none</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="o">=</span> <span class="n">get_serialized_value</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ValueSerializerTestCase.test_unknown"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer_tests.ValueSerializerTestCase.test_unknown">[docs]</a>    <span class="k">def</span> <span class="nf">test_unknown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="k">class</span> <span class="nc">Unknown</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="n">u</span> <span class="o">=</span> <span class="n">Unknown</span><span class="p">()</span>
+
+        <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="o">=</span> <span class="n">get_serialized_value</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+</div></div>
+<div class="viewcode-block" id="SerializerTestCase"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer_tests.SerializerTestCase">[docs]</a><span class="k">class</span> <span class="nc">SerializerTestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">output</span><span class="p">,):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SerializerTestCase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">methodName</span><span class="o">=</span><span class="s">&quot;run_test&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input</span> <span class="o">=</span> <span class="nb">input</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="n">output</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+<div class="viewcode-block" id="SerializerTestCase.run_test"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer_tests.SerializerTestCase.run_test">[docs]</a>    <span class="k">def</span> <span class="nf">run_test</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">serialize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="n">tag_name</span><span class="o">=</span><span class="s">&quot;test&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsNotNone</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s">&quot;Output should contain an object&quot;</span><span class="p">)</span>
+
+        <span class="n">string</span> <span class="o">=</span> <span class="n">serializer</span><span class="o">.</span><span class="n">et</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRegexpMatches</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="p">,</span> <span class="s">&quot;Incorrect output</span><span class="se">\n</span><span class="s">Expected:</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n</span><span class="s">Got:</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="p">,</span> <span class="n">string</span><span class="p">))</span>
+
+        <span class="n">node</span> <span class="o">=</span> <span class="n">serializer</span><span class="o">.</span><span class="n">et</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">deserialize</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="s">&quot;Deserialized value should equal original object.&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SerializerTestCase.shortDescription"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer_tests.SerializerTestCase.shortDescription">[docs]</a>    <span class="k">def</span> <span class="nf">shortDescription</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+</div></div>
+<div class="viewcode-block" id="TestKlassOld"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer_tests.TestKlassOld">[docs]</a><span class="k">class</span> <span class="nc">TestKlassOld</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="mi">43432</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="mf">454343.1233</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">=</span> <span class="s">&quot;teststring&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">l</span> <span class="o">=</span> <span class="p">[</span><span class="mi">23</span><span class="p">,</span> <span class="mi">543</span><span class="p">,</span> <span class="s">&quot;sds&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">543</span><span class="p">,</span> <span class="s">&quot;sds&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">i</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">i</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">f</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">s</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">l</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">l</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">t</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TestKlassNew"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer_tests.TestKlassNew">[docs]</a><span class="k">class</span> <span class="nc">TestKlassNew</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="mi">43432</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="mf">454343.1233</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">=</span> <span class="s">&quot;teststring&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">l</span> <span class="o">=</span> <span class="p">[</span><span class="mi">23</span><span class="p">,</span> <span class="mi">543</span><span class="p">,</span> <span class="s">&quot;sds&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">543</span><span class="p">,</span> <span class="s">&quot;sds&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">i</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">i</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">f</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">s</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">l</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">l</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">t</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TestQuartjesKlass"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer_tests.TestQuartjesKlass">[docs]</a><span class="k">class</span> <span class="nc">TestQuartjesKlass</span><span class="p">(</span><span class="n">QuartjesBaseClass</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">TestQuartjesKlass</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="mi">43432</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="mf">454343.1233</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">=</span> <span class="s">&quot;teststring&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">l</span> <span class="o">=</span> <span class="p">[</span><span class="mi">23</span><span class="p">,</span> <span class="mi">543</span><span class="p">,</span> <span class="s">&quot;sds&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">543</span><span class="p">,</span> <span class="s">&quot;sds&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TestKlassOverride"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer_tests.TestKlassOverride">[docs]</a><span class="k">class</span> <span class="nc">TestKlassOverride</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="n">__serialize__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;i&quot;</span><span class="p">,</span> <span class="s">&quot;l&quot;</span><span class="p">]</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="mi">43432</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="mf">454343.1233</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">=</span> <span class="s">&quot;teststring&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">l</span> <span class="o">=</span> <span class="p">[</span><span class="mi">23</span><span class="p">,</span> <span class="mi">543</span><span class="p">,</span> <span class="s">&quot;sds&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">543</span><span class="p">,</span> <span class="s">&quot;sds&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">i</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">i</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">l</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">l</span><span class="p">)</span>
+</div>
+<span class="n">serializer_test_cases</span> <span class="o">=</span> <span class="p">[</span><span class="n">SerializerTestCase</span><span class="p">(</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s">&quot;int&quot;</span><span class="p">,</span>
+                             <span class="nb">input</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+                             <span class="n">output</span><span class="o">=</span><span class="s">&quot;&lt;test type=</span><span class="se">\&quot;</span><span class="s">int</span><span class="se">\&quot;</span><span class="s">&gt;12&lt;/test&gt;&quot;</span>
+                             <span class="p">),</span>
+                         <span class="n">SerializerTestCase</span><span class="p">(</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s">&quot;float&quot;</span><span class="p">,</span>
+                             <span class="nb">input</span><span class="o">=</span><span class="mf">1234.23</span><span class="p">,</span>
+                             <span class="n">output</span><span class="o">=</span><span class="s">&quot;&lt;test type=</span><span class="se">\&quot;</span><span class="s">float</span><span class="se">\&quot;</span><span class="s">&gt;1234.23&lt;/test&gt;&quot;</span>
+                             <span class="p">),</span>
+                         <span class="n">SerializerTestCase</span><span class="p">(</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s">&quot;string&quot;</span><span class="p">,</span>
+                             <span class="nb">input</span><span class="o">=</span><span class="s">&quot;testsdfda@#nfasnalsk32&quot;</span><span class="p">,</span>
+                             <span class="n">output</span><span class="o">=</span><span class="s">&quot;&lt;test type=</span><span class="se">\&quot;</span><span class="s">str</span><span class="se">\&quot;</span><span class="s">&gt;testsdfda@#nfasnalsk32&lt;/test&gt;&quot;</span>
+                             <span class="p">),</span>
+                         <span class="n">SerializerTestCase</span><span class="p">(</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s">&quot;uuid&quot;</span><span class="p">,</span>
+                             <span class="nb">input</span><span class="o">=</span><span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">(</span><span class="s">&#39;urn:uuid:3f22b1ff-424d-468c-aa47-b399a6fd1795&#39;</span><span class="p">),</span>
+                             <span class="n">output</span><span class="o">=</span><span class="s">&quot;&lt;test type=</span><span class="se">\&quot;</span><span class="s">uuid</span><span class="se">\&quot;</span><span class="s">&gt;urn:uuid:3f22b1ff-424d-468c-aa47-b399a6fd1795&lt;/test&gt;&quot;</span>
+                             <span class="p">),</span>
+                         <span class="n">SerializerTestCase</span><span class="p">(</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s">&quot;list&quot;</span><span class="p">,</span>
+                             <span class="nb">input</span><span class="o">=</span><span class="p">[</span><span class="mi">12</span><span class="p">,</span> <span class="mf">1234.23</span><span class="p">,</span> <span class="s">&quot;bladfsd&quot;</span><span class="p">],</span>
+                             <span class="n">output</span><span class="o">=</span><span class="s">&quot;&lt;test type=</span><span class="se">\&quot;</span><span class="s">list</span><span class="se">\&quot;</span><span class="s">&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">int</span><span class="se">\&quot;</span><span class="s">&gt;12&lt;/value&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">float</span><span class="se">\&quot;</span><span class="s">&gt;1234.23&lt;/value&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">str</span><span class="se">\&quot;</span><span class="s">&gt;bladfsd&lt;/value&gt;&lt;/test&gt;&quot;</span>
+                             <span class="p">),</span>
+                         <span class="n">SerializerTestCase</span><span class="p">(</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s">&quot;tuple&quot;</span><span class="p">,</span>
+                             <span class="nb">input</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mf">1234.23</span><span class="p">,</span> <span class="s">&quot;bladfsd&quot;</span><span class="p">),</span>
+                             <span class="n">output</span><span class="o">=</span><span class="s">&quot;&lt;test type=</span><span class="se">\&quot;</span><span class="s">tuple</span><span class="se">\&quot;</span><span class="s">&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">int</span><span class="se">\&quot;</span><span class="s">&gt;12&lt;/value&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">float</span><span class="se">\&quot;</span><span class="s">&gt;1234.23&lt;/value&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">str</span><span class="se">\&quot;</span><span class="s">&gt;bladfsd&lt;/value&gt;&lt;/test&gt;&quot;</span>
+                             <span class="p">),</span>
+                         <span class="n">SerializerTestCase</span><span class="p">(</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s">&quot;old style class&quot;</span><span class="p">,</span>
+                             <span class="nb">input</span><span class="o">=</span><span class="n">TestKlassOld</span><span class="p">(),</span>
+                             <span class="n">output</span><span class="o">=</span><span class="s">&quot;&lt;test class=</span><span class="se">\&quot;</span><span class="s">__main__.TestKlassOld</span><span class="se">\&quot;</span><span class="s"> id=</span><span class="se">\&quot;</span><span class="s">urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}</span><span class="se">\&quot;</span><span class="s"> type=</span><span class="se">\&quot;</span><span class="s">instance</span><span class="se">\&quot;</span><span class="s">&gt;&lt;f type=</span><span class="se">\&quot;</span><span class="s">float</span><span class="se">\&quot;</span><span class="s">&gt;454343.1233&lt;/f&gt;&lt;i type=</span><span class="se">\&quot;</span><span class="s">int</span><span class="se">\&quot;</span><span class="s">&gt;43432&lt;/i&gt;&lt;l type=</span><span class="se">\&quot;</span><span class="s">list</span><span class="se">\&quot;</span><span class="s">&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">int</span><span class="se">\&quot;</span><span class="s">&gt;23&lt;/value&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">int</span><span class="se">\&quot;</span><span class="s">&gt;543&lt;/value&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">str</span><span class="se">\&quot;</span><span class="s">&gt;sds&lt;/value&gt;&lt;/l&gt;&lt;s type=</span><span class="se">\&quot;</span><span class="s">str</span><span class="se">\&quot;</span><span class="s">&gt;teststring&lt;/s&gt;&lt;t type=</span><span class="se">\&quot;</span><span class="s">tuple</span><span class="se">\&quot;</span><span class="s">&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">int</span><span class="se">\&quot;</span><span class="s">&gt;23&lt;/value&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">int</span><span class="se">\&quot;</span><span class="s">&gt;543&lt;/value&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">str</span><span class="se">\&quot;</span><span class="s">&gt;sds&lt;/value&gt;&lt;/t&gt;&lt;/test&gt;&quot;</span>
+                             <span class="p">),</span>
+                         <span class="n">SerializerTestCase</span><span class="p">(</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s">&quot;new style class&quot;</span><span class="p">,</span>
+                             <span class="nb">input</span><span class="o">=</span><span class="n">TestKlassNew</span><span class="p">(),</span>
+                             <span class="n">output</span><span class="o">=</span><span class="s">&quot;&lt;test class=</span><span class="se">\&quot;</span><span class="s">__main__.TestKlassNew</span><span class="se">\&quot;</span><span class="s"> id=</span><span class="se">\&quot;</span><span class="s">urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}</span><span class="se">\&quot;</span><span class="s"> type=</span><span class="se">\&quot;</span><span class="s">instance</span><span class="se">\&quot;</span><span class="s">&gt;&lt;f type=</span><span class="se">\&quot;</span><span class="s">float</span><span class="se">\&quot;</span><span class="s">&gt;454343.1233&lt;/f&gt;&lt;i type=</span><span class="se">\&quot;</span><span class="s">int</span><span class="se">\&quot;</span><span class="s">&gt;43432&lt;/i&gt;&lt;l type=</span><span class="se">\&quot;</span><span class="s">list</span><span class="se">\&quot;</span><span class="s">&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">int</span><span class="se">\&quot;</span><span class="s">&gt;23&lt;/value&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">int</span><span class="se">\&quot;</span><span class="s">&gt;543&lt;/value&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">str</span><span class="se">\&quot;</span><span class="s">&gt;sds&lt;/value&gt;&lt;/l&gt;&lt;s type=</span><span class="se">\&quot;</span><span class="s">str</span><span class="se">\&quot;</span><span class="s">&gt;teststring&lt;/s&gt;&lt;t type=</span><span class="se">\&quot;</span><span class="s">tuple</span><span class="se">\&quot;</span><span class="s">&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">int</span><span class="se">\&quot;</span><span class="s">&gt;23&lt;/value&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">int</span><span class="se">\&quot;</span><span class="s">&gt;543&lt;/value&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">str</span><span class="se">\&quot;</span><span class="s">&gt;sds&lt;/value&gt;&lt;/t&gt;&lt;/test&gt;&quot;</span>
+                             <span class="p">),</span>
+                         <span class="n">SerializerTestCase</span><span class="p">(</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s">&quot;quartjes class&quot;</span><span class="p">,</span>
+                             <span class="nb">input</span><span class="o">=</span><span class="n">TestQuartjesKlass</span><span class="p">(),</span>
+                             <span class="n">output</span><span class="o">=</span><span class="s">&quot;&lt;test class=</span><span class="se">\&quot;</span><span class="s">__main__.TestQuartjesKlass</span><span class="se">\&quot;</span><span class="s"> id=</span><span class="se">\&quot;</span><span class="s">urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}</span><span class="se">\&quot;</span><span class="s"> type=</span><span class="se">\&quot;</span><span class="s">instance</span><span class="se">\&quot;</span><span class="s">&gt;&lt;f type=</span><span class="se">\&quot;</span><span class="s">float</span><span class="se">\&quot;</span><span class="s">&gt;454343.1233&lt;/f&gt;&lt;i type=</span><span class="se">\&quot;</span><span class="s">int</span><span class="se">\&quot;</span><span class="s">&gt;43432&lt;/i&gt;&lt;l type=</span><span class="se">\&quot;</span><span class="s">list</span><span class="se">\&quot;</span><span class="s">&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">int</span><span class="se">\&quot;</span><span class="s">&gt;23&lt;/value&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">int</span><span class="se">\&quot;</span><span class="s">&gt;543&lt;/value&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">str</span><span class="se">\&quot;</span><span class="s">&gt;sds&lt;/value&gt;&lt;/l&gt;&lt;s type=</span><span class="se">\&quot;</span><span class="s">str</span><span class="se">\&quot;</span><span class="s">&gt;teststring&lt;/s&gt;&lt;t type=</span><span class="se">\&quot;</span><span class="s">tuple</span><span class="se">\&quot;</span><span class="s">&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">int</span><span class="se">\&quot;</span><span class="s">&gt;23&lt;/value&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">int</span><span class="se">\&quot;</span><span class="s">&gt;543&lt;/value&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">str</span><span class="se">\&quot;</span><span class="s">&gt;sds&lt;/value&gt;&lt;/t&gt;&lt;/test&gt;&quot;</span>
+                             <span class="p">),</span>
+                         <span class="n">SerializerTestCase</span><span class="p">(</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s">&quot;class with override&quot;</span><span class="p">,</span>
+                             <span class="nb">input</span><span class="o">=</span><span class="n">TestKlassOverride</span><span class="p">(),</span>
+                             <span class="n">output</span><span class="o">=</span><span class="s">&quot;&lt;test class=</span><span class="se">\&quot;</span><span class="s">__main__.TestKlassOverride</span><span class="se">\&quot;</span><span class="s"> id=</span><span class="se">\&quot;</span><span class="s">urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}</span><span class="se">\&quot;</span><span class="s"> type=</span><span class="se">\&quot;</span><span class="s">instance</span><span class="se">\&quot;</span><span class="s">&gt;&lt;i type=</span><span class="se">\&quot;</span><span class="s">int</span><span class="se">\&quot;</span><span class="s">&gt;43432&lt;/i&gt;&lt;l type=</span><span class="se">\&quot;</span><span class="s">list</span><span class="se">\&quot;</span><span class="s">&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">int</span><span class="se">\&quot;</span><span class="s">&gt;23&lt;/value&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">int</span><span class="se">\&quot;</span><span class="s">&gt;543&lt;/value&gt;&lt;value type=</span><span class="se">\&quot;</span><span class="s">str</span><span class="se">\&quot;</span><span class="s">&gt;sds&lt;/value&gt;&lt;/l&gt;&lt;/test&gt;&quot;</span>
+                             <span class="p">),</span>
+                         <span class="n">SerializerTestCase</span><span class="p">(</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s">&quot;None&quot;</span><span class="p">,</span>
+                             <span class="nb">input</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                             <span class="n">output</span><span class="o">=</span><span class="s">&quot;&lt;test /&gt;&quot;</span>
+                             <span class="p">)</span>
+                        <span class="p">]</span>
+
+
+<div class="viewcode-block" id="load_tests"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer_tests.load_tests">[docs]</a><span class="k">def</span> <span class="nf">load_tests</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">tests</span><span class="p">,</span> <span class="n">pattern</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load the test cases in this module.</span>
+<span class="sd">    Some test cases are added a little different than usual.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">suite</span> <span class="o">=</span> <span class="n">unittest</span><span class="o">.</span><span class="n">TestSuite</span><span class="p">()</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTests</span><span class="p">(</span><span class="n">loader</span><span class="o">.</span><span class="n">loadTestsFromTestCase</span><span class="p">(</span><span class="n">ValueSerializerTestCase</span><span class="p">))</span>
+    <span class="n">suite</span><span class="o">.</span><span class="n">addTests</span><span class="p">(</span><span class="n">serializer_test_cases</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">suite</span>
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">verbosity</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Rob van der Most, Piet Braat.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

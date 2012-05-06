@@ -1,0 +1,189 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>quartjes.gui.sell_dialog &mdash; Quartjesavond Python 2012 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2012',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Quartjesavond Python 2012 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for quartjes.gui.sell_dialog</h1><div class="highlight"><pre>
+<span class="c"># To change this template, choose Tools | Templates</span>
+<span class="c"># and open the template in the editor.</span>
+
+<span class="n">__author__</span><span class="o">=</span><span class="s">&quot;piet&quot;</span>
+<span class="n">__date__</span> <span class="o">=</span><span class="s">&quot;$Jul 3, 2011 3:03:58 PM$&quot;</span>
+
+<span class="kn">from</span> <span class="nn">Tkinter</span> <span class="kn">import</span> <span class="o">*</span>
+
+<div class="viewcode-block" id="dialogSell"><a class="viewcode-back" href="../../../quartjes.gui.html#quartjes.gui.sell_dialog.dialogSell">[docs]</a><span class="k">class</span> <span class="nc">dialogSell</span><span class="p">(</span><span class="n">Frame</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">conn</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="n">root</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Sell Drinks&#39;</span><span class="p">)</span>
+        <span class="n">Frame</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root</span> <span class="o">=</span> <span class="n">root</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pack</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conn</span> <span class="o">=</span> <span class="n">conn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">get_service_interface</span><span class="p">(</span><span class="s">&quot;database&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">createWidgets</span><span class="p">()</span>
+
+<div class="viewcode-block" id="dialogSell.sell_drink"><a class="viewcode-back" href="../../../quartjes.gui.html#quartjes.gui.sell_dialog.dialogSell.sell_drink">[docs]</a>    <span class="k">def</span> <span class="nf">sell_drink</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc_price</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lb_drinks</span><span class="o">.</span><span class="n">curselection</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selection</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selection</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">entryvalue</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sv_amount</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">entryvalue</span><span class="p">)</span> <span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">amount</span> <span class="o">=</span> <span class="n">entryvalue</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sex</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">get_service_interface</span><span class="p">(</span><span class="s">&quot;stock_exchange&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sex</span><span class="o">.</span><span class="n">sell</span><span class="p">(</span><span class="n">drink</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">selected</span><span class="p">],</span> <span class="n">amount</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="dialogSell.fill_drinks_listbox"><a class="viewcode-back" href="../../../quartjes.gui.html#quartjes.gui.sell_dialog.dialogSell.fill_drinks_listbox">[docs]</a>    <span class="k">def</span> <span class="nf">fill_drinks_listbox</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">lb_drinks</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">drinks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_drinks</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">drinks</span><span class="p">:</span>
+            <span class="n">lb_drinks</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">END</span><span class="p">,</span><span class="n">d</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="dialogSell.calc_price"><a class="viewcode-back" href="../../../quartjes.gui.html#quartjes.gui.sell_dialog.dialogSell.calc_price">[docs]</a>    <span class="k">def</span> <span class="nf">calc_price</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">entryvalue</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">e_amount</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">entryvalue</span><span class="p">)</span> <span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">amount</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">entryvalue</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lb_drinks</span><span class="o">.</span><span class="n">curselection</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selection</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">selected</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selection</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">drinks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_drinks</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newprice</span> <span class="o">=</span> <span class="n">amount</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">drinks</span><span class="p">[</span><span class="n">selected</span><span class="p">]</span><span class="o">.</span><span class="n">sellprice_quartjes</span><span class="p">())</span>
+        <span class="k">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">newprice</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sv_price</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">newprice</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="dialogSell.printklik"><a class="viewcode-back" href="../../../quartjes.gui.html#quartjes.gui.sell_dialog.dialogSell.printklik">[docs]</a>    <span class="k">def</span> <span class="nf">printklik</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eventdata</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;klik&quot;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="dialogSell.createWidgets"><a class="viewcode-back" href="../../../quartjes.gui.html#quartjes.gui.sell_dialog.dialogSell.createWidgets">[docs]</a>    <span class="k">def</span> <span class="nf">createWidgets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">font16</span> <span class="o">=</span> <span class="p">(</span><span class="s">&quot;Arial&quot;</span><span class="p">,</span> <span class="mi">26</span><span class="p">,</span> <span class="s">&quot;bold&quot;</span><span class="p">)</span>
+        <span class="n">font12</span> <span class="o">=</span> <span class="p">(</span><span class="s">&quot;Arial&quot;</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="s">&quot;bold&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lb_drinks</span> <span class="o">=</span> <span class="n">Listbox</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lb_drinks</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span><span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">rowspan</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span><span class="n">sticky</span><span class="o">=</span><span class="n">EW</span><span class="p">,</span> <span class="n">padx</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">pady</span> <span class="o">=</span> <span class="mi">20</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lb_drinks</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">printklik</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill_drinks_listbox</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lb_drinks</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame1</span> <span class="o">=</span> <span class="n">Frame</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame1</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">column</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">l_amount</span> <span class="o">=</span> <span class="n">Label</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame1</span><span class="p">,</span> <span class="n">text</span> <span class="o">=</span> <span class="s">&quot; Amount:&quot;</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">font</span> <span class="o">=</span> <span class="n">font16</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">l_amount</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span><span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">sticky</span><span class="o">=</span><span class="n">EW</span><span class="p">,</span> <span class="n">padx</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">pady</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sv_amount</span> <span class="o">=</span> <span class="n">StringVar</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">e_amount</span> <span class="o">=</span> <span class="n">Entry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame1</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">textvariable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sv_amount</span><span class="p">,</span> <span class="n">font</span> <span class="o">=</span> <span class="n">font16</span><span class="p">,</span> <span class="n">text</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">e_amount</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span><span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">sticky</span><span class="o">=</span><span class="n">EW</span><span class="p">,</span> <span class="n">padx</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">pady</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">e_amount</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sv_price</span> <span class="o">=</span> <span class="n">StringVar</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">l_price</span> <span class="o">=</span> <span class="n">Label</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame1</span><span class="p">,</span> <span class="n">textvariable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sv_price</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">font</span> <span class="o">=</span> <span class="n">font16</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">l_price</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span><span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">sticky</span><span class="o">=</span><span class="n">EW</span><span class="p">,</span> <span class="n">padx</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">pady</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_update_price</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame1</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">text</span> <span class="o">=</span> <span class="s">&quot;Update Price&quot;</span><span class="p">,</span> <span class="n">font</span> <span class="o">=</span> <span class="n">font12</span><span class="p">,</span> <span class="n">command</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_price</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_update_price</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">column</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_sell</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span> <span class="o">=</span> <span class="s">&quot;Sell&quot;</span><span class="p">,</span> <span class="n">bg</span><span class="o">=</span><span class="s">&quot;#999999&quot;</span><span class="p">,</span> <span class="n">command</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sell_drink</span><span class="p">,</span> <span class="n">activebackground</span><span class="o">=</span><span class="s">&quot;#ff5555&quot;</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">font</span> <span class="o">=</span> <span class="n">font16</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_sell</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span><span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">sticky</span><span class="o">=</span><span class="n">EW</span><span class="p">,</span> <span class="n">padx</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">pady</span> <span class="o">=</span> <span class="mi">20</span><span class="p">)</span>
+
+</div></div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">Tk</span><span class="p">()</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">dialogSell</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">mainloop</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Rob van der Most, Piet Braat.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

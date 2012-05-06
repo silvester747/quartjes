@@ -1,0 +1,185 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>models Package &mdash; Quartjesavond Python 2012 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '2012',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Quartjesavond Python 2012 documentation" href="index.html" />
+    <link rel="up" title="quartjes Package" href="quartjes.html" />
+    <link rel="next" title="util Package" href="quartjes.util.html" />
+    <link rel="prev" title="gui Package" href="quartjes.gui.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="quartjes.util.html" title="util Package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="quartjes.gui.html" title="gui Package"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
+          <li><a href="modules.html" >quartjes</a> &raquo;</li>
+          <li><a href="quartjes.html" accesskey="U">quartjes Package</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="models-package">
+<h1>models Package<a class="headerlink" href="#models-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2><tt class="xref py py-mod docutils literal"><span class="pre">models</span></tt> Package<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-quartjes.models"></span></div>
+<div class="section" id="module-quartjes.models.drink">
+<span id="drink-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">drink</span></tt> Module<a class="headerlink" href="#module-quartjes.models.drink" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="quartjes.models.drink.Drink">
+<em class="property">class </em><tt class="descclassname">quartjes.models.drink.</tt><tt class="descname">Drink</tt><big>(</big><em>name='Unnamed'</em>, <em>alc_perc=0</em>, <em>color=(255</em>, <em>255</em>, <em>255)</em>, <em>unit_price=0.7</em>, <em>price_factor=1</em>, <em>unit_amount=200</em><big>)</big><a class="reference internal" href="_modules/quartjes/models/drink.html#Drink"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.models.drink.Drink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="quartjes.util.html#quartjes.util.classtools.QuartjesBaseClass" title="quartjes.util.classtools.QuartjesBaseClass"><tt class="xref py py-class docutils literal"><span class="pre">quartjes.util.classtools.QuartjesBaseClass</span></tt></a></p>
+<p>Drink class</p>
+<dl class="method">
+<dt id="quartjes.models.drink.Drink.price_per_liter">
+<tt class="descname">price_per_liter</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/models/drink.html#Drink.price_per_liter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.models.drink.Drink.price_per_liter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="quartjes.models.drink.Drink.sellprice">
+<tt class="descname">sellprice</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/models/drink.html#Drink.sellprice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.models.drink.Drink.sellprice" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="quartjes.models.drink.Drink.sellprice_quartjes">
+<tt class="descname">sellprice_quartjes</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/models/drink.html#Drink.sellprice_quartjes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.models.drink.Drink.sellprice_quartjes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="quartjes.models.drink.Mix">
+<em class="property">class </em><tt class="descclassname">quartjes.models.drink.</tt><tt class="descname">Mix</tt><big>(</big><em>name='Unnamed'</em>, <em>drinks=</em><span class="optional">[</span><span class="optional">]</span>, <em>unit_amount=200</em><big>)</big><a class="reference internal" href="_modules/quartjes/models/drink.html#Mix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.models.drink.Mix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#quartjes.models.drink.Drink" title="quartjes.models.drink.Drink"><tt class="xref py py-class docutils literal"><span class="pre">quartjes.models.drink.Drink</span></tt></a></p>
+<p>Mix class</p>
+<dl class="method">
+<dt id="quartjes.models.drink.Mix.insert_drink">
+<tt class="descname">insert_drink</tt><big>(</big><em>drink</em><big>)</big><a class="reference internal" href="_modules/quartjes/models/drink.html#Mix.insert_drink"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.models.drink.Mix.insert_drink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a drink to the mix</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quartjes.models.drink.Mix.remove_drink">
+<tt class="descname">remove_drink</tt><big>(</big><em>index</em><big>)</big><a class="reference internal" href="_modules/quartjes/models/drink.html#Mix.remove_drink"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.models.drink.Mix.remove_drink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a drink from the mix</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="quartjes.models.drink.Mix.update_properties">
+<tt class="descname">update_properties</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/models/drink.html#Mix.update_properties"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.models.drink.Mix.update_properties" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recalculate mix properties</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">models Package</a><ul>
+<li><a class="reference internal" href="#id1"><tt class="docutils literal"><span class="pre">models</span></tt> Package</a></li>
+<li><a class="reference internal" href="#module-quartjes.models.drink"><tt class="docutils literal"><span class="pre">drink</span></tt> Module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="quartjes.gui.html"
+                        title="previous chapter">gui Package</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="quartjes.util.html"
+                        title="next chapter">util Package</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/quartjes.models.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="quartjes.util.html" title="util Package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="quartjes.gui.html" title="gui Package"
+             >previous</a> |</li>
+        <li><a href="index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
+          <li><a href="modules.html" >quartjes</a> &raquo;</li>
+          <li><a href="quartjes.html" >quartjes Package</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Rob van der Most, Piet Braat.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

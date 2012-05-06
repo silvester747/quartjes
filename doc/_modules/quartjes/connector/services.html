@@ -1,0 +1,344 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>quartjes.connector.services &mdash; Quartjesavond Python 2012 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2012',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Quartjesavond Python 2012 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for quartjes.connector.services</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Base definitions of services.</span>
+<span class="sd">The quartjes server is capable of offering multiple services. Each service</span>
+<span class="sd">is identified by its service name.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">quartjes.connector.exceptions</span> <span class="kn">import</span> <span class="n">MessageHandleError</span>
+<span class="kn">from</span> <span class="nn">axel</span> <span class="kn">import</span> <span class="n">Event</span>
+
+<div class="viewcode-block" id="remote_service"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.remote_service">[docs]</a><span class="k">def</span> <span class="nf">remote_service</span><span class="p">(</span><span class="n">C</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Decorator for classes that should expose methods as a remote service.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">C</span><span class="o">.</span><span class="n">_remote_service</span> <span class="o">=</span> <span class="bp">True</span>
+    
+    <span class="n">methods</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">events</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">C</span><span class="p">):</span>
+        <span class="n">attr</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="s">&quot;_remote_method&quot;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+            <span class="n">methods</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="s">&quot;_remote_event&quot;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+            <span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    
+    <span class="n">C</span><span class="o">.</span><span class="n">_remote_methods</span> <span class="o">=</span> <span class="n">methods</span>
+    <span class="n">C</span><span class="o">.</span><span class="n">_remote_events</span> <span class="o">=</span> <span class="n">events</span>        
+    
+    <span class="k">return</span> <span class="n">C</span>
+</div>
+<div class="viewcode-block" id="remote_method"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.remote_method">[docs]</a><span class="k">def</span> <span class="nf">remote_method</span><span class="p">(</span><span class="n">F</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Decorator for methods that should expose them selves through a remote service.</span>
+<span class="sd">    Also requires the class to be decorated as &#39;remote_service&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">F</span><span class="o">.</span><span class="n">_remote_method</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="n">F</span>
+</div>
+<div class="viewcode-block" id="remote_event"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.remote_event">[docs]</a><span class="k">def</span> <span class="nf">remote_event</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate an event that should be exposed through a remote service.</span>
+<span class="sd">    Also requires the class to be decorated as &#39;remote_service&#39;.</span>
+<span class="sd">    Warning: this is _not_ a decorator.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">E</span> <span class="o">=</span> <span class="n">Event</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">E</span><span class="o">.</span><span class="n">_remote_event</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="n">E</span>
+</div>
+<div class="viewcode-block" id="prepare_remote_service"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.prepare_remote_service">[docs]</a><span class="k">def</span> <span class="nf">prepare_remote_service</span><span class="p">(</span><span class="n">service</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prepare a remote service class to be used as a remote service.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="s">&quot;_remote_event_registry&quot;</span><span class="p">):</span>
+        <span class="n">service</span><span class="o">.</span><span class="n">_remote_event_registry</span> <span class="o">=</span> <span class="n">RemoteEventRegistry</span><span class="p">(</span><span class="n">service</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="execute_remote_method_call"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.execute_remote_method_call">[docs]</a><span class="k">def</span> <span class="nf">execute_remote_method_call</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="n">method_name</span><span class="p">,</span> <span class="o">*</span><span class="n">pargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Call a method on a class allowing remote service calls.</span>
+<span class="sd">    Checks whether the method can be called and then performs the call.</span>
+<span class="sd">    The result of the method call is returned.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">assert</span> <span class="n">service</span><span class="o">.</span><span class="n">_remote_service</span><span class="p">,</span> <span class="s">&quot;Services must be decorated as remote_service&quot;</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">method_name</span> <span class="ow">in</span> <span class="n">service</span><span class="o">.</span><span class="n">_remote_methods</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">MessageHandleError</span><span class="p">(</span><span class="n">MessageHandleError</span><span class="o">.</span><span class="n">RESULT_UNKNOWN_METHOD</span><span class="p">)</span>
+    
+    <span class="n">meth</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="n">method_name</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">meth</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">MessageHandleError</span><span class="p">(</span><span class="n">MessageHandleError</span><span class="o">.</span><span class="n">RESULT_UNKNOWN_METHOD</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">meth</span><span class="p">(</span><span class="o">*</span><span class="n">pargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">MessageHandleError</span><span class="p">(</span><span class="n">MessageHandleError</span><span class="o">.</span><span class="n">RESULT_INVALID_PARAMS</span><span class="p">,</span> <span class="n">error_details</span><span class="o">=</span><span class="n">err</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="n">MessageHandleError</span><span class="p">(</span><span class="n">MessageHandleError</span><span class="o">.</span><span class="n">RESULT_EXCEPTION_RAISED</span><span class="p">,</span> <span class="n">error_details</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="subscribe_to_remote_event"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.subscribe_to_remote_event">[docs]</a><span class="k">def</span> <span class="nf">subscribe_to_remote_event</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="n">service_name</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="n">listener</span><span class="p">,</span> <span class="n">factory</span><span class="p">):</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;subscribing to event&quot;</span><span class="p">)</span>
+    <span class="n">service</span><span class="o">.</span><span class="n">_remote_event_registry</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="n">service_name</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="n">listener</span><span class="p">,</span> <span class="n">factory</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;subscribing to event done&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="RemoteEventRegistry"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.RemoteEventRegistry">[docs]</a><span class="k">class</span> <span class="nc">RemoteEventRegistry</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Registry for keeping track of remote subscribers to an event.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_events</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_service</span> <span class="o">=</span> <span class="n">service</span>
+        
+<div class="viewcode-block" id="RemoteEventRegistry.subscribe"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.RemoteEventRegistry.subscribe">[docs]</a>    <span class="k">def</span> <span class="nf">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service_name</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="n">listener</span><span class="p">,</span> <span class="n">factory</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Subscribe the listener to an event.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">event_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_event</span><span class="p">(</span><span class="n">event_name</span><span class="p">)</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">[</span><span class="n">event_name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">service_name</span><span class="p">,</span> <span class="n">listener</span><span class="p">,</span> <span class="n">factory</span><span class="p">))</span>
+        
+        </div>
+<div class="viewcode-block" id="RemoteEventRegistry.unsubscribe"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.RemoteEventRegistry.unsubscribe">[docs]</a>    <span class="k">def</span> <span class="nf">unsubscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service_name</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="n">listener</span><span class="p">,</span> <span class="n">factory</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Unsubscribe the listener from an event.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        </div>
+    <span class="k">def</span> <span class="nf">_add_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add an event to the list of registered events and make sure it is being</span>
+<span class="sd">        listened to.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;adding event: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">event_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">event_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_service</span><span class="o">.</span><span class="n">_remote_events</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;error 1&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">MessageHandleError</span><span class="p">(</span><span class="n">MessageHandleError</span><span class="o">.</span><span class="n">RESULT_UNKNOWN_EVENT</span><span class="p">)</span>    
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">[</span><span class="n">event_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="n">event</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_service</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">event</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;error 2&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">MessageHandleError</span><span class="p">(</span><span class="n">MessageHandleError</span><span class="o">.</span><span class="n">RESULT_UNKNOWN_EVENT</span><span class="p">)</span>    
+
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;registering event listener&quot;</span><span class="p">)</span>
+        <span class="n">event</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_event_listener</span><span class="p">(</span><span class="n">event_name</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;adding event done&quot;</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">_event_triggered</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="o">*</span><span class="n">pargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Catch a triggered event.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">service_name</span><span class="p">,</span> <span class="n">listener</span><span class="p">,</span> <span class="n">factory</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">[</span><span class="n">event_name</span><span class="p">]:</span>
+            <span class="n">factory</span><span class="o">.</span><span class="n">send_event</span><span class="p">(</span><span class="n">service_name</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="n">listener</span><span class="p">,</span> <span class="o">*</span><span class="n">pargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">_create_event_listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a special method for listening to an event and then forwarding it</span>
+<span class="sd">        to the clients.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">listener</span><span class="p">(</span><span class="o">*</span><span class="n">pargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_event_triggered</span><span class="p">(</span><span class="n">event_name</span><span class="p">,</span> <span class="o">*</span><span class="n">pargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">listener</span>
+
+</div>
+<div class="viewcode-block" id="ServiceInterface"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.ServiceInterface">[docs]</a><span class="k">class</span> <span class="nc">ServiceInterface</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Client side interface to interact with services defined as Service objects</span>
+<span class="sd">    at the server side.</span>
+
+<span class="sd">    Returns undefined attributes as methods that will send a request to the service</span>
+<span class="sd">    using the attribute name as action and keyword arguments as parameters.</span>
+<span class="sd">    Override this class and add your own methods to allow positional arguments</span>
+<span class="sd">    and different names.</span>
+
+<span class="sd">    The subscribe method is used to register a callback method that is called when</span>
+<span class="sd">    the service publishes an update on the selected topic.</span>
+
+<span class="sd">    Always be ready to receive a MessageHandleError or ConnectionError when calling</span>
+<span class="sd">    methods on a ServiceInterface.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client_factory</span><span class="p">,</span> <span class="n">service_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Construct a new service interface.</span>
+
+<span class="sd">        Only to be called by the ClientConnector. To get a service interface use</span>
+<span class="sd">        ClientConnector.get_service_interface</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client_factory</span> <span class="o">=</span> <span class="n">client_factory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_service_name</span> <span class="o">=</span> <span class="n">service_name</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a special callable object as a proxy to the action on the service for</span>
+<span class="sd">        each attribute that does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">ServiceInterfaceAttribute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_client_factory</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_service_name</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ServiceInterface.subscribe"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.ServiceInterface.subscribe">[docs]</a>    <span class="k">def</span> <span class="nf">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="n">callback</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Subscribe to receive updates on the given event_name. The callback is called</span>
+<span class="sd">        each time an update is received. The callback should only accept keyword</span>
+<span class="sd">        arguments matching the keywords send by the service.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client_factory</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_service_name</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="n">callback</span><span class="p">)</span>
+</div></div>
+<div class="viewcode-block" id="ServiceInterfaceAttribute"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.ServiceInterfaceAttribute">[docs]</a><span class="k">class</span> <span class="nc">ServiceInterfaceAttribute</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Special proxy object that acts as either a callable method or an event.</span>
+<span class="sd">    Calling this object will result in the corresponding server side method</span>
+<span class="sd">    to be called. Adding or removing a callback results in the callback</span>
+<span class="sd">    being (un)registered to the server event.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client_factory</span><span class="p">,</span> <span class="n">service_name</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set all required parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client_factory</span> <span class="o">=</span> <span class="n">client_factory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_service_name</span> <span class="o">=</span> <span class="n">service_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">pargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Act as a proxy to a server method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client_factory</span><span class="o">.</span><span class="n">send_method_call</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_service_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span> <span class="o">*</span><span class="n">pargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">MessageHandleError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">err</span><span class="o">.</span><span class="n">error_code</span> <span class="o">==</span> <span class="n">MessageHandleError</span><span class="o">.</span><span class="n">RESULT_UNKNOWN_METHOD</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s">&quot;Method </span><span class="si">%s</span><span class="s"> does not exist in service </span><span class="si">%s</span><span class="s">.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_service_name</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">err</span><span class="o">.</span><span class="n">error_code</span> <span class="o">==</span> <span class="n">err</span><span class="o">.</span><span class="n">RESULT_INVALID_PARAMS</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">err</span><span class="o">.</span><span class="n">error_details</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span>
+    
+    <span class="k">def</span> <span class="nf">__iadd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">handler</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Act as a server side event. Add the handler to the list of callbacks.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client_factory</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_service_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span> <span class="n">handler</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">__isub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">handler</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Act as a server side event. Remove the handler from the list of callbacks.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Not supported yet</span>
+
+</div>
+<span class="nd">@remote_service</span>
+<div class="viewcode-block" id="TestRemoteService"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.TestRemoteService">[docs]</a><span class="k">class</span> <span class="nc">TestRemoteService</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    
+    <span class="nd">@remote_method</span>
+<div class="viewcode-block" id="TestRemoteService.test"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.TestRemoteService.test">[docs]</a>    <span class="k">def</span> <span class="nf">test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">text</span>
+    </div>
+    <span class="nd">@remote_method</span>
+<div class="viewcode-block" id="TestRemoteService.trigger"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.TestRemoteService.trigger">[docs]</a>    <span class="k">def</span> <span class="nf">trigger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">on_trigger</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s">&quot;Callback: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">text</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">text</span></div>
+    <span class="nd">@remote_method</span>
+<div class="viewcode-block" id="TestRemoteService.trigger2"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.TestRemoteService.trigger2">[docs]</a>    <span class="k">def</span> <span class="nf">trigger2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">on_trigger</span><span class="p">(</span><span class="s">&quot;Callback2: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">text</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">text</span>
+    </div>
+<div class="viewcode-block" id="TestRemoteService.not_remote_method"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.TestRemoteService.not_remote_method">[docs]</a>    <span class="k">def</span> <span class="nf">not_remote_method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;This should not happen!&quot;</span>
+    </div>
+    <span class="n">on_trigger</span> <span class="o">=</span> <span class="n">remote_event</span><span class="p">()</span>
+    </div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Rob van der Most, Piet Braat.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

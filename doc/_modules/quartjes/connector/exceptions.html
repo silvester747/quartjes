@@ -1,0 +1,202 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>quartjes.connector.exceptions &mdash; Quartjesavond Python 2012 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2012',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Quartjesavond Python 2012 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for quartjes.connector.exceptions</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Exceptions used as part of the connector.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;Rob van der Most&quot;</span>
+<span class="n">__docformat__</span> <span class="o">=</span> <span class="s">&quot;restructuredtext en&quot;</span>
+
+<div class="viewcode-block" id="ProtocolError"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.exceptions.ProtocolError">[docs]</a><span class="k">class</span> <span class="nc">ProtocolError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for all protocol related exceptions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+</div>
+<div class="viewcode-block" id="MessageHandleError"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.exceptions.MessageHandleError">[docs]</a><span class="k">class</span> <span class="nc">MessageHandleError</span><span class="p">(</span><span class="n">ProtocolError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Exception thrown by the server when handling an incoming message has failed.</span>
+<span class="sd">    This exception is recreated by the client if no appropriate builtin exception</span>
+<span class="sd">    can be thrown.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">RESULT_OK</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    No error occured. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">RESULT_XML_PARSE_FAILED</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parsing the XML in the message failed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">RESULT_XML_INVALID</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The XML does not contain valid content.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">RESULT_UNKNOWN_MESSAGE</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The message type is unknown.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">RESULT_UNEXPECTED_MESSAGE</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    In the current state the connector does not accept the message.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">RESULT_UNKNOWN_SERVICE</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The service is not registered to the connector.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">RESULT_UNKNOWN_METHOD</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The method is not present or not remote accessible.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">RESULT_INVALID_PARAMS</span> <span class="o">=</span> <span class="mi">7</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The parameters do not match the method signature.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">RESULT_EXCEPTION_RAISED</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An exception was encountered while processing the request.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">RESULT_UNKNOWN_EVENT</span> <span class="o">=</span> <span class="mi">9</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The event is not present or not remote accessible.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">RESULT_UNKNOWN_ERROR</span> <span class="o">=</span> <span class="mi">99</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An unexpected error has occurred.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error_code</span><span class="o">=</span><span class="n">RESULT_UNKNOWN_ERROR</span><span class="p">,</span> <span class="n">original_message</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">error_details</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Construct a MessageHandleError.</span>
+<span class="sd">        </span>
+<span class="sd">        :Parameters:</span>
+<span class="sd">            error_code : int</span>
+<span class="sd">                An error code stating what went wrong handling the message. Should be one of the</span>
+<span class="sd">                codes in this class.</span>
+<span class="sd">            original_message : quartjes.connector.messages.Message</span>
+<span class="sd">                The original message that could not be handled.</span>
+<span class="sd">            error_details</span>
+<span class="sd">                Detailed description of the error that occurred.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">error_code</span> <span class="o">=</span> <span class="n">error_code</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">original_message</span> <span class="o">=</span> <span class="n">original_message</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">error_details</span> <span class="o">=</span> <span class="n">error_details</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;MessageHandleError: (</span><span class="si">%d</span><span class="s">) </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">error_code</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_details</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ConnectionError"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.exceptions.ConnectionError">[docs]</a><span class="k">class</span> <span class="nc">ConnectionError</span><span class="p">(</span><span class="n">ProtocolError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Exception thrown when an error occurs in the connection.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
+</div>
+<div class="viewcode-block" id="TimeoutError"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.exceptions.TimeoutError">[docs]</a><span class="k">class</span> <span class="nc">TimeoutError</span><span class="p">(</span><span class="n">ProtocolError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Exception thrown when an action on the server times out.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Rob van der Most, Piet Braat.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,432 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>quartjes.connector.serializer &mdash; Quartjesavond Python 2012 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2012',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Quartjesavond Python 2012 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for quartjes.connector.serializer</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Methods for serializing Quartjes messages and objects to XML for transmitting</span>
+<span class="sd">over the network or maybe even storing in files or other locations.</span>
+
+<span class="sd">Several types of objects are supported for serialization:</span>
+<span class="sd">* objects implementing a __serialize__ class variable and a constructor allowing</span>
+<span class="sd">  zero arguments</span>
+<span class="sd">* objects with a __dict__ variable and a constructor allowing zero arguments</span>
+<span class="sd">* several builtin types like str, int, float, uuid</span>
+<span class="sd">* tuples, lists and dictionaries of supported types</span>
+<span class="sd">* custom types that are registered with this module</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__author__</span><span class="o">=</span><span class="s">&quot;Rob van der Most&quot;</span>
+<span class="n">__date__</span> <span class="o">=</span><span class="s">&quot;$Jun 8, 2011 7:32:02 PM$&quot;</span>
+
+<span class="c"># In other modules using ElementTree always import the version from this file.</span>
+<span class="c"># That makes it easy to switch between py and c version.</span>
+<span class="kn">import</span> <span class="nn">xml.etree.cElementTree</span> <span class="kn">as</span> <span class="nn">et</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
+
+<div class="viewcode-block" id="serialize"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer.serialize">[docs]</a><span class="k">def</span> <span class="nf">serialize</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">tag_name</span><span class="o">=</span><span class="s">&quot;unknown&quot;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    If a parent node is supplied the data is serialized as a sub element of the parent</span>
+<span class="sd">    node. tagName is used as the name of the top level tag.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">cache</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">cache</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">return</span> <span class="n">add_value_element</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">tag_name</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="deserialize"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer.deserialize">[docs]</a><span class="k">def</span> <span class="nf">deserialize</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Deserialize the contents of the given node and return the instance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">cache</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">cache</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">return</span> <span class="n">parse_value_element</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="serialize_dict"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer.serialize_dict">[docs]</a><span class="k">def</span> <span class="nf">serialize_dict</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">tag_name</span><span class="o">=</span><span class="s">&quot;dict&quot;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Construct an XML representation of the given dictionary.</span>
+<span class="sd">    Returns the created element.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c">#print(&quot;serializeDict %s&quot; % value)</span>
+    <span class="n">dict_node</span> <span class="o">=</span> <span class="n">add_element</span><span class="p">(</span><span class="n">tag_name</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s">&quot;dict&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+        <span class="n">item_node</span> <span class="o">=</span> <span class="n">add_element</span><span class="p">(</span><span class="s">&quot;item&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">dict_node</span><span class="p">)</span>
+        <span class="n">add_element</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">item_node</span><span class="p">)</span>
+        <span class="n">add_value_element</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">item_node</span><span class="p">,</span> <span class="n">tag_name</span><span class="o">=</span><span class="s">&quot;value&quot;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dict_node</span>
+</div>
+<div class="viewcode-block" id="deserialize_dict"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer.deserialize_dict">[docs]</a><span class="k">def</span> <span class="nf">deserialize_dict</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse the contents of the given node as a dictionary and return the</span>
+<span class="sd">    contents.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">param_elements</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s">&quot;item&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">param_elements</span><span class="p">:</span>
+
+        <span class="n">key</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">findtext</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">parse_value_element</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;value&quot;</span><span class="p">),</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">return</span> <span class="n">params</span>
+</div>
+<div class="viewcode-block" id="serialize_list_or_tuple"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer.serialize_list_or_tuple">[docs]</a><span class="k">def</span> <span class="nf">serialize_list_or_tuple</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">tag_name</span><span class="o">=</span><span class="s">&quot;list&quot;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Serialize the contents of a list to xml.</span>
+<span class="sd">    Returns the top element of the list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nb">type</span> <span class="o">=</span> <span class="s">&quot;list&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="nb">type</span> <span class="o">=</span> <span class="s">&quot;tuple&quot;</span>
+
+    <span class="n">node</span> <span class="o">=</span> <span class="n">add_element</span><span class="p">(</span><span class="n">tag_name</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">type</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+        <span class="n">add_value_element</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">node</span><span class="p">,</span> <span class="n">tag_name</span><span class="o">=</span><span class="s">&quot;value&quot;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">node</span>
+</div>
+<div class="viewcode-block" id="deserialize_list_or_tuple"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer.deserialize_list_or_tuple">[docs]</a><span class="k">def</span> <span class="nf">deserialize_list_or_tuple</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse an XML list node. Returns the original list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
+        <span class="n">value</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parse_value_element</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">))</span>
+
+    <span class="nb">type</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;type&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s">&quot;tuple&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">value</span>
+</div>
+<div class="viewcode-block" id="serialize_instance"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer.serialize_instance">[docs]</a><span class="k">def</span> <span class="nf">serialize_instance</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">tag_name</span><span class="o">=</span><span class="s">&quot;object&quot;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create an XML representation of an object instance. All variables are stored in a</span>
+<span class="sd">    parameter list. Returns the root element of the object.</span>
+<span class="sd">    root can be None, in that case the object will have no parent.</span>
+<span class="sd">    obj can be None, in that case a None value is stored.</span>
+<span class="sd">    tagName can be used to override the default &lt;object&gt; tag.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c">#print(&quot;serializeInstance %s&quot; % obj)</span>
+
+    <span class="n">obj_node</span> <span class="o">=</span> <span class="n">add_element</span><span class="p">(</span><span class="n">tag_name</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s">&quot;instance&quot;</span><span class="p">)</span>
+
+    <span class="n">class_name</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__module__</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s">&quot;id&quot;</span><span class="p">):</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span>
+
+    <span class="n">obj_node</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;class&quot;</span><span class="p">,</span> <span class="n">class_name</span><span class="p">)</span>
+    <span class="n">obj_node</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">urn</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">cache</span> <span class="o">!=</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">obj</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">cache</span><span class="p">:</span>
+        <span class="n">obj_node</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;stub&quot;</span><span class="p">,</span> <span class="s">&quot;yes&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">attributes</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s">&quot;__serialize__&quot;</span><span class="p">):</span>
+            <span class="n">attributes</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">__serialize__</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">attributes</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">__dict__</span>
+
+        <span class="k">if</span> <span class="n">cache</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">cache</span><span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj</span>
+        <span class="k">for</span> <span class="n">attr_name</span> <span class="ow">in</span> <span class="n">attributes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">attr_name</span> <span class="o">==</span> <span class="s">&quot;id&quot;</span><span class="p">:</span>
+                <span class="k">continue</span>
+                
+            <span class="n">add_value_element</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">attr_name</span><span class="p">,</span> <span class="bp">None</span><span class="p">),</span> <span class="n">parent</span><span class="o">=</span><span class="n">obj_node</span><span class="p">,</span> <span class="n">tag_name</span><span class="o">=</span><span class="n">attr_name</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">obj_node</span>
+</div>
+<div class="viewcode-block" id="deserialize_instance"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer.deserialize_instance">[docs]</a><span class="k">def</span> <span class="nf">deserialize_instance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read an object instance serialized to XML and return the instance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">))</span>
+    <span class="n">class_name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;class&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">id</span> <span class="o">==</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">class_name</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="n">obj</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">stub</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;stub&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">stub</span> <span class="o">==</span> <span class="s">&quot;yes&quot;</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">cache</span> <span class="o">!=</span> <span class="bp">None</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">obj</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">klass</span> <span class="o">=</span> <span class="n">get_class_by_name</span><span class="p">(</span><span class="n">class_name</span><span class="p">)</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">klass</span><span class="p">()</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">id</span>
+
+        <span class="k">if</span> <span class="n">cache</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">cache</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj</span>
+
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">parse_value_element</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">)</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">element</span><span class="o">.</span><span class="n">tag</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">obj</span>
+</div>
+<div class="viewcode-block" id="get_class_by_name"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer.get_class_by_name">[docs]</a><span class="k">def</span> <span class="nf">get_class_by_name</span><span class="p">(</span><span class="n">class_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get a class using the fully qualified name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">class_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+    <span class="n">module</span> <span class="o">=</span> <span class="s">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">__import__</span><span class="p">(</span> <span class="n">module</span> <span class="p">)</span>
+    <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">comp</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">m</span>
+
+</div>
+<div class="viewcode-block" id="add_element"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer.add_element">[docs]</a><span class="k">def</span> <span class="nf">add_element</span><span class="p">(</span><span class="n">tag_name</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add a new element with the given name to the XML document as a child of the given parent.</span>
+<span class="sd">    If text is not None, a text node is added as a child of the new node.</span>
+<span class="sd">    The new node is returned.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">node</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">if</span> <span class="n">parent</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">et</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="n">tag_name</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">et</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">tag_name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">text</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">text</span>
+
+    <span class="k">if</span> <span class="nb">type</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;type&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">node</span>
+</div>
+<div class="viewcode-block" id="add_value_element"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer.add_value_element">[docs]</a><span class="k">def</span> <span class="nf">add_value_element</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">tag_name</span><span class="o">=</span><span class="s">&quot;value&quot;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add a value inside an element. Use the correct way to serialize built-in</span>
+<span class="sd">    types, library types or serializable types. The element is added to the</span>
+<span class="sd">    parent. If no tagName is given, the default tag for the type of value is</span>
+<span class="sd">    used.</span>
+<span class="sd">    Returns the newly created element.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c">#print(&quot;addValueElement %s&quot; % value)</span>
+
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s">&quot;__serialize__&quot;</span><span class="p">):</span>
+
+        <span class="k">return</span> <span class="n">serialize_instance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">tag_name</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+
+        <span class="k">return</span> <span class="n">serialize_dict</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">tag_name</span><span class="o">=</span><span class="n">tag_name</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">)</span>
+        
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+
+        <span class="k">return</span> <span class="n">serialize_list_or_tuple</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">tag_name</span><span class="o">=</span><span class="n">tag_name</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">)</span>
+        
+    <span class="k">elif</span> <span class="n">value</span><span class="o">.</span><span class="n">__class__</span> <span class="ow">in</span> <span class="n">value_serializers_by_klass</span><span class="p">:</span>
+        <span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="o">=</span> <span class="n">get_serialized_value</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">add_element</span><span class="p">(</span><span class="n">tag_name</span><span class="p">,</span> <span class="n">string</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s">&quot;__dict__&quot;</span><span class="p">):</span>
+
+        <span class="k">return</span> <span class="n">serialize_instance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">tag_name</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+
+        <span class="k">return</span> <span class="n">add_element</span><span class="p">(</span><span class="n">tag_name</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="parse_value_element"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer.parse_value_element">[docs]</a><span class="k">def</span> <span class="nf">parse_value_element</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse an element and based on the type call the correct deserializer.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">type</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;type&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="bp">None</span> <span class="ow">or</span> <span class="nb">type</span> <span class="o">==</span> <span class="s">&quot;NoneType&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s">&quot;instance&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">deserialize_instance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s">&quot;dict&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">deserialize_dict</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s">&quot;list&quot;</span> <span class="ow">or</span> <span class="nb">type</span> <span class="o">==</span> <span class="s">&quot;tuple&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">deserialize_list_or_tuple</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">type</span> <span class="ow">in</span> <span class="n">value_serializers_by_klass_name</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="n">ser</span> <span class="o">=</span> <span class="n">value_serializers_by_klass_name</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">ser</span><span class="o">.</span><span class="n">deserialize</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+
+</div>
+<span class="n">value_serializers_by_klass</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">value_serializers_by_klass_name</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="get_serialized_value"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer.get_serialized_value">[docs]</a><span class="k">def</span> <span class="nf">get_serialized_value</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Serialize the given value using a value serializer.</span>
+<span class="sd">    Returns a tuple of: serialized value, type name</span>
+<span class="sd">    If no serializer is present, the value is serialized as None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="o">.</span><span class="n">__class__</span> <span class="ow">in</span> <span class="n">value_serializers_by_klass</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    
+    <span class="n">ser</span> <span class="o">=</span> <span class="n">value_serializers_by_klass</span><span class="p">[</span><span class="n">value</span><span class="o">.</span><span class="n">__class__</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">ser</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="n">ser</span><span class="o">.</span><span class="n">klass_name</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="add_value_serializer"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer.add_value_serializer">[docs]</a><span class="k">def</span> <span class="nf">add_value_serializer</span><span class="p">(</span><span class="n">ser</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add a value serializer to the list of available serializers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">value_serializers_by_klass</span><span class="p">[</span><span class="n">ser</span><span class="o">.</span><span class="n">klass</span><span class="p">]</span> <span class="o">=</span> <span class="n">ser</span>
+    <span class="n">value_serializers_by_klass_name</span><span class="p">[</span><span class="n">ser</span><span class="o">.</span><span class="n">klass_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ser</span>
+</div>
+<div class="viewcode-block" id="ValueSerializer"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer.ValueSerializer">[docs]</a><span class="k">class</span> <span class="nc">ValueSerializer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Object for serializing a type of object containing only a single value. The</span>
+<span class="sd">    value should be serialized into a single string that is stored in a single</span>
+<span class="sd">    element.</span>
+<span class="sd">    Create your custom version of this class to add unsupported data types.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">klass</span><span class="p">,</span> <span class="n">serialize_method</span><span class="p">,</span> <span class="n">deserialize_method</span><span class="p">,</span> <span class="n">klass_name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">klass</span> <span class="o">=</span> <span class="n">klass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">serialize_method</span> <span class="o">=</span> <span class="n">serialize_method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deserialize_method</span> <span class="o">=</span> <span class="n">deserialize_method</span>
+
+        <span class="k">if</span> <span class="n">klass_name</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">klass_name</span> <span class="o">=</span> <span class="n">klass_name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">klass</span><span class="o">.</span><span class="n">__module__</span> <span class="o">==</span> <span class="s">&quot;__builtin__&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">klass_name</span> <span class="o">=</span> <span class="n">klass</span><span class="o">.</span><span class="n">__name__</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">klass_name</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">klass</span><span class="o">.</span><span class="n">__module__</span><span class="p">,</span> <span class="n">klass</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ValueSerializer.serialize"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer.ValueSerializer.serialize">[docs]</a>    <span class="k">def</span> <span class="nf">serialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Serialize the value into string format and return it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">serialize_method</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ValueSerializer.deserialize"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.serializer.ValueSerializer.deserialize">[docs]</a>    <span class="k">def</span> <span class="nf">deserialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deserialize the given string and return the value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">deserialize_method</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+
+<span class="c"># Already included value serializers. Mostly for builtin python data types.</span></div></div>
+<span class="n">_int_serializer</span> <span class="o">=</span> <span class="n">ValueSerializer</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+<span class="n">_string_serializer</span> <span class="o">=</span> <span class="n">ValueSerializer</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">)</span>
+<span class="n">_float_serializer</span> <span class="o">=</span> <span class="n">ValueSerializer</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+<span class="n">_uuid_serializer</span> <span class="o">=</span> <span class="n">ValueSerializer</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">urn</span><span class="p">,</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">,</span> <span class="n">klass_name</span><span class="o">=</span><span class="s">&quot;uuid&quot;</span><span class="p">)</span>
+
+<span class="n">add_value_serializer</span><span class="p">(</span><span class="n">_int_serializer</span><span class="p">)</span>
+<span class="n">add_value_serializer</span><span class="p">(</span><span class="n">_string_serializer</span><span class="p">)</span>
+<span class="n">add_value_serializer</span><span class="p">(</span><span class="n">_float_serializer</span><span class="p">)</span>
+<span class="n">add_value_serializer</span><span class="p">(</span><span class="n">_uuid_serializer</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Rob van der Most, Piet Braat.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
