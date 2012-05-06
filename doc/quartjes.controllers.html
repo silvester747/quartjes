@@ -26,9 +26,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="Quartjesavond Python 2012 documentation" href="index.html" />
-    <link rel="up" title="quartjes Package" href="quartjes.html" />
-    <link rel="next" title="gui Package" href="quartjes.gui.html" />
-    <link rel="prev" title="connector Package" href="quartjes.connector.html" /> 
+    <link rel="up" title="quartjes Package" href="quartjes.html" /> 
   </head>
   <body>
     <div class="related">
@@ -40,12 +38,6 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="quartjes.gui.html" title="gui Package"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="quartjes.connector.html" title="connector Package"
-             accesskey="P">previous</a> |</li>
         <li><a href="index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
           <li><a href="modules.html" >quartjes</a> &raquo;</li>
           <li><a href="quartjes.html" accesskey="U">quartjes Package</a> &raquo;</li> 
@@ -67,7 +59,79 @@
 <dl class="class">
 <dt id="quartjes.controllers.database.Database">
 <em class="property">class </em><tt class="descclassname">quartjes.controllers.database.</tt><tt class="descname">Database</tt><a class="reference internal" href="_modules/quartjes/controllers/database.html#Database"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.controllers.database.Database" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.controllers.database.Database.add" title="quartjes.controllers.database.Database.add"><tt class="xref py py-obj docutils literal"><span class="pre">add</span></tt></a>(obj)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#quartjes.controllers.database.Database.add_drink" title="quartjes.controllers.database.Database.add_drink"><tt class="xref py py-obj docutils literal"><span class="pre">add_drink</span></tt></a>(drink)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.controllers.database.Database.add_mix" title="quartjes.controllers.database.Database.add_mix"><tt class="xref py py-obj docutils literal"><span class="pre">add_mix</span></tt></a>(mix)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#quartjes.controllers.database.Database.db_reset" title="quartjes.controllers.database.Database.db_reset"><tt class="xref py py-obj docutils literal"><span class="pre">db_reset</span></tt></a>()</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.controllers.database.Database.get" title="quartjes.controllers.database.Database.get"><tt class="xref py py-obj docutils literal"><span class="pre">get</span></tt></a>(id)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#quartjes.controllers.database.Database.get_drink" title="quartjes.controllers.database.Database.get_drink"><tt class="xref py py-obj docutils literal"><span class="pre">get_drink</span></tt></a>(id)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.controllers.database.Database.get_drinks" title="quartjes.controllers.database.Database.get_drinks"><tt class="xref py py-obj docutils literal"><span class="pre">get_drinks</span></tt></a>()</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#quartjes.controllers.database.Database.get_mix" title="quartjes.controllers.database.Database.get_mix"><tt class="xref py py-obj docutils literal"><span class="pre">get_mix</span></tt></a>(id)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.controllers.database.Database.get_mixes" title="quartjes.controllers.database.Database.get_mixes"><tt class="xref py py-obj docutils literal"><span class="pre">get_mixes</span></tt></a>()</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#quartjes.controllers.database.Database.on_drinks_updated" title="quartjes.controllers.database.Database.on_drinks_updated"><tt class="xref py py-obj docutils literal"><span class="pre">on_drinks_updated</span></tt></a></td>
+<td>Event object inspired by C# events. Handlers can be registered and</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.controllers.database.Database.on_mixes_updated" title="quartjes.controllers.database.Database.on_mixes_updated"><tt class="xref py py-obj docutils literal"><span class="pre">on_mixes_updated</span></tt></a></td>
+<td>Event object inspired by C# events. Handlers can be registered and</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#quartjes.controllers.database.Database.remove" title="quartjes.controllers.database.Database.remove"><tt class="xref py py-obj docutils literal"><span class="pre">remove</span></tt></a>(obj)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.controllers.database.Database.remove_drink" title="quartjes.controllers.database.Database.remove_drink"><tt class="xref py py-obj docutils literal"><span class="pre">remove_drink</span></tt></a>(drink)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#quartjes.controllers.database.Database.remove_mix" title="quartjes.controllers.database.Database.remove_mix"><tt class="xref py py-obj docutils literal"><span class="pre">remove_mix</span></tt></a>(mix)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.controllers.database.Database.replace_drinks" title="quartjes.controllers.database.Database.replace_drinks"><tt class="xref py py-obj docutils literal"><span class="pre">replace_drinks</span></tt></a>(drinks)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#quartjes.controllers.database.Database.replace_mixes" title="quartjes.controllers.database.Database.replace_mixes"><tt class="xref py py-obj docutils literal"><span class="pre">replace_mixes</span></tt></a>(mixes)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.controllers.database.Database.set_dirty" title="quartjes.controllers.database.Database.set_dirty"><tt class="xref py py-obj docutils literal"><span class="pre">set_dirty</span></tt></a>()</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#quartjes.controllers.database.Database.store" title="quartjes.controllers.database.Database.store"><tt class="xref py py-obj docutils literal"><span class="pre">store</span></tt></a>()</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.controllers.database.Database.update" title="quartjes.controllers.database.Database.update"><tt class="xref py py-obj docutils literal"><span class="pre">update</span></tt></a>(obj)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#quartjes.controllers.database.Database.update_drink" title="quartjes.controllers.database.Database.update_drink"><tt class="xref py py-obj docutils literal"><span class="pre">update_drink</span></tt></a>(drink)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.controllers.database.Database.update_mix" title="quartjes.controllers.database.Database.update_mix"><tt class="xref py py-obj docutils literal"><span class="pre">update_mix</span></tt></a>(mix)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
 <dt id="quartjes.controllers.database.Database.add">
 <tt class="descname">add</tt><big>(</big><em>obj</em><big>)</big><a class="reference internal" href="_modules/quartjes/controllers/database.html#Database.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.controllers.database.Database.add" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -114,12 +178,12 @@
 
 <dl class="attribute">
 <dt id="quartjes.controllers.database.Database.on_drinks_updated">
-<tt class="descname">on_drinks_updated</tt><em class="property"> = &lt;axel.axel.Event object at 0x356c7d0&gt;</em><a class="headerlink" href="#quartjes.controllers.database.Database.on_drinks_updated" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">on_drinks_updated</tt><em class="property"> = &lt;axel.axel.Event object at 0x31cd790&gt;</em><a class="headerlink" href="#quartjes.controllers.database.Database.on_drinks_updated" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="quartjes.controllers.database.Database.on_mixes_updated">
-<tt class="descname">on_mixes_updated</tt><em class="property"> = &lt;axel.axel.Event object at 0x356c810&gt;</em><a class="headerlink" href="#quartjes.controllers.database.Database.on_mixes_updated" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">on_mixes_updated</tt><em class="property"> = &lt;axel.axel.Event object at 0x31cd7d0&gt;</em><a class="headerlink" href="#quartjes.controllers.database.Database.on_mixes_updated" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -178,6 +242,42 @@
 <dt id="quartjes.controllers.database.DatabaseMonitor">
 <em class="property">class </em><tt class="descclassname">quartjes.controllers.database.</tt><tt class="descname">DatabaseMonitor</tt><big>(</big><em>db</em><big>)</big><a class="reference internal" href="_modules/quartjes/controllers/database.html#DatabaseMonitor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.controllers.database.DatabaseMonitor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></tt></p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">getName</span></tt>()</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">isAlive</span></tt>()</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">isDaemon</span></tt>()</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">is_alive</span></tt>()</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">join</span></tt>([timeout])</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#quartjes.controllers.database.DatabaseMonitor.run" title="quartjes.controllers.database.DatabaseMonitor.run"><tt class="xref py py-obj docutils literal"><span class="pre">run</span></tt></a>()</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">setDaemon</span></tt>(daemonic)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">setName</span></tt>(name)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">start</span></tt>()</td>
+<td></td>
+</tr>
+</tbody>
+</table>
 <dl class="method">
 <dt id="quartjes.controllers.database.DatabaseMonitor.run">
 <tt class="descname">run</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/controllers/database.html#DatabaseMonitor.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.controllers.database.DatabaseMonitor.run" title="Permalink to this definition">¶</a></dt>
@@ -195,9 +295,30 @@
 <dt id="quartjes.controllers.stock_exchange.StockExchange">
 <em class="property">class </em><tt class="descclassname">quartjes.controllers.stock_exchange.</tt><tt class="descname">StockExchange</tt><big>(</big><em>start_thread=True</em><big>)</big><a class="reference internal" href="_modules/quartjes/controllers/stock_exchange.html#StockExchange"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.controllers.stock_exchange.StockExchange" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.controllers.stock_exchange.StockExchange.on_next_round" title="quartjes.controllers.stock_exchange.StockExchange.on_next_round"><tt class="xref py py-obj docutils literal"><span class="pre">on_next_round</span></tt></a></td>
+<td>Event object inspired by C# events. Handlers can be registered and</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#quartjes.controllers.stock_exchange.StockExchange.recalculate_factors" title="quartjes.controllers.stock_exchange.StockExchange.recalculate_factors"><tt class="xref py py-obj docutils literal"><span class="pre">recalculate_factors</span></tt></a>()</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.controllers.stock_exchange.StockExchange.sell" title="quartjes.controllers.stock_exchange.StockExchange.sell"><tt class="xref py py-obj docutils literal"><span class="pre">sell</span></tt></a>(drink,&nbsp;amount)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#quartjes.controllers.stock_exchange.StockExchange.stop" title="quartjes.controllers.stock_exchange.StockExchange.stop"><tt class="xref py py-obj docutils literal"><span class="pre">stop</span></tt></a>()</td>
+<td></td>
+</tr>
+</tbody>
+</table>
 <dl class="attribute">
 <dt id="quartjes.controllers.stock_exchange.StockExchange.on_next_round">
-<tt class="descname">on_next_round</tt><em class="property"> = &lt;axel.axel.Event object at 0x356cad0&gt;</em><a class="headerlink" href="#quartjes.controllers.stock_exchange.StockExchange.on_next_round" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">on_next_round</tt><em class="property"> = &lt;axel.axel.Event object at 0x31cda90&gt;</em><a class="headerlink" href="#quartjes.controllers.stock_exchange.StockExchange.on_next_round" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -221,6 +342,45 @@
 <dt id="quartjes.controllers.stock_exchange.StockExchangeUpdateThread">
 <em class="property">class </em><tt class="descclassname">quartjes.controllers.stock_exchange.</tt><tt class="descname">StockExchangeUpdateThread</tt><big>(</big><em>exchange</em><big>)</big><a class="reference internal" href="_modules/quartjes/controllers/stock_exchange.html#StockExchangeUpdateThread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.controllers.stock_exchange.StockExchangeUpdateThread" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></tt></p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">getName</span></tt>()</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">isAlive</span></tt>()</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">isDaemon</span></tt>()</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">is_alive</span></tt>()</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">join</span></tt>([timeout])</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#quartjes.controllers.stock_exchange.StockExchangeUpdateThread.run" title="quartjes.controllers.stock_exchange.StockExchangeUpdateThread.run"><tt class="xref py py-obj docutils literal"><span class="pre">run</span></tt></a>()</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">setDaemon</span></tt>(daemonic)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">setName</span></tt>(name)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">start</span></tt>()</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#quartjes.controllers.stock_exchange.StockExchangeUpdateThread.stop" title="quartjes.controllers.stock_exchange.StockExchangeUpdateThread.stop"><tt class="xref py py-obj docutils literal"><span class="pre">stop</span></tt></a>()</td>
+<td></td>
+</tr>
+</tbody>
+</table>
 <dl class="method">
 <dt id="quartjes.controllers.stock_exchange.StockExchangeUpdateThread.run">
 <tt class="descname">run</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/controllers/stock_exchange.html#StockExchangeUpdateThread.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.controllers.stock_exchange.StockExchangeUpdateThread.run" title="Permalink to this definition">¶</a></dt>
@@ -246,19 +406,17 @@
   <ul>
 <li><a class="reference internal" href="#">controllers Package</a><ul>
 <li><a class="reference internal" href="#id1"><tt class="docutils literal"><span class="pre">controllers</span></tt> Package</a></li>
-<li><a class="reference internal" href="#module-quartjes.controllers.database"><tt class="docutils literal"><span class="pre">database</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-quartjes.controllers.database"><tt class="docutils literal"><span class="pre">database</span></tt> Module</a><ul>
+</ul>
+</li>
 <li><a class="reference internal" href="#module-quartjes.controllers.sales_tester"><tt class="docutils literal"><span class="pre">sales_tester</span></tt> Module</a></li>
-<li><a class="reference internal" href="#module-quartjes.controllers.stock_exchange"><tt class="docutils literal"><span class="pre">stock_exchange</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-quartjes.controllers.stock_exchange"><tt class="docutils literal"><span class="pre">stock_exchange</span></tt> Module</a><ul>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="quartjes.connector.html"
-                        title="previous chapter">connector Package</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="quartjes.gui.html"
-                        title="next chapter">gui Package</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/quartjes.controllers.txt"
@@ -290,12 +448,6 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="quartjes.gui.html" title="gui Package"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="quartjes.connector.html" title="connector Package"
-             >previous</a> |</li>
         <li><a href="index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
           <li><a href="modules.html" >quartjes</a> &raquo;</li>
           <li><a href="quartjes.html" >quartjes Package</a> &raquo;</li> 
