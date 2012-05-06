@@ -15,6 +15,15 @@ class MessageHandleError(ProtocolError):
     Exception thrown by the server when handling an incoming message has failed.
     This exception is recreated by the client if no appropriate builtin exception
     can be thrown.
+    
+    error_code : int
+        An error code stating what went wrong handling the message. Should be one of the
+        codes in this class.
+    original_message : quartjes.connector.messages.Message
+        The original message that could not be handled.
+    error_details : string
+        Detailed description of the error that occurred.
+
     """
 
     RESULT_OK = 0
@@ -73,18 +82,6 @@ class MessageHandleError(ProtocolError):
     """
 
     def __init__(self, error_code=RESULT_UNKNOWN_ERROR, original_message=None, error_details=None):
-        """
-        Construct a MessageHandleError.
-        
-        :Parameters:
-            error_code : int
-                An error code stating what went wrong handling the message. Should be one of the
-                codes in this class.
-            original_message : quartjes.connector.messages.Message
-                The original message that could not be handled.
-            error_details
-                Detailed description of the error that occurred.
-        """
         self.error_code = error_code
         self.original_message = original_message
         self.error_details = error_details
@@ -95,6 +92,9 @@ class MessageHandleError(ProtocolError):
 class ConnectionError(ProtocolError):
     """
     Exception thrown when an error occurs in the connection.
+    
+    message : string
+        Message describing the error.
     """
 
     def __init__(self, message=None):
@@ -103,6 +103,9 @@ class ConnectionError(ProtocolError):
 class TimeoutError(ProtocolError):
     """
     Exception thrown when an action on the server times out.
+    
+    message : string
+        Message describing the error.
     """
     def __init__(self, message=None):
         self.message = message
