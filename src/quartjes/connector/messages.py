@@ -3,8 +3,7 @@ Definition of messages used to communicate between the Quartjes server and its
 clients.
 """
 
-__author__="Rob van der Most"
-__date__ ="$Jun 3, 2011 8:52:26 PM$"
+__author__= " Rob van der Most"
 
 from quartjes.util.classtools import QuartjesBaseClass
 import quartjes.connector.serializer as serializer
@@ -19,16 +18,16 @@ class Message(QuartjesBaseClass):
         super(Message, self).__init__(id)
 
 
-class ActionRequestMessage(Message):
+class MethodCallMessage(Message):
     """
-    Message type used to send requests from clients to the server.
+    Message type used to call methods on the server.
     """
 
-    def __init__(self, service_name=None, action=None, pargs=None, kwargs=None):
-        super(ActionRequestMessage, self).__init__()
+    def __init__(self, service_name=None, method_name=None, pargs=None, kwargs=None):
+        super(MethodCallMessage, self).__init__()
         
         self.service_name = service_name
-        self.action = action
+        self.method_name = method_name
         self.pargs = pargs
         self.kwargs = kwargs
 
@@ -46,25 +45,25 @@ class ResponseMessage(Message):
 
 class SubscribeMessage(Message):
     """
-    Message used to subscribe to update feeds
+    Message used to subscribe to events
     """
 
-    def __init__(self, service_name=None, topic=None):
+    def __init__(self, service_name=None, event_name=None):
         super(SubscribeMessage, self).__init__()
 
         self.service_name = service_name
-        self.topic = topic
+        self.event_name = event_name
 
-class TopicUpdateMessage(Message):
+class EventMessage(Message):
     """
     Message used to send updates on topics
     """
 
-    def __init__(self, service_name=None, topic=None, pargs=None, kwargs=None):
-        super(TopicUpdateMessage, self).__init__()
+    def __init__(self, service_name=None, event_name=None, pargs=None, kwargs=None):
+        super(EventMessage, self).__init__()
 
         self.service_name = service_name
-        self.topic = topic
+        self.event_name = event_name
         self.pargs = pargs
         self.kwargs = kwargs
 

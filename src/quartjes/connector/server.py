@@ -44,11 +44,11 @@ class ServerConnector(object):
         """
         threads.blockingCallFromThread(reactor, reactor.stop)
 
-    def register_service(self, service):
+    def register_service(self, service, name):
         """
         Register a new Service instance to be accessible from clients.
         """
-        self.factory.register_service(service)
+        self.factory.register_service(service, name)
 
 
     class ReactorThread(Thread):
@@ -66,9 +66,9 @@ class ServerConnector(object):
             #print("Reactor stopped")
 
 if __name__ == "__main__":
-    from quartjes.connector.services import TestService
+    from quartjes.connector.services import TestRemoteService
 
     server = ServerConnector(1234)
-    server.register_service(TestService())
+    server.register_service(TestRemoteService(), "test")
     server.start()
 

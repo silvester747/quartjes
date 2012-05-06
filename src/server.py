@@ -10,6 +10,6 @@ from quartjes.controllers.database import database
 
 server = ServerConnector(1234)
 exchange = StockExchange()
-server.register_service(exchange.get_service())
-server.register_service(database.get_service())
+server.register_service(exchange, "stock_exchange")
+server.register_service(database, "database")
 server.start()

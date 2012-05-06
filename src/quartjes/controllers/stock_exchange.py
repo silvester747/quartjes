@@ -2,14 +2,12 @@ import threading
 import random
 import time
 import quartjes.controllers.database
-import quartjes.connector.services
 from quartjes.models.drink import Mix
-# To change this template, choose Tools | Templates
-# and open the template in the editor.
+from quartjes.connector.services import remote_service, remote_method, remote_event
 
-__author__="rob"
-__date__ ="$Jul 2, 2011 12:38:26 PM$"
+__author__ = "Rob van der Most"
 
+@remote_service
 class StockExchange(object):
 
     def __init__(self, start_thread=True):
@@ -24,6 +22,7 @@ class StockExchange(object):
             self.thread = StockExchangeUpdateThread(self)
             self.thread.start()
 
+    @remote_method
     def sell(self, drink, amount):
         local_drink = self.db.get(drink.id)
 
@@ -114,18 +113,15 @@ class StockExchange(object):
         self.db.set_dirty()
         self._notify_next_round()
         
-    def get_service(self):
-        if not self.service:
-            self.service = StockExchangeService(self)
-        return self.service
-    
     def stop(self):
         print("Stock exchange stopping after next round...")
         self.thread.stop()
+
+    on_next_round = remote_event()
     
     def _notify_next_round(self):
-        if self.service:
-            self.service.notify_next_round(self.db.get_drinks())
+        self.on_next_round(self.db.get_drinks())
+
 
 class StockExchangeUpdateThread(threading.Thread):
     def __init__(self, exchange):
@@ -141,34 +137,6 @@ class StockExchangeUpdateThread(threading.Thread):
     def stop(self):
         self.running = False
 
-class StockExchangeService(quartjes.connector.services.Service):
-    """
-    Service to access the stock exchange.
-
-    Service name: stock_exchange
-    
-    Supported methods
-    =================
-    
-    sell(drink, amount)
-    
-    
-    Supported topics
-    ================
-
-    next_round(drinks)
-
-    """
-
-    def __init__(self, exchange=None):
-        super(StockExchangeService, self).__init__(name="stock_exchange")
-        self.exchange = exchange
-
-    def notify_next_round(self, drinks):
-        self.send_topic_update("next_round", drinks=drinks)
-
-    def action_sell(self, drink, amount):
-        return self.exchange.sell(drink, amount)
 
 if __name__ == "__main__":
     exchange = StockExchange(start_thread=False)

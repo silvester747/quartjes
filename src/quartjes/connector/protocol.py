@@ -10,19 +10,18 @@ or blocking calls from other threads. Methods designed to run in the reactor
 thread are prefixed with "r_". Do not call these method from any other thread.
 """
 
-__author__="Rob van der Most"
-__date__ ="$May 27, 2011 8:53:12 PM$"
+__author__ = "Rob van der Most"
 
 from twisted.internet.protocol import ReconnectingClientFactory
 from twisted.internet.protocol import ServerFactory
 from twisted.internet import reactor, threads, defer
 from twisted.protocols.basic import NetstringReceiver
-from twisted.internet import threads
 import uuid
-from quartjes.connector.messages import ActionRequestMessage, ResponseMessage, SubscribeMessage
+from quartjes.connector.messages import MethodCallMessage, ResponseMessage, SubscribeMessage
 from quartjes.connector.messages import ServerMotdMessage, create_message_string, parse_message_string
-from quartjes.connector.messages import TopicUpdateMessage
-from quartjes.connector.exceptions import *
+from quartjes.connector.messages import EventMessage
+from quartjes.connector.exceptions import MessageHandleError, ConnectionError, TimeoutError
+from quartjes.connector.services import execute_remote_method_call, prepare_remote_service, subscribe_to_remote_event
 
 class QuartjesProtocol(NetstringReceiver):
     """
@@ -71,31 +70,41 @@ class QuartjesServerFactory(ServerFactory):
     protocol = QuartjesProtocol
 
     def __init__(self):
+        """
+        Initialize the factory.
+        """
         self.connections = {}
         self.services = {}
-        self.topic_listeners = {}
-        self.topics_per_connection = {}
+
+    def register_service(self, service, name):
+        """
+        Register a service with the factory.
+        After registering the service, it can be remotely accessed through the given name.
+        """
+        assert service._remote_service, "Services should be decorated correctly."
+        
+        prepare_remote_service(service)
+        self.services[name] = service
+
+    def unregister_service(self, name):
+        """
+        Unregister a service from the factory.
+        """
+        self.services.remove(name)
 
     def _r_on_connection_established(self, protocol):
+        """
+        Handle an incoming connection.
+        """
         self.connections[protocol.id] = protocol
-        self.topics_per_connection[protocol.id] = []
         motd = ServerMotdMessage(client_id=protocol.id)
         protocol.send_message(create_message_string(motd))
 
     def _r_on_connection_lost(self, protocol):
+        """
+        Handle a lost connection.
+        """
         del self.connections[protocol.id]
-
-        topics = self.topics_per_connection[protocol.id]
-        for topic in topics:
-            self.topic_listeners[topic].remove(protocol)
-
-    def register_service(self, service):
-        self.services[service.name] = service
-        service.factory = self
-
-    def unregister_service(self, service):
-        self.services.remove(service.name)
-        service.factory = None
 
     def _r_on_incoming_message(self, string, protocol):
         """
@@ -112,7 +121,7 @@ class QuartjesServerFactory(ServerFactory):
         Parse the contents of a message. Also do processing outside the reactor
         thread.
 
-        This method is run in a separate thread to prevent blocking the reactor.
+        This method should run in a separate thread to prevent blocking the reactor.
 
         Both the parsed original message and a possible return message are returned
         in a special MessageResult instance.
@@ -121,11 +130,13 @@ class QuartjesServerFactory(ServerFactory):
         msg = parse_message_string(string)
         result = MessageResult(original_message=msg)
 
-        if isinstance(msg, ActionRequestMessage):
-            res = self._perform_action(msg)
+        if isinstance(msg, MethodCallMessage):
+            # Handle method call
+            res = self._method_call(msg)
             response_msg = ResponseMessage(result_code=0, result=res, response_to=msg.id)
             result.response = create_message_string(response_msg)
         elif isinstance(msg, SubscribeMessage):
+            # Handle subscription to event
             response_msg = ResponseMessage(result_code=0, result=None, response_to=msg.id)
             result.response = create_message_string(response_msg)
         else:
@@ -142,38 +153,37 @@ class QuartjesServerFactory(ServerFactory):
         Returns the message to be send back to the client.
         """
         if isinstance(result.original_message, SubscribeMessage):
-            self._r_subscribe_to_topic(result.original_message.service_name,
-                result.original_message.topic, protocol)
+            self._r_subscribe_to_event(result.original_message.service_name,
+                result.original_message.event_name, protocol)
         
         return result.response
 
-    def _perform_action(self, msg):
+    def _method_call(self, msg):
         """
-        Handle an ActionRequest message by starting the requested action on the
+        Handle an MethodCall message by calling the requested method on the
         requested service.
         """
-        #print("Performing service: %s, action: %s" % (msg.service_name, msg.action))
+        #print("Performing service: %s, method_name: %s" % (msg.service_name, msg.method_name))
         service = self.services.get(msg.service_name)
         if service == None:
             raise MessageHandleError(MessageHandleError.RESULT_UNKNOWN_SERVICE, msg)
 
         try:
-            return service.call(msg.action, *msg.pargs, **msg.kwargs)
+            return execute_remote_method_call(service, msg.method_name, *msg.pargs, **msg.kwargs)
+            #return service.call(msg.method_name, *msg.pargs, **msg.kwargs)
         except MessageHandleError as error:
             error.original_message = msg
             raise error
 
-    def _r_subscribe_to_topic(self, service_name, topic, protocol):
+    def _r_subscribe_to_event(self, service_name, event_name, protocol):
         """
-        Subscribe the client to a topic on the specified service.
+        Subscribe the client to an event on the specified service.
         """
-        listeners = self.topic_listeners.get((service_name, topic))
-        if listeners == None:
-            listeners = [protocol]
-            self.topic_listeners[(service_name, topic)] = listeners
-        else:
-            listeners.append(protocol)
-        self.topics_per_connection[protocol.id].append((service_name, topic))
+        service = self.services.get(service_name)
+        if service == None:
+            return
+        
+        subscribe_to_remote_event(service, service_name, event_name, protocol, self)
 
     def _r_send_result(self, response, protocol):
         """
@@ -193,27 +203,21 @@ class QuartjesServerFactory(ServerFactory):
         error = result.value
         if not isinstance(error, MessageHandleError):
             raise error
-        #print("Error occurred: %s" % result)
+        print("Error occurred: %s" % result)
         id = None
         if error.original_message != None:
             id = error.original_message.id
         msg = ResponseMessage(result_code=error.error_code, response_to=id, result=error.error_details)
         protocol.send_message(create_message_string(msg))
 
-    def send_topic_update(self, service_name, topic, *pargs, **kwargs):
-        listeners = self.topic_listeners.get((service_name, topic))
-        if listeners == None:
-            return
-
-        msg = TopicUpdateMessage(service_name, topic, pargs, kwargs)
+    def send_event(self, service_name, event_name, listener, *pargs, **kwargs):
+        """
+        Notify a client of an event.
+        """
+        msg = EventMessage(service_name, event_name, pargs, kwargs)
         string = create_message_string(msg)
-        reactor.callFromThread(self._r_multicast_message, listeners, string)
-
-    def _r_multicast_message(self, protocols, string):
-        for protocol in protocols:
-            protocol.send_message(string)
-
-
+        reactor.callFromThread(listener.send_message, string)
+        
 
 class QuartjesClientFactory(ReconnectingClientFactory):
     """
@@ -224,10 +228,13 @@ class QuartjesClientFactory(ReconnectingClientFactory):
     default_timeout = 5
 
     def __init__(self, timeout=default_timeout):
+        """
+        Initialize the client factory.
+        """
         self.waiting_messages = {}
         self.waiting_for_connection = []
         self.current_protocol = None
-        self.topic_callbacks = {}
+        self.event_callbacks = {}
         self.timeout = timeout
 
     def _r_on_connection_established(self, protocol):
@@ -274,15 +281,15 @@ class QuartjesClientFactory(ReconnectingClientFactory):
         elif isinstance(msg, ServerMotdMessage):
             print("Connected: %s" % msg.motd)
             self._r_successful_connection()
-        elif isinstance(msg, TopicUpdateMessage):
-            callback = self.topic_callbacks.get((msg.service_name, msg.topic))
+        elif isinstance(msg, EventMessage):
+            callback = self.event_callbacks.get((msg.service_name, msg.event_name))
             if callback != None:
                 threads.deferToThread(callback, *msg.pargs, **msg.kwargs)
             
     def _r_successful_connection(self):
         self.resetDelay()
-        for (service_name, topic) in self.topic_callbacks.keys():
-            msg = SubscribeMessage(service_name=service_name, topic=topic)
+        for (service_name, event_name) in self.event_callbacks.keys():
+            msg = SubscribeMessage(service_name=service_name, event_name=event_name)
             serial_message = create_message_string(msg)
             self.current_protocol.send_message(serial_message)
 
@@ -313,29 +320,29 @@ class QuartjesClientFactory(ReconnectingClientFactory):
         self.current_protocol.send_message(serial_message)
         return d
 
-    def send_action_request(self, service_name, action, *pargs, **kwargs):
+    def send_method_call(self, service_name, method_name, *pargs, **kwargs):
         """
-        Call from another thread to request an action to be performed at the server
+        Call from another thread to request an method_name to be performed at the server
         and wait for the result.
 
         Can throw either a MessageHandleError or a ConnectionError
         """
-        msg = ActionRequestMessage(service_name=service_name, action=action, pargs=pargs, kwargs=kwargs)
+        msg = MethodCallMessage(service_name=service_name, method_name=method_name, pargs=pargs, kwargs=kwargs)
         return self.send_message_blocking(msg)
 
-    def subscribe(self, service_name, topic, callback):
+    def subscribe(self, service_name, event_name, callback):
         """
-        Call from another thread to subscribe to a topic of a specific service.
-        The given callback is called each time an update for the topic is received.
+        Call from another thread to subscribe to a event_name of a specific service.
+        The given callback is called each time an update for the event_name is received.
         Returns None, but an exception can be raised.
 
         Can throw either a MessageHandleError or a ConnectionError
         """
-        msg = SubscribeMessage(service_name=service_name, topic=topic)
+        msg = SubscribeMessage(service_name=service_name, event_name=event_name)
         self.send_message_blocking(msg)
 
         # if subscribe failed an exception should be raised by now
-        self.topic_callbacks[(service_name, topic)] = callback
+        self.event_callbacks[(service_name, event_name)] = callback
 
         return None
 

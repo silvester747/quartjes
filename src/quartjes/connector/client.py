@@ -9,9 +9,6 @@ from quartjes.connector.services import ServiceInterface
 import quartjes.controllers.database
 import quartjes.controllers.stock_exchange
 
-__author__="rob"
-__date__ ="$Jun 12, 2011 9:37:38 PM$"
-
 class ClientConnector(object):
     """
     Client side endpoint of the Quartjes connector.
@@ -64,30 +61,78 @@ class ClientConnector(object):
         Construct a new ClientConnector to connect to the given host and port number.
         If no host is given a local server is started.
         """
-        self.host = host
-        self.port = port
-        self.factory = QuartjesClientFactory()
-        self.database = None
-        self.stock_exchange = None
+        self._host = host
+        self._port = port
+        self._factory = QuartjesClientFactory()
+        self._database = None
+        self._stock_exchange = None
 
+    @property
+    def host(self):
+        """
+        Hostname to connect to.
+        """
+        return self._host
+    
+    @host.setter
+    def host(self, value):
+        assert not self.is_connected(), "Host should not be changed will connected."
+        self._host = value
+
+    @property
+    def port(self):
+        """
+        Port to connect to.
+        """
+        return self._port
+    
+    @port.setter
+    def port(self, value):
+        assert not self.is_connected(), "Port should not be changed will connected."
+        self._port = value
+        
+    @property
+    def factory(self):
+        """
+        The protocol factory used by the client to connect to the server.
+        You normally should not need to access this. It is for advanced options.
+        """
+        return self._factory
+    
+    @property
+    def database(self):
+        """
+        Reference to the currently running database. This can be a proxy to the
+        database on the server or a local database.
+        """
+        return self._database
+    
+    @property
+    def stock_exchange(self):
+        """
+        Reference to the currently running stock exchange. This can be a proxy
+        to the stock exchange on the server or a local stock exchange.
+        """
+        return self._stock_exchange
+    
     def start(self):
         """
         Start the connector and create a connection to the server. Starts a
         reactor loop in a separate thread.
         """
-        if not self.host:
+        if not self._host:
             print("No host selected, starting local instance.")
-            self.database = quartjes.controllers.database.database
-            self.stock_exchange = quartjes.controllers.stock_exchange.StockExchange()
+            self._database = quartjes.controllers.database.database
+            self._stock_exchange = quartjes.controllers.stock_exchange.StockExchange()
         else:
             reactor.callLater(0, self._connect)
             if not reactor.running:
                 self._reactor_thread = ClientConnector.ReactorThread()
                 self._reactor_thread.start()
-            self.factory.wait_for_connection()
+            self._factory.wait_for_connection()
 
-            self.database = self.get_service_interface("database")
-            self.stock_exchange = self.get_service_interface("stock_exchange")
+            self._database = self.get_service_interface("database")
+            self._stock_exchange = self.get_service_interface("stock_exchange")
 
     def _connect(self):
         """
@@ -98,29 +143,16 @@ class ClientConnector(object):
 
     def stop(self):
         """
-        Stop the connector, closing the connection. Stops the reactor loop.
+        Stop the connector, closing the connection.
+        The Reactor loop remains active as the reactor cannot be restarted.
         """
-        if self.host:
-            threads.blockingCallFromThread(reactor, self.factory.stopTrying)
-            threads.blockingCallFromThread(reactor, reactor.stop)
+        if self._host:
+            threads.blockingCallFromThread(reactor, self._factory.stopTrying)
+            #threads.blockingCallFromThread(reactor, reactor.stop)
         else:
-            self.database = None
-            self.stock_exchange.stop()
-            self.stock_exchange = None
-
-    def send_action_request(self, service_name, action, *pargs, **kwargs):
-        """
-        Send an action request to the server and wait for the response.
-        This method is usually called from a service interface.
-        """
-        return self.factory.send_action_request(service_name, action, *pargs, **kwargs)
-
-    def subscribe(self, service_name, topic, callback):
-        """
-        Subscribe to a topic to receive updates from the server.
-        This method is usually called from a service interface.
-        """
-        self.factory.subscribe(service_name, topic, callback)
+            self._database = None
+            self._stock_exchange.stop()
+            self._stock_exchange = None
 
     def get_service_interface(self, service_name):
         """
@@ -128,19 +160,19 @@ class ClientConnector(object):
         the service interface to send requests to the corresponding service
         on the Quartjes server.
         """
-        return ServiceInterface(self, service_name)
+        return ServiceInterface(self._factory, service_name)
 
     def is_connected(self):
         """
         Determine whether a connection is active.
         """
-        if not self.host:
-            if self.database:
+        if not self._host:
+            if self._database:
                 return True
             else:
                 return False
         else:
-            return self.factory.is_connected()
+            return self._factory.is_connected()
 
     class ReactorThread(Thread):
         """
@@ -162,7 +194,7 @@ if __name__ == "__main__":
     import time
 
     def callback(text):
-        print(text)
+        print("Received event: " + text)
 
     cl = ClientConnector("localhost", 1234)
     cl.start()
@@ -178,12 +210,12 @@ if __name__ == "__main__":
 
     time.sleep(1)
     print("Subscribe to topic")
-    testService.subscribe("testtopic", callback)
+    testService.subscribe("on_trigger", callback)
 
     time.sleep(1)
     print("Trigger topic")
-    testService.callback(text="Eggs")
-    testService.callback2("Ham")
+    testService.trigger(text="Eggs")
+    testService.trigger2("Ham")
 
     time.sleep(10)
     print("Stopping client")
