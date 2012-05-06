@@ -63,11 +63,11 @@ def execute_remote_method_call(service, method_name, *pargs, **kwargs):
     assert service._remote_service, "Services must be decorated as remote_service"
     
     if not method_name in service._remote_methods:
-        raise MessageHandleError(MessageHandleError.RESULT_UNKNOWN_ACTION)
+        raise MessageHandleError(MessageHandleError.RESULT_UNKNOWN_METHOD)
     
     meth = getattr(service, method_name, None)
     if meth == None:
-        raise MessageHandleError(MessageHandleError.RESULT_UNKNOWN_ACTION)
+        raise MessageHandleError(MessageHandleError.RESULT_UNKNOWN_METHOD)
 
     try:
         return meth(*pargs, **kwargs)
@@ -143,38 +143,6 @@ class RemoteEventRegistry(object):
             self._event_triggered(event_name, *pargs, **kwargs)
         return listener
 
-class Service(object):
-    """
-    Base class to be implemented by services at the server side using the protocol.
-
-    In derived implementations create actions as function definitions with format:
-    action_<action name>. Calling a method called <action name> on the corresponding
-    service interface at the client side will result in action_<action name> to
-    be called on the server. The parameters are only passed by keyword.
-
-    Services are not active until registered with a ServerConnector.
-    """
-
-    def __init__(self, name="Unnamed"):
-        self.name = name
-        self.factory = None
-
-    def call(self, action, *pargs, **kwargs):
-        meth = getattr(self, "action_%s" % action, None)
-        if meth == None:
-            raise MessageHandleError(MessageHandleError.RESULT_UNKNOWN_ACTION)
-
-        try:
-            return meth(*pargs, **kwargs)
-        except TypeError as err:
-            raise MessageHandleError(MessageHandleError.RESULT_INVALID_PARAMS, error_details=err.message)
-        except Exception as err:
-            traceback.print_exc()
-            raise MessageHandleError(MessageHandleError.RESULT_EXCEPTION_RAISED, error_details=str(err))
-
-    def send_topic_update(self, topic, *pargs, **kwargs):
-        self.factory.send_topic_update(self.name, topic, *pargs, **kwargs)
-
 
 class ServiceInterface(object):
     """
@@ -239,7 +207,7 @@ class ServiceInterfaceAttribute(object):
         try:
             return self._client_factory.send_method_call(self._service_name, self._name, *pargs, **kwargs)
         except MessageHandleError as err:
-            if err.error_code == MessageHandleError.RESULT_UNKNOWN_ACTION:
+            if err.error_code == MessageHandleError.RESULT_UNKNOWN_METHOD:
                 raise AttributeError("Method %s does not exist in service %s." % (self._name, self._service_name))
             elif err.error_code == err.RESULT_INVALID_PARAMS:
                 raise TypeError(err.error_details)
@@ -258,25 +226,6 @@ class ServiceInterfaceAttribute(object):
         """
         # Not supported yet
 
-class TestService(Service):
-    """
-    Simple test service. Only implements the test action which will return the
-    contents of the argument text.
-    """
-
-    def __init__(self):
-        Service.__init__(self, "test")
-
-    def action_test(self, text):
-        return text
-
-    def action_callback(self, text):
-        self.send_topic_update("testtopic", text="Callback: %s" % text)
-        return text
-
-    def action_callback2(self, text):
-        self.send_topic_update("testtopic", "Callback2: %s" % text)
-        return text
 
 @remote_service
 class TestRemoteService(object):

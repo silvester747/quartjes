@@ -127,19 +127,12 @@ class ClientConnector(object):
         else:
             reactor.callLater(0, self._connect)
             if not reactor.running:
-                self._reactor_thread = ClientConnector.ReactorThread()
+                self._reactor_thread = ClientConnector._ReactorThread()
                 self._reactor_thread.start()
             self._factory.wait_for_connection()
 
             self._database = self.get_service_interface("database")
             self._stock_exchange = self.get_service_interface("stock_exchange")
-
-    def _connect(self):
-        """
-        Internal method called from the reactor to start a new connection.
-        """
-        #print("Connecting...")
-        reactor.connectTCP(self.host, self.port, self.factory)
 
     def stop(self):
         """
@@ -174,7 +167,14 @@ class ClientConnector(object):
         else:
             return self._factory.is_connected()
 
-    class ReactorThread(Thread):
+    def _connect(self):
+        """
+        Internal method called from the reactor to start a new connection.
+        """
+        #print("Connecting...")
+        reactor.connectTCP(self.host, self.port, self.factory)
+
+    class _ReactorThread(Thread):
         """
         Thread for running the reactor loop. This thread runs as a daemon, so
         if the main thread and any non daemon threads end, the reactor also
