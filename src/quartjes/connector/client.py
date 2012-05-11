@@ -21,25 +21,11 @@ Example
 Available server methods
 ------------------------
 
-database
-^^^^^^^^
-get_drinks()
-update_drink(drink)
-add_drink(drink)
-remove_drink(drink)
+Currently two server objects are made available upon connection. Please see the
+documentation for the server object for available methods and events:
 
-get_mixes()
-update_mix(mix)
-add_mix(mix)
-remove_mix(mix)
-
-add(obj)
-remove(obj)
-update(obj)
-
-stock_exchange
-^^^^^^^^^^^^^^
-sell(drink, amount)
+* database: :class:`quartjes.controllers.database.Database`
+* stock_exchange: :class:`quartjes.controllers.stock_exchange.StockExchange`
 
 Advanced
 --------
@@ -49,6 +35,9 @@ service.
 
 As long as the connector is running, it will keep trying to reconnect any
 lost connections using an exponential back-off.
+
+ClientConnector class
+---------------------
 
 """
 from quartjes.connector.protocol import QuartjesClientFactory
@@ -68,6 +57,16 @@ class ClientConnector(object):
         Host to connect to. If no host is specified, a local server is started.
     port : int
         Port to connect to.
+        
+    Attributes
+    ----------
+    host
+    port
+    factory
+    database
+    stock_exchange
+    
+    
     """
 
     def __init__(self, host=None, port=1234):
@@ -81,6 +80,7 @@ class ClientConnector(object):
     def host(self):
         """
         Hostname to connect to.
+        Can only be changed when there is no active connection.
         """
         return self._host
     
@@ -93,6 +93,7 @@ class ClientConnector(object):
     def port(self):
         """
         Port to connect to.
+        Can only be changed when there is no active connection.
         """
         return self._port
     
@@ -135,8 +136,8 @@ class ClientConnector(object):
             self._database = quartjes.controllers.database.database
             self._stock_exchange = quartjes.controllers.stock_exchange.StockExchange()
         else:
-            reactor.callLater(0, self._connect)
-            if not reactor.running:
+            reactor.callLater(0, self._connect) #@UndefinedVariable
+            if not reactor.running:             #@UndefinedVariable
                 self._reactor_thread = ClientConnector._ReactorThread()
                 self._reactor_thread.start()
             self._factory.wait_for_connection()
@@ -151,7 +152,6 @@ class ClientConnector(object):
         """
         if self._host:
             threads.blockingCallFromThread(reactor, self._factory.stopTrying)
-            #threads.blockingCallFromThread(reactor, reactor.stop)
         else:
             self._database = None
             self._stock_exchange.stop()
@@ -162,12 +162,31 @@ class ClientConnector(object):
         Construct a service interface for the service with the given name. Use
         the service interface to send requests to the corresponding service
         on the Quartjes server.
+        
+        Parameters
+        ----------
+        service_name : string
+            Name of the service on the server to which you want a remote
+            interface.
+        
+        Returns
+        -------
+        service_interface : :class:`quartjes.connector.services.ServiceInterface`
+            An interface to the service.
+            Please note that the existence of the service on the server is not
+            verified until an actual method call has been done.
         """
         return ServiceInterface(self._factory, service_name)
 
     def is_connected(self):
         """
-        Determine whether a connection is active.
+        Determine whether the connection to the server is active.
+        A local service is also considered connected.
+        
+        Returns
+        -------
+        connected : boolean
+            True if connected, False if not.
         """
         if not self._host:
             if self._database:
@@ -182,7 +201,7 @@ class ClientConnector(object):
         Internal method called from the reactor to start a new connection.
         """
         #print("Connecting...")
-        reactor.connectTCP(self.host, self.port, self.factory)
+        reactor.connectTCP(self.host, self.port, self.factory)  #@UndefinedVariable
 
     class _ReactorThread(Thread):
         """
@@ -195,12 +214,14 @@ class ClientConnector(object):
             self.daemon = True
 
         def run(self):
-            #print("Starting reactor")
-            reactor.run()
-            #print("Reactor stopped")
+            reactor.run()       #@UndefinedVariable
         
-
-if __name__ == "__main__":
+def self_test():
+    """
+    Perform a self test of this module.
+    
+    Requires that the test from :mod:`quartjes.connector.server` is running.
+    """
     import time
 
     def callback(text):
@@ -244,3 +265,5 @@ if __name__ == "__main__":
 
     time.sleep(1)
     
+if __name__ == "__main__":
+    self_test()
