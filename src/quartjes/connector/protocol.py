@@ -363,10 +363,10 @@ class QuartjesServerFactory(ServerFactory):
         if not isinstance(error, MessageHandleError):
             raise error
         print("Error occurred: %s" % result)
-        id = None
+        msgid = None
         if error.original_message != None:
-            id = error.original_message.id
-        msg = ResponseMessage(result_code=error.error_code, response_to=id, result=error.error_details)
+            msgid = error.original_message.id
+        msg = ResponseMessage(result_code=error.error_code, response_to=msgid, result=error.error_details)
         protocol.send_message(create_message_string(msg))
 
     def send_event(self, service_name, event_name, listener, *pargs, **kwargs):
