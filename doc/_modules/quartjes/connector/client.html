@@ -38,6 +38,9 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
@@ -52,66 +55,79 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Client component of the Quartjes connector. Use the ClientConnector to create</span>
 <span class="sd">a connection to the Quartjes server.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">-----</span>
+<span class="sd">Create an instance of this object with the host and port to connect to.</span>
+<span class="sd">Call the start() method to establish the connection.</span>
+<span class="sd">Now the database and the stock_exchange variable can be used to communicate</span>
+<span class="sd">with the server.</span>
+
+<span class="sd">If you do not wish to connect to a server, but run a local server instead,</span>
+<span class="sd">create the object without any arguments.</span>
+
+<span class="sd">Example</span>
+<span class="sd">-------</span>
+<span class="sd">&gt;&gt;&gt; conn = ClientConnector(&quot;192.168.1.1&quot;)</span>
+<span class="sd">&gt;&gt;&gt; conn.start()</span>
+<span class="sd">&gt;&gt;&gt; conn.database.get_drinks()</span>
+
+<span class="sd">Available server methods</span>
+<span class="sd">------------------------</span>
+
+<span class="sd">Currently two server objects are made available upon connection. Please see the</span>
+<span class="sd">documentation for the server object for available methods and events:</span>
+
+<span class="sd">* database: :class:`quartjes.controllers.database.Database`</span>
+<span class="sd">* stock_exchange: :class:`quartjes.controllers.stock_exchange.StockExchange`</span>
+
+<span class="sd">Advanced</span>
+<span class="sd">--------</span>
+
+<span class="sd">Use the method get_service_interface to retrieve additional interfaces to a server side</span>
+<span class="sd">service.</span>
+
+<span class="sd">As long as the connector is running, it will keep trying to reconnect any</span>
+<span class="sd">lost connections using an exponential back-off.</span>
+
+<span class="sd">ClientConnector class</span>
+<span class="sd">---------------------</span>
+
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;Rob van der Most&quot;</span>
+<span class="n">__docformat__</span> <span class="o">=</span> <span class="s">&quot;restructuredtext en&quot;</span>
+
 <span class="kn">from</span> <span class="nn">quartjes.connector.protocol</span> <span class="kn">import</span> <span class="n">QuartjesClientFactory</span>
 <span class="kn">from</span> <span class="nn">twisted.internet</span> <span class="kn">import</span> <span class="n">reactor</span><span class="p">,</span> <span class="n">threads</span>
 <span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Thread</span>
 <span class="kn">from</span> <span class="nn">quartjes.connector.services</span> <span class="kn">import</span> <span class="n">ServiceInterface</span>
 <span class="kn">import</span> <span class="nn">quartjes.controllers.database</span>
 <span class="kn">import</span> <span class="nn">quartjes.controllers.stock_exchange</span>
+<span class="kn">from</span> <span class="nn">quartjes.connector.exceptions</span> <span class="kn">import</span> <span class="n">TimeoutError</span>
 
 <div class="viewcode-block" id="ClientConnector"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.client.ClientConnector">[docs]</a><span class="k">class</span> <span class="nc">ClientConnector</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Client side endpoint of the Quartjes connector.</span>
-
-<span class="sd">    =Usage=</span>
-<span class="sd">    Create an instance of this object with the host and port to connect to.</span>
-<span class="sd">    Call the start() method to establish the connection.</span>
-<span class="sd">    Now the database and the stock_exchange variable can be used to communicate</span>
-<span class="sd">    with the server.</span>
-
-<span class="sd">    If you do not wish to connect to a server, but run a local server instead,</span>
-<span class="sd">    create the object without any arguments.</span>
-
-<span class="sd">    =Example=</span>
-<span class="sd">    conn = ClientConnector(&quot;192.168.1.1&quot;)</span>
-<span class="sd">    conn.start()</span>
-<span class="sd">    conn.database.get_drinks()</span>
-
-<span class="sd">    =Available server methods=</span>
-
-<span class="sd">    ==database==</span>
-<span class="sd">    get_drinks()</span>
-<span class="sd">    update_drink(drink)</span>
-<span class="sd">    add_drink(drink)</span>
-<span class="sd">    remove_drink(drink)</span>
-
-<span class="sd">    get_mixes()</span>
-<span class="sd">    update_mix(mix)</span>
-<span class="sd">    add_mix(mix)</span>
-<span class="sd">    remove_mix(mix)</span>
-
-<span class="sd">    add(obj)</span>
-<span class="sd">    remove(obj)</span>
-<span class="sd">    update(obj)</span>
-
-<span class="sd">    ==stock_exchange==</span>
-<span class="sd">    sell(drink, amount)</span>
-
-<span class="sd">    =Advanced=</span>
-
-<span class="sd">    Use the method get_service_interface to retrieve additional interfaces to a server side</span>
-<span class="sd">    service.</span>
-
-<span class="sd">    As long as the connector is running, it will keep trying to reconnect any</span>
-<span class="sd">    lost connections using an exponential back-off.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    host : string</span>
+<span class="sd">        Host to connect to. If no host is specified, a local server is started.</span>
+<span class="sd">    port : int</span>
+<span class="sd">        Port to connect to.</span>
+<span class="sd">        </span>
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    host</span>
+<span class="sd">    port</span>
+<span class="sd">    factory</span>
+<span class="sd">    database</span>
+<span class="sd">    stock_exchange</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">1234</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Construct a new ClientConnector to connect to the given host and port number.</span>
-<span class="sd">        If no host is given a local server is started.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_host</span> <span class="o">=</span> <span class="n">host</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_port</span> <span class="o">=</span> <span class="n">port</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_factory</span> <span class="o">=</span> <span class="n">QuartjesClientFactory</span><span class="p">()</span>
@@ -122,6 +138,7 @@
     <span class="k">def</span> <span class="nf">host</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Hostname to connect to.</span>
+<span class="sd">        Can only be changed when there is no active connection.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_host</span>
     
@@ -134,6 +151,7 @@
     <span class="k">def</span> <span class="nf">port</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Port to connect to.</span>
+<span class="sd">        Can only be changed when there is no active connection.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_port</span>
     
@@ -176,8 +194,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_database</span> <span class="o">=</span> <span class="n">quartjes</span><span class="o">.</span><span class="n">controllers</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">database</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_stock_exchange</span> <span class="o">=</span> <span class="n">quartjes</span><span class="o">.</span><span class="n">controllers</span><span class="o">.</span><span class="n">stock_exchange</span><span class="o">.</span><span class="n">StockExchange</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">reactor</span><span class="o">.</span><span class="n">callLater</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connect</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">reactor</span><span class="o">.</span><span class="n">running</span><span class="p">:</span>
+            <span class="n">reactor</span><span class="o">.</span><span class="n">callLater</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connect</span><span class="p">)</span> <span class="c">#@UndefinedVariable</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">reactor</span><span class="o">.</span><span class="n">running</span><span class="p">:</span>             <span class="c">#@UndefinedVariable</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_reactor_thread</span> <span class="o">=</span> <span class="n">ClientConnector</span><span class="o">.</span><span class="n">_ReactorThread</span><span class="p">()</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_reactor_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_factory</span><span class="o">.</span><span class="n">wait_for_connection</span><span class="p">()</span>
@@ -192,7 +210,6 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_host</span><span class="p">:</span>
             <span class="n">threads</span><span class="o">.</span><span class="n">blockingCallFromThread</span><span class="p">(</span><span class="n">reactor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_factory</span><span class="o">.</span><span class="n">stopTrying</span><span class="p">)</span>
-            <span class="c">#threads.blockingCallFromThread(reactor, reactor.stop)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_database</span> <span class="o">=</span> <span class="bp">None</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_stock_exchange</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
@@ -203,12 +220,31 @@
 <span class="sd">        Construct a service interface for the service with the given name. Use</span>
 <span class="sd">        the service interface to send requests to the corresponding service</span>
 <span class="sd">        on the Quartjes server.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        service_name : string</span>
+<span class="sd">            Name of the service on the server to which you want a remote</span>
+<span class="sd">            interface.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        service_interface : :class:`quartjes.connector.services.ServiceInterface`</span>
+<span class="sd">            An interface to the service.</span>
+<span class="sd">            Please note that the existence of the service on the server is not</span>
+<span class="sd">            verified until an actual method call has been done.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">ServiceInterface</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_factory</span><span class="p">,</span> <span class="n">service_name</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="ClientConnector.is_connected"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.client.ClientConnector.is_connected">[docs]</a>    <span class="k">def</span> <span class="nf">is_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Determine whether a connection is active.</span>
+<span class="sd">        Determine whether the connection to the server is active.</span>
+<span class="sd">        A local service is also considered connected.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        connected : boolean</span>
+<span class="sd">            True if connected, False if not.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_host</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_database</span><span class="p">:</span>
@@ -223,7 +259,7 @@
 <span class="sd">        Internal method called from the reactor to start a new connection.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c">#print(&quot;Connecting...&quot;)</span>
-        <span class="n">reactor</span><span class="o">.</span><span class="n">connectTCP</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">factory</span><span class="p">)</span>
+        <span class="n">reactor</span><span class="o">.</span><span class="n">connectTCP</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">factory</span><span class="p">)</span>  <span class="c">#@UndefinedVariable</span>
 
     <span class="k">class</span> <span class="nc">_ReactorThread</span><span class="p">(</span><span class="n">Thread</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -236,12 +272,14 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="bp">True</span>
 
         <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-            <span class="c">#print(&quot;Starting reactor&quot;)</span>
-            <span class="n">reactor</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
-            <span class="c">#print(&quot;Reactor stopped&quot;)</span>
-        
-</div>
-<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+            <span class="n">reactor</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">installSignalHandlers</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>       <span class="c">#@UndefinedVariable</span>
+        </div>
+<div class="viewcode-block" id="self_test"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.client.self_test">[docs]</a><span class="k">def</span> <span class="nf">self_test</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform a self test of this module.</span>
+<span class="sd">    </span>
+<span class="sd">    Requires that the test from :mod:`quartjes.connector.server` is running.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">import</span> <span class="nn">time</span>
 
     <span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
@@ -267,6 +305,15 @@
     <span class="k">print</span><span class="p">(</span><span class="s">&quot;Trigger topic&quot;</span><span class="p">)</span>
     <span class="n">testService</span><span class="o">.</span><span class="n">trigger</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s">&quot;Eggs&quot;</span><span class="p">)</span>
     <span class="n">testService</span><span class="o">.</span><span class="n">trigger2</span><span class="p">(</span><span class="s">&quot;Ham&quot;</span><span class="p">)</span>
+    
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Trigger timeout&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">testService</span><span class="o">.</span><span class="n">test_timeout</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">TimeoutError</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Timeout OK&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="bp">False</span><span class="p">,</span> <span class="s">&quot;This should have triggered a timeout!&quot;</span>
+        
 
     <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
     <span class="k">print</span><span class="p">(</span><span class="s">&quot;Stopping client&quot;</span><span class="p">)</span>
@@ -284,7 +331,9 @@
     <span class="n">cl</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
 
     <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-    
+    </div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">self_test</span><span class="p">()</span>
 </pre></div>
 
           </div>
@@ -317,6 +366,9 @@
              >index</a></li>
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 

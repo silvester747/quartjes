@@ -38,6 +38,9 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
@@ -52,8 +55,11 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Implementation of the Quartjes protocol in Twisted.</span>
 
-<span class="sd">Contents of this file are not to be used directly. Use either the ServerConnector</span>
-<span class="sd">in quartjes.connector.server or the ClientConnector in quartjes.connector.client.</span>
+<span class="sd">Contents of this file are not to be used directly. Use either the </span>
+<span class="sd">:class:`ServerConnector &lt;quartjes.connector.server.ServerConnector&gt;`</span>
+<span class="sd">in :mod:`quartjes.connector.server` or the </span>
+<span class="sd">:class:`ClientConnector &lt;quartjes.connector.client.ClientConnector&gt;` in </span>
+<span class="sd">:mod:`quartjes.connector.client`.</span>
 
 <span class="sd">The protocol implementation in Twisted is asynchronous. The methods in this file</span>
 <span class="sd">translate between the asynchronous calls in the reactor thread and synchronous</span>
@@ -62,6 +68,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;Rob van der Most&quot;</span>
+<span class="n">__docformat__</span> <span class="o">=</span> <span class="s">&quot;restructuredtext en&quot;</span>
 
 <span class="kn">from</span> <span class="nn">twisted.internet.protocol</span> <span class="kn">import</span> <span class="n">ReconnectingClientFactory</span>
 <span class="kn">from</span> <span class="nn">twisted.internet.protocol</span> <span class="kn">import</span> <span class="n">ServerFactory</span>
@@ -78,6 +85,9 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Protocol implementation for the Quartjes application. For now we are using a basic</span>
 <span class="sd">    Netstring receiver to listen for xml messages encoded as netstrings.</span>
+<span class="sd">    </span>
+<span class="sd">    No need to make instances of this class yourself. It is set as the protocol</span>
+<span class="sd">    in the server and client factories.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -116,51 +126,117 @@
 <div class="viewcode-block" id="QuartjesServerFactory"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.protocol.QuartjesServerFactory">[docs]</a><span class="k">class</span> <span class="nc">QuartjesServerFactory</span><span class="p">(</span><span class="n">ServerFactory</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Protocol factory to handle incoming connections for the Quartjes server.</span>
+<span class="sd">    </span>
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    register_service</span>
+<span class="sd">    unregister_service</span>
+<span class="sd">    send_event</span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    </span>
+<span class="sd">    Handling of incoming messages</span>
+<span class="sd">    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
+<span class="sd">    When a message is received from the client, it is handled in the</span>
+<span class="sd">    twisted defered way. It contains multiple steps, some within the reactor</span>
+<span class="sd">    thread and some in a separate thread. It is important to do most of the</span>
+<span class="sd">    processing outside the reactor thread. As long as processing is inside</span>
+<span class="sd">    the reactor thread, no other incoming messages can be handled.</span>
+<span class="sd">    </span>
+<span class="sd">    Currently the following steps are performed. Communication between steps</span>
+<span class="sd">    is in the form of a :class:`MessageResult` object.</span>
+<span class="sd">    </span>
+<span class="sd">    * :meth:`_parse_message`: Deserialise the message in a separate thread</span>
+<span class="sd">      and perform any actions that do not need to run inside the reactor</span>
+<span class="sd">      thread;</span>
+<span class="sd">    * :meth:`_r_process_message`: Do any processing of the message inside</span>
+<span class="sd">      the reactor thread;</span>
+<span class="sd">    * :meth:`_r_send_result`: Send the result back to the client.</span>
+<span class="sd">    </span>
+<span class="sd">    If an exception occurs, any following step will be skipped and the error</span>
+<span class="sd">    message is directly sent back using :meth:`_r_send_error`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">protocol</span> <span class="o">=</span> <span class="n">QuartjesProtocol</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The protocol class variable is used by twisted to determine the protocol</span>
+<span class="sd">    to use for this factory.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the factory.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">connections</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">services</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_connections</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_services</span> <span class="o">=</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="QuartjesServerFactory.register_service"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.protocol.QuartjesServerFactory.register_service">[docs]</a>    <span class="k">def</span> <span class="nf">register_service</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Register a service with the factory.</span>
 <span class="sd">        After registering the service, it can be remotely accessed through the given name.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        service : object decorated by :func:`remote_service &lt;quartjes.connector.services.remote_service&gt;`</span>
+<span class="sd">            Service object to register with the factory. After registering it </span>
+<span class="sd">            will be available for remote clients.</span>
+<span class="sd">        name : string</span>
+<span class="sd">            Name the service is registered under. Clients must use this name to</span>
+<span class="sd">            access the service.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="n">service</span><span class="o">.</span><span class="n">_remote_service</span><span class="p">,</span> <span class="s">&quot;Services should be decorated correctly.&quot;</span>
         
         <span class="n">prepare_remote_service</span><span class="p">(</span><span class="n">service</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">services</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">service</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_services</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">service</span>
 </div>
 <div class="viewcode-block" id="QuartjesServerFactory.unregister_service"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.protocol.QuartjesServerFactory.unregister_service">[docs]</a>    <span class="k">def</span> <span class="nf">unregister_service</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Unregister a service from the factory.</span>
+<span class="sd">        Unregister a service from the factory. It is no longer accessible by</span>
+<span class="sd">        remote clients.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : string</span>
+<span class="sd">            Name the service is currently registered under.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">services</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_services</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </div>
     <span class="k">def</span> <span class="nf">_r_on_connection_established</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">protocol</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Handle an incoming connection.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        protocol</span>
+<span class="sd">            Twisted protocol object connected to the client.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">connections</span><span class="p">[</span><span class="n">protocol</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">protocol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_connections</span><span class="p">[</span><span class="n">protocol</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">protocol</span>
         <span class="n">motd</span> <span class="o">=</span> <span class="n">ServerMotdMessage</span><span class="p">(</span><span class="n">client_id</span><span class="o">=</span><span class="n">protocol</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
         <span class="n">protocol</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">create_message_string</span><span class="p">(</span><span class="n">motd</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">_r_on_connection_lost</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">protocol</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Handle a lost connection.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        protocol</span>
+<span class="sd">            Twisted protocol object connected to the client.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">connections</span><span class="p">[</span><span class="n">protocol</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connections</span><span class="p">[</span><span class="n">protocol</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">_r_on_incoming_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">,</span> <span class="n">protocol</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Handle incoming messages. Most of the work is offloaded to a separate</span>
 <span class="sd">        thread.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        string : string</span>
+<span class="sd">            Incoming message string to handle.</span>
+<span class="sd">        protocol</span>
+<span class="sd">            Twisted protocol object connected to the client.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c">#print(&quot;Incoming: %s&quot; % string)</span>
         <span class="n">d</span> <span class="o">=</span> <span class="n">threads</span><span class="o">.</span><span class="n">deferToThread</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parse_message</span><span class="p">,</span> <span class="n">string</span><span class="p">,</span> <span class="n">protocol</span><span class="p">)</span>
@@ -176,6 +252,23 @@
 
 <span class="sd">        Both the parsed original message and a possible return message are returned</span>
 <span class="sd">        in a special MessageResult instance.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        string : string</span>
+<span class="sd">            Incoming message string to handle.</span>
+<span class="sd">        protocol</span>
+<span class="sd">            Twisted protocol object connected to the client.</span>
+<span class="sd">            </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : :class:`MessageResult`</span>
+<span class="sd">            Result of parsing the message.</span>
+<span class="sd">        </span>
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        MessageHandleError</span>
+<span class="sd">            If any error occurs while handling the message.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c">#print(&quot;Parsing message: %s&quot; % string)</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="n">parse_message_string</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
@@ -202,6 +295,23 @@
 <span class="sd">        is already present from actions processed outside the reactor.</span>
 
 <span class="sd">        Returns the message to be send back to the client.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        result : :class:`MessageResult`</span>
+<span class="sd">            Result from previous handling of the message.</span>
+<span class="sd">        protocol</span>
+<span class="sd">            Twisted protocol object connected to the client.</span>
+<span class="sd">            </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        response : string</span>
+<span class="sd">            Serialized message to return to the client.</span>
+<span class="sd">        </span>
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        MessageHandleError</span>
+<span class="sd">            If any error occurs while handling the message.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">original_message</span><span class="p">,</span> <span class="n">SubscribeMessage</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_r_subscribe_to_event</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">original_message</span><span class="o">.</span><span class="n">service_name</span><span class="p">,</span>
@@ -213,9 +323,24 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Handle an MethodCall message by calling the requested method on the</span>
 <span class="sd">        requested service.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        msg : :class:`quartjes.connector.messages.MethodCallMessage`</span>
+<span class="sd">            Message containg the method call to perform.</span>
+<span class="sd">            </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result</span>
+<span class="sd">            Whatever the method call returns.</span>
+<span class="sd">            </span>
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        MessageHandleError</span>
+<span class="sd">            If any error occurs while handling the message.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c">#print(&quot;Performing service: %s, method_name: %s&quot; % (msg.service_name, msg.method_name))</span>
-        <span class="n">service</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">services</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">service_name</span><span class="p">)</span>
+        <span class="n">service</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_services</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">service_name</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">service</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">MessageHandleError</span><span class="p">(</span><span class="n">MessageHandleError</span><span class="o">.</span><span class="n">RESULT_UNKNOWN_SERVICE</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
 
@@ -229,10 +354,25 @@
     <span class="k">def</span> <span class="nf">_r_subscribe_to_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service_name</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="n">protocol</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Subscribe the client to an event on the specified service.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        service_name : string</span>
+<span class="sd">            Name of the service containing the event.</span>
+<span class="sd">        event_name : string</span>
+<span class="sd">            Name of the event to subscribe to.</span>
+<span class="sd">        protocol</span>
+<span class="sd">            Twisted protocol object connected to the client that should receive</span>
+<span class="sd">            event notifications.</span>
+<span class="sd">            </span>
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        MessageHandleError</span>
+<span class="sd">            If any error occurs while handling the message.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">service</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">services</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">service_name</span><span class="p">)</span>
+        <span class="n">service</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_services</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">service_name</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">service</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">return</span>
+            <span class="k">raise</span> <span class="n">MessageHandleError</span><span class="p">(</span><span class="n">MessageHandleError</span><span class="o">.</span><span class="n">RESULT_UNKNOWN_SERVICE</span><span class="p">)</span>
         
         <span class="n">subscribe_to_remote_event</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="n">service_name</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="n">protocol</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 
@@ -240,6 +380,14 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Send the result back to the client.</span>
 <span class="sd">        Response is expected to be a string ready to send.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        response : string</span>
+<span class="sd">            Message ready to be sent to the client.</span>
+<span class="sd">        protocol</span>
+<span class="sd">            Twisted protocol object connected to the client that should receive</span>
+<span class="sd">            event notifications.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c">#print(&quot;Send result: %s&quot; % result)</span>
         <span class="n">protocol</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
@@ -250,72 +398,179 @@
 <span class="sd">        This is the only method that creates XML inside the reactor thread. This</span>
 <span class="sd">        might cause problems if the error contains a lot of data, but for now we</span>
 <span class="sd">        do not expect this to be the case.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        result</span>
+<span class="sd">            Result from twisted encapsulating an exception.</span>
+<span class="sd">        protocol</span>
+<span class="sd">            Twisted protocol object connected to the client that should receive</span>
+<span class="sd">            event notifications.</span>
+<span class="sd">        </span>
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        Exception</span>
+<span class="sd">            If the exception received is not of type </span>
+<span class="sd">            :class:`quartjes.connector.exceptions.MessageHandleError` we reraise the</span>
+<span class="sd">            exception instead of sending it to the client.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">error</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">value</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="n">MessageHandleError</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">error</span>
         <span class="k">print</span><span class="p">(</span><span class="s">&quot;Error occurred: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">result</span><span class="p">)</span>
-        <span class="nb">id</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">msgid</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="k">if</span> <span class="n">error</span><span class="o">.</span><span class="n">original_message</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="nb">id</span> <span class="o">=</span> <span class="n">error</span><span class="o">.</span><span class="n">original_message</span><span class="o">.</span><span class="n">id</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="n">ResponseMessage</span><span class="p">(</span><span class="n">result_code</span><span class="o">=</span><span class="n">error</span><span class="o">.</span><span class="n">error_code</span><span class="p">,</span> <span class="n">response_to</span><span class="o">=</span><span class="nb">id</span><span class="p">,</span> <span class="n">result</span><span class="o">=</span><span class="n">error</span><span class="o">.</span><span class="n">error_details</span><span class="p">)</span>
+            <span class="n">msgid</span> <span class="o">=</span> <span class="n">error</span><span class="o">.</span><span class="n">original_message</span><span class="o">.</span><span class="n">id</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="n">ResponseMessage</span><span class="p">(</span><span class="n">result_code</span><span class="o">=</span><span class="n">error</span><span class="o">.</span><span class="n">error_code</span><span class="p">,</span> <span class="n">response_to</span><span class="o">=</span><span class="n">msgid</span><span class="p">,</span> <span class="n">result</span><span class="o">=</span><span class="n">error</span><span class="o">.</span><span class="n">error_details</span><span class="p">)</span>
         <span class="n">protocol</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">create_message_string</span><span class="p">(</span><span class="n">msg</span><span class="p">))</span>
 
 <div class="viewcode-block" id="QuartjesServerFactory.send_event"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.protocol.QuartjesServerFactory.send_event">[docs]</a>    <span class="k">def</span> <span class="nf">send_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service_name</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="n">listener</span><span class="p">,</span> <span class="o">*</span><span class="n">pargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Notify a client of an event.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        service_name : string</span>
+<span class="sd">            Name of the service firing the event.</span>
+<span class="sd">        event_name : string</span>
+<span class="sd">            Name of the event being fired.</span>
+<span class="sd">        listener</span>
+<span class="sd">            Twisted protocol object connected to the client that should receive</span>
+<span class="sd">            event notifications.</span>
+<span class="sd">        *pargs</span>
+<span class="sd">            Any additional positional arguments will be sent as positional</span>
+<span class="sd">            arguments to the client callback.</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Any additional keyword arguments will be sent as keyword</span>
+<span class="sd">            arguments to the client callback.</span>
+<span class="sd">            </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="n">EventMessage</span><span class="p">(</span><span class="n">service_name</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="n">pargs</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
         <span class="n">string</span> <span class="o">=</span> <span class="n">create_message_string</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="n">reactor</span><span class="o">.</span><span class="n">callFromThread</span><span class="p">(</span><span class="n">listener</span><span class="o">.</span><span class="n">send_message</span><span class="p">,</span> <span class="n">string</span><span class="p">)</span>
+        <span class="n">reactor</span><span class="o">.</span><span class="n">callFromThread</span><span class="p">(</span><span class="n">listener</span><span class="o">.</span><span class="n">send_message</span><span class="p">,</span> <span class="n">string</span><span class="p">)</span> <span class="c">#@UndefinedVariable</span>
         
 </div></div>
 <div class="viewcode-block" id="QuartjesClientFactory"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.protocol.QuartjesClientFactory">[docs]</a><span class="k">class</span> <span class="nc">QuartjesClientFactory</span><span class="p">(</span><span class="n">ReconnectingClientFactory</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Client factory for quartjes client. Implements the reconnecting client factory</span>
 <span class="sd">    to make sure it reconnects in case of errors.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    timeout : int</span>
+<span class="sd">        Timeout in seconds for messages. If no response is received within this time</span>
+<span class="sd">        an exception will be returned.</span>
+<span class="sd">        </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    When connected this class keeps a reference to the protocol currently </span>
+<span class="sd">    connected to the server. If no connection is present, the reference</span>
+<span class="sd">    should be None.</span>
+<span class="sd">    </span>
+<span class="sd">    Blocking method calls are performed by using the blockingCallFromThread</span>
+<span class="sd">    functionality in Twisted. The method sending the message returns a</span>
+<span class="sd">    defered object which is saved in a dictionary with the message id. Once</span>
+<span class="sd">    a response is received the defered is triggered with the server response.</span>
+<span class="sd">    That moment the blockingCallFromThread method will unblock and return</span>
+<span class="sd">    the result.</span>
+<span class="sd">    </span>
+<span class="sd">    For timeouts a special defered is created. A call is scheduled in the</span>
+<span class="sd">    reactor to return a :class:`TimeoutError &lt;quartjes.connector.exceptions.TimeoutError&gt;`</span>
+<span class="sd">    to the deferred after the timeout has expired. In the defered a callback</span>
+<span class="sd">    is added that will make sure the timeout call is cancelled when a response</span>
+<span class="sd">    is received.</span>
+<span class="sd">    </span>
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    timeout</span>
+<span class="sd">    </span>
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    is_connected</span>
+<span class="sd">    send_message_blocking</span>
+<span class="sd">    send_method_call</span>
+<span class="sd">    subscribe</span>
+<span class="sd">    wait_for_connection</span>
+<span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">protocol</span> <span class="o">=</span> <span class="n">QuartjesProtocol</span>
-    <span class="n">default_timeout</span> <span class="o">=</span> <span class="mi">5</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">default_timeout</span><span class="p">):</span>
+    <span class="n">protocol</span> <span class="o">=</span> <span class="n">QuartjesProtocol</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The protocol class variable is used by twisted to determine the protocol</span>
+<span class="sd">    to use for this factory.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the client factory.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">waiting_messages</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">waiting_for_connection</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">current_protocol</span> <span class="o">=</span> <span class="bp">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">event_callbacks</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">timeout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_waiting_messages</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_waiting_for_connection</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_protocol</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_event_callbacks</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span> <span class="o">=</span> <span class="n">timeout</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">timeout</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Timeout in seconds for messages. If no response is received within this time</span>
+<span class="sd">        an exception will be returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span>
+    
+    <span class="nd">@timeout.setter</span>
+<div class="viewcode-block" id="QuartjesClientFactory.timeout"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.protocol.QuartjesClientFactory.timeout">[docs]</a>    <span class="k">def</span> <span class="nf">timeout</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span> <span class="o">=</span> <span class="n">value</span>
+</div>
     <span class="k">def</span> <span class="nf">_r_on_connection_established</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">protocol</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Handle a newly established connection to the server.</span>
+<span class="sd">        Handle a newly established connection to the server. Called by the </span>
+<span class="sd">        :class:`QuartjesProtocol`.</span>
+<span class="sd">        </span>
+<span class="sd">        If any methods are waiting for a connection, they will be notified.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        protocol</span>
+<span class="sd">            Twisted protocol object connected to the server.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">print</span><span class="p">(</span><span class="s">&quot;Client connected&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">current_protocol</span> <span class="o">=</span> <span class="n">protocol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_protocol</span> <span class="o">=</span> <span class="n">protocol</span>
 
-        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">waiting_for_connection</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_waiting_for_connection</span><span class="p">:</span>
             <span class="n">d</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">waiting_for_connection</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_waiting_for_connection</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="k">def</span> <span class="nf">_r_on_connection_lost</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">protocol</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Handle a lost connection.</span>
+<span class="sd">        Handle a lost connection.Called by the :class:`QuartjesProtocol`.</span>
+<span class="sd">        </span>
 <span class="sd">        All callbacks waiting for a message response are notified that a</span>
 <span class="sd">        connection error has occurred.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        protocol</span>
+<span class="sd">            Twisted protocol object connected to the server.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">print</span><span class="p">(</span><span class="s">&quot;Client disconnected&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">current_protocol</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_protocol</span> <span class="o">=</span> <span class="bp">None</span>
 
-        <span class="k">for</span> <span class="n">cb</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">waiting_messages</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">cb</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_waiting_messages</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="n">cb</span><span class="o">.</span><span class="n">errback</span><span class="p">(</span><span class="n">ConnectionError</span><span class="p">(</span><span class="s">&quot;Connection lost.&quot;</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">waiting_messages</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_waiting_messages</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_r_on_incoming_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">,</span> <span class="n">protocol</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Handle incoming messages. Defers parsing the message to another thread, so the</span>
-<span class="sd">        reactor is not blocked.</span>
+<span class="sd">        reactor is not blocked. Called by the :class:`QuartjesProtocol`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        string : string</span>
+<span class="sd">            Text received from the server.</span>
+<span class="sd">        protocol</span>
+<span class="sd">            Twisted protocol object connected to the server.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c">#print(&quot;Incoming: %s&quot; % string)</span>
         <span class="n">d</span> <span class="o">=</span> <span class="n">threads</span><span class="o">.</span><span class="n">deferToThread</span><span class="p">(</span><span class="n">parse_message_string</span><span class="p">,</span> <span class="n">string</span><span class="p">)</span>
@@ -324,25 +579,36 @@
     <span class="k">def</span> <span class="nf">_r_handle_message_contents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">protocol</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        After parsing a message handle it in the reactor loop.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        msg : :class:`quartjes.connector.messages.Message`</span>
+<span class="sd">            Message object to handle.</span>
+<span class="sd">        protocol</span>
+<span class="sd">            Twisted protocol object connected to the server.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">ResponseMessage</span><span class="p">):</span>
-            <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">waiting_messages</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">response_to</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_waiting_messages</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">response_to</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">d</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
                 <span class="n">d</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">ServerMotdMessage</span><span class="p">):</span>
             <span class="k">print</span><span class="p">(</span><span class="s">&quot;Connected: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">msg</span><span class="o">.</span><span class="n">motd</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_r_successful_connection</span><span class="p">()</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">EventMessage</span><span class="p">):</span>
-            <span class="n">callback</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_callbacks</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">msg</span><span class="o">.</span><span class="n">service_name</span><span class="p">,</span> <span class="n">msg</span><span class="o">.</span><span class="n">event_name</span><span class="p">))</span>
+            <span class="n">callback</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_event_callbacks</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">msg</span><span class="o">.</span><span class="n">service_name</span><span class="p">,</span> <span class="n">msg</span><span class="o">.</span><span class="n">event_name</span><span class="p">))</span>
             <span class="k">if</span> <span class="n">callback</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
                 <span class="n">threads</span><span class="o">.</span><span class="n">deferToThread</span><span class="p">(</span><span class="n">callback</span><span class="p">,</span> <span class="o">*</span><span class="n">msg</span><span class="o">.</span><span class="n">pargs</span><span class="p">,</span> <span class="o">**</span><span class="n">msg</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
             
     <span class="k">def</span> <span class="nf">_r_successful_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handle a succesful connection. Resets the reconnect backoff and makes</span>
+<span class="sd">        sure all events that were already subscribed to are active again.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">resetDelay</span><span class="p">()</span>
-        <span class="k">for</span> <span class="p">(</span><span class="n">service_name</span><span class="p">,</span> <span class="n">event_name</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_callbacks</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">service_name</span><span class="p">,</span> <span class="n">event_name</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_event_callbacks</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="n">SubscribeMessage</span><span class="p">(</span><span class="n">service_name</span><span class="o">=</span><span class="n">service_name</span><span class="p">,</span> <span class="n">event_name</span><span class="o">=</span><span class="n">event_name</span><span class="p">)</span>
             <span class="n">serial_message</span> <span class="o">=</span> <span class="n">create_message_string</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">current_protocol</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">serial_message</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_current_protocol</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">serial_message</span><span class="p">)</span>
 
 <div class="viewcode-block" id="QuartjesClientFactory.send_message_blocking"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.protocol.QuartjesClientFactory.send_message_blocking">[docs]</a>    <span class="k">def</span> <span class="nf">send_message_blocking</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -350,52 +616,118 @@
 <span class="sd">        Accepts a serializable message.</span>
 <span class="sd">        Based on the response either the result is returned or an exception is raised.</span>
 
-<span class="sd">        Can throw either a MessageHandleError or a ConnectionError</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        message : :class:`quartjes.connector.messages.Message`</span>
+<span class="sd">            Message object to send to the server.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result</span>
+<span class="sd">            The response returned by the server.</span>
+<span class="sd">            </span>
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        MessageHandleError</span>
+<span class="sd">            Something went wrong while handling the message on the server.</span>
+<span class="sd">        ConnectionError</span>
+<span class="sd">            There is an issue with the connection to the server.</span>
+<span class="sd">        TimeoutError</span>
+<span class="sd">            No response was received within the set timeout.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">serial_message</span> <span class="o">=</span> <span class="n">create_message_string</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
-        <span class="n">result_msg</span> <span class="o">=</span> <span class="n">threads</span><span class="o">.</span><span class="n">blockingCallFromThread</span><span class="p">(</span><span class="n">reactor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r_send_message_and_wait</span><span class="p">,</span> <span class="n">message</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">serial_message</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">result_msg</span><span class="o">.</span><span class="n">result_code</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">MessageHandleError</span><span class="p">(</span><span class="n">error_code</span><span class="o">=</span><span class="n">result_msg</span><span class="o">.</span><span class="n">result_code</span><span class="p">,</span> <span class="n">error_details</span> <span class="o">=</span> <span class="n">result_msg</span><span class="o">.</span><span class="n">result</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">result_msg</span><span class="o">.</span><span class="n">result</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result_msg</span> <span class="o">=</span> <span class="n">threads</span><span class="o">.</span><span class="n">blockingCallFromThread</span><span class="p">(</span><span class="n">reactor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r_send_message_and_wait</span><span class="p">,</span> <span class="n">message</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">serial_message</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">result_msg</span><span class="o">.</span><span class="n">result_code</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">MessageHandleError</span><span class="p">(</span><span class="n">error_code</span><span class="o">=</span><span class="n">result_msg</span><span class="o">.</span><span class="n">result_code</span><span class="p">,</span> <span class="n">error_details</span> <span class="o">=</span> <span class="n">result_msg</span><span class="o">.</span><span class="n">result</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">result_msg</span><span class="o">.</span><span class="n">result</span>
+        <span class="k">except</span> <span class="n">TimeoutError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_waiting_messages</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+            <span class="k">raise</span>
 </div>
     <span class="k">def</span> <span class="nf">_r_send_message_and_wait</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message_id</span><span class="p">,</span> <span class="n">serial_message</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Send a message to the server and return a Deferred which is called back</span>
 <span class="sd">        when a response has been received.</span>
 <span class="sd">        Accepts a string containing an already serialized message.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        message_id : UUID</span>
+<span class="sd">            Unique id of the message.</span>
+<span class="sd">        serial_message : string</span>
+<span class="sd">            Serialised message to send.</span>
+<span class="sd">            </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        deferred</span>
+<span class="sd">            Deferred object that is triggered when a response is received or a</span>
+<span class="sd">            timeout occurs.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_protocol</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_protocol</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">ConnectionError</span><span class="p">(</span><span class="s">&quot;Not connected.&quot;</span><span class="p">)</span>
-        <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">Deferred</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">waiting_messages</span><span class="p">[</span><span class="n">message_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">current_protocol</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">serial_message</span><span class="p">)</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r_create_timeout_deferred</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_waiting_messages</span><span class="p">[</span><span class="n">message_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_protocol</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">serial_message</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">d</span>
 
 <div class="viewcode-block" id="QuartjesClientFactory.send_method_call"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.protocol.QuartjesClientFactory.send_method_call">[docs]</a>    <span class="k">def</span> <span class="nf">send_method_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service_name</span><span class="p">,</span> <span class="n">method_name</span><span class="p">,</span> <span class="o">*</span><span class="n">pargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Call from another thread to request an method_name to be performed at the server</span>
+<span class="sd">        Call from another thread to request a method call to be performed at the server</span>
 <span class="sd">        and wait for the result.</span>
 
-<span class="sd">        Can throw either a MessageHandleError or a ConnectionError</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        service_name : string</span>
+<span class="sd">            Name of the service containing the method.</span>
+<span class="sd">        method_name : string</span>
+<span class="sd">            Name of the method to call.</span>
+<span class="sd">        *pargs</span>
+<span class="sd">            Positional arguments to supply to the method.</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Keyword arguments to supply to the method.</span>
+<span class="sd">            </span>
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        MessageHandleError</span>
+<span class="sd">            Something went wrong while handling the message on the server.</span>
+<span class="sd">        ConnectionError</span>
+<span class="sd">            There is an issue with the connection to the server.</span>
+<span class="sd">        TimeoutError</span>
+<span class="sd">            No response was received within the set timeout.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="n">MethodCallMessage</span><span class="p">(</span><span class="n">service_name</span><span class="o">=</span><span class="n">service_name</span><span class="p">,</span> <span class="n">method_name</span><span class="o">=</span><span class="n">method_name</span><span class="p">,</span> <span class="n">pargs</span><span class="o">=</span><span class="n">pargs</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_message_blocking</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="QuartjesClientFactory.subscribe"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.protocol.QuartjesClientFactory.subscribe">[docs]</a>    <span class="k">def</span> <span class="nf">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service_name</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="n">callback</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Call from another thread to subscribe to a event_name of a specific service.</span>
-<span class="sd">        The given callback is called each time an update for the event_name is received.</span>
-<span class="sd">        Returns None, but an exception can be raised.</span>
+<span class="sd">        Call from another thread to subscribe to an event on a specific service.</span>
+<span class="sd">        The given callback is called each time an update for the event is received.</span>
+<span class="sd">        Returns nothing, but an exception can be raised.</span>
 
-<span class="sd">        Can throw either a MessageHandleError or a ConnectionError</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        service_name : string</span>
+<span class="sd">            Name of the service containing the event.</span>
+<span class="sd">        method_name : string</span>
+<span class="sd">            Name of the event to subscribe to.</span>
+<span class="sd">        callback</span>
+<span class="sd">            Method to call when an event notification is received.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        MessageHandleError</span>
+<span class="sd">            Something went wrong while handling the message on the server.</span>
+<span class="sd">        ConnectionError</span>
+<span class="sd">            There is an issue with the connection to the server.</span>
+<span class="sd">        TimeoutError</span>
+<span class="sd">            No response was received within the set timeout.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="n">SubscribeMessage</span><span class="p">(</span><span class="n">service_name</span><span class="o">=</span><span class="n">service_name</span><span class="p">,</span> <span class="n">event_name</span><span class="o">=</span><span class="n">event_name</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">send_message_blocking</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="c"># if subscribe failed an exception should be raised by now</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">event_callbacks</span><span class="p">[(</span><span class="n">service_name</span><span class="p">,</span> <span class="n">event_name</span><span class="p">)]</span> <span class="o">=</span> <span class="n">callback</span>
-
-        <span class="k">return</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_event_callbacks</span><span class="p">[(</span><span class="n">service_name</span><span class="p">,</span> <span class="n">event_name</span><span class="p">)]</span> <span class="o">=</span> <span class="n">callback</span>
 </div>
 <div class="viewcode-block" id="QuartjesClientFactory.wait_for_connection"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.protocol.QuartjesClientFactory.wait_for_connection">[docs]</a>    <span class="k">def</span> <span class="nf">wait_for_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -403,21 +735,42 @@
 <span class="sd">        Provide a timeout value to control the time waited for a connection. If no</span>
 <span class="sd">        timeout value is provided, the default value is used.</span>
 
-<span class="sd">        If a timeout occurs the TimeoutError is raised.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        timeout : int</span>
+<span class="sd">            Time in seconds to wait for a connection to be established. If not</span>
+<span class="sd">            given, the default will be used.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TimeoutError</span>
+<span class="sd">            No connection was established within the timeout.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">threads</span><span class="o">.</span><span class="n">blockingCallFromThread</span><span class="p">(</span><span class="n">reactor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r_wait_for_connection</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
 </div>
     <span class="k">def</span> <span class="nf">_r_wait_for_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Wait for the connection to be established.</span>
+<span class="sd">        Wait for the connection to be established. First checks if we are already</span>
+<span class="sd">        connected. Else it will wait for an established connection.</span>
 
 <span class="sd">        Internal version. Only to be called from the reactor thread.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        timeout : int</span>
+<span class="sd">            Time in seconds to wait for a connection to be established. If not</span>
+<span class="sd">            given, the default will be used.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        True if already connected, else a Deferred that will be called when a</span>
+<span class="sd">        connection is established.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_connected</span><span class="p">():</span>
             <span class="k">return</span> <span class="bp">True</span>
 
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r_create_timeout_deferred</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">waiting_for_connection</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_waiting_for_connection</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">d</span>
 
@@ -425,12 +778,21 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Construct a deferred which will return an exception if the callback is</span>
 <span class="sd">        not triggered within the timeout.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        timeout : int</span>
+<span class="sd">            Time in seconds to wait before generating an error.</span>
+<span class="sd">            </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        A deferred object that will return an error if the timeout expires.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">timeout</span><span class="p">:</span>
-            <span class="n">timeout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span>
+            <span class="n">timeout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span>
             
         <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">Deferred</span><span class="p">()</span>
-        <span class="n">timeout_call</span> <span class="o">=</span> <span class="n">reactor</span><span class="o">.</span><span class="n">callLater</span><span class="p">(</span><span class="n">timeout</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">errback</span><span class="p">,</span> <span class="n">TimeoutError</span><span class="p">())</span>
+        <span class="n">timeout_call</span> <span class="o">=</span> <span class="n">reactor</span><span class="o">.</span><span class="n">callLater</span><span class="p">(</span><span class="n">timeout</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">errback</span><span class="p">,</span> <span class="n">TimeoutError</span><span class="p">())</span> <span class="c">#@UndefinedVariable</span>
 
         <span class="k">def</span> <span class="nf">cb</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">timeout_call</span><span class="p">):</span>
             <span class="n">timeout_call</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
@@ -440,7 +802,14 @@
         <span class="k">return</span> <span class="n">d</span>
 
 <div class="viewcode-block" id="QuartjesClientFactory.is_connected"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.protocol.QuartjesClientFactory.is_connected">[docs]</a>    <span class="k">def</span> <span class="nf">is_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_protocol</span> <span class="o">!=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Is the client connected to the server?</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        True if currently connected, False if not.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_protocol</span> <span class="o">!=</span> <span class="bp">None</span>
 
 </div></div>
 <div class="viewcode-block" id="MessageResult"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.protocol.MessageResult">[docs]</a><span class="k">class</span> <span class="nc">MessageResult</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -448,6 +817,21 @@
 <span class="sd">    Intermediate result of an incoming message in the server protocol.</span>
 <span class="sd">    Contains both the original message and optionally the result to sent back</span>
 <span class="sd">    to the client.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    response : string</span>
+<span class="sd">        Serialised response to the message.</span>
+<span class="sd">    original_message: :class:`quartjes.connector.messages.Message`</span>
+<span class="sd">        Original message this is a result from.</span>
+<span class="sd">    </span>
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    response : string</span>
+<span class="sd">        Serialised response to the message.</span>
+<span class="sd">    original_message : :class:`Message &lt;quartjes.connector.messages.Message&gt;`</span>
+<span class="sd">        Original message this is a result from.</span>
+<span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">original_message</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">response</span> <span class="o">=</span> <span class="n">response</span>
@@ -484,6 +868,9 @@
              >index</a></li>
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 

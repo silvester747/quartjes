@@ -38,6 +38,9 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
@@ -66,6 +69,17 @@
 <span class="sd">    Exception thrown by the server when handling an incoming message has failed.</span>
 <span class="sd">    This exception is recreated by the client if no appropriate builtin exception</span>
 <span class="sd">    can be thrown.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    error_code : int</span>
+<span class="sd">        An error code stating what went wrong handling the message. Should be one of the</span>
+<span class="sd">        result codes in this class.</span>
+<span class="sd">    original_message : quartjes.connector.messages.Message</span>
+<span class="sd">        The original message that could not be handled.</span>
+<span class="sd">    error_details : string</span>
+<span class="sd">        Detailed description of the error that occurred.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">RESULT_OK</span> <span class="o">=</span> <span class="mi">0</span>
@@ -124,18 +138,6 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error_code</span><span class="o">=</span><span class="n">RESULT_UNKNOWN_ERROR</span><span class="p">,</span> <span class="n">original_message</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">error_details</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Construct a MessageHandleError.</span>
-<span class="sd">        </span>
-<span class="sd">        :Parameters:</span>
-<span class="sd">            error_code : int</span>
-<span class="sd">                An error code stating what went wrong handling the message. Should be one of the</span>
-<span class="sd">                codes in this class.</span>
-<span class="sd">            original_message : quartjes.connector.messages.Message</span>
-<span class="sd">                The original message that could not be handled.</span>
-<span class="sd">            error_details</span>
-<span class="sd">                Detailed description of the error that occurred.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">error_code</span> <span class="o">=</span> <span class="n">error_code</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">original_message</span> <span class="o">=</span> <span class="n">original_message</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">error_details</span> <span class="o">=</span> <span class="n">error_details</span>
@@ -146,6 +148,11 @@
 <div class="viewcode-block" id="ConnectionError"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.exceptions.ConnectionError">[docs]</a><span class="k">class</span> <span class="nc">ConnectionError</span><span class="p">(</span><span class="n">ProtocolError</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Exception thrown when an error occurs in the connection.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    message : string</span>
+<span class="sd">        Message describing the error.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -154,6 +161,11 @@
 <div class="viewcode-block" id="TimeoutError"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.exceptions.TimeoutError">[docs]</a><span class="k">class</span> <span class="nc">TimeoutError</span><span class="p">(</span><span class="n">ProtocolError</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Exception thrown when an action on the server times out.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    message : string</span>
+<span class="sd">        Message describing the error.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
@@ -189,6 +201,9 @@
              >index</a></li>
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 

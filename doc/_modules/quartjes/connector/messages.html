@@ -38,6 +38,9 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
@@ -54,7 +57,8 @@
 <span class="sd">clients.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="n">__author__</span><span class="o">=</span> <span class="s">&quot; Rob van der Most&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;Rob van der Most&quot;</span>
+<span class="n">__docformat__</span> <span class="o">=</span> <span class="s">&quot;restructuredtext en&quot;</span>
 
 <span class="kn">from</span> <span class="nn">quartjes.util.classtools</span> <span class="kn">import</span> <span class="n">QuartjesBaseClass</span>
 <span class="kn">import</span> <span class="nn">quartjes.connector.serializer</span> <span class="kn">as</span> <span class="nn">serializer</span>
@@ -63,6 +67,11 @@
 <div class="viewcode-block" id="Message"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.messages.Message">[docs]</a><span class="k">class</span> <span class="nc">Message</span><span class="p">(</span><span class="n">QuartjesBaseClass</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class all messages are derived from.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    id : UUID</span>
+<span class="sd">        Optional unique identifier for the message.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -72,6 +81,17 @@
 <div class="viewcode-block" id="MethodCallMessage"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.messages.MethodCallMessage">[docs]</a><span class="k">class</span> <span class="nc">MethodCallMessage</span><span class="p">(</span><span class="n">Message</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Message type used to call methods on the server.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    service_name : string</span>
+<span class="sd">        Name of the service to call a method on.</span>
+<span class="sd">    method_name : string</span>
+<span class="sd">        Name of the method to call.</span>
+<span class="sd">    pargs : iterable</span>
+<span class="sd">        Positional arguments to use in the method call.</span>
+<span class="sd">    kwargs : iterable</span>
+<span class="sd">        Keyword argumetns to use in the method call.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service_name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">method_name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">pargs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -85,6 +105,16 @@
 <div class="viewcode-block" id="ResponseMessage"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.messages.ResponseMessage">[docs]</a><span class="k">class</span> <span class="nc">ResponseMessage</span><span class="p">(</span><span class="n">Message</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Message used to respond to server request messages.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    result_code : int</span>
+<span class="sd">        Code determining the outcome of the request. </span>
+<span class="sd">        See :class:`quartjes.connector.exceptions.MessageHandleError`.</span>
+<span class="sd">    result</span>
+<span class="sd">        Result of the request. Can be a return value or None.</span>
+<span class="sd">    response_to : UUID</span>
+<span class="sd">        Unique ID of the message this is a response to.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_code</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">result</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">response_to</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -96,7 +126,14 @@
 </div>
 <div class="viewcode-block" id="SubscribeMessage"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.messages.SubscribeMessage">[docs]</a><span class="k">class</span> <span class="nc">SubscribeMessage</span><span class="p">(</span><span class="n">Message</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Message used to subscribe to events</span>
+<span class="sd">    Message used to subscribe to events.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    service_name : string</span>
+<span class="sd">        Name of the service containing the event.</span>
+<span class="sd">    event_name : string</span>
+<span class="sd">        Name of the event to subscribe to.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service_name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">event_name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -107,7 +144,18 @@
 </div>
 <div class="viewcode-block" id="EventMessage"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.messages.EventMessage">[docs]</a><span class="k">class</span> <span class="nc">EventMessage</span><span class="p">(</span><span class="n">Message</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Message used to send updates on topics</span>
+<span class="sd">    Message used to send updates on events. Triggers a callback on the clientside.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    service_name : string</span>
+<span class="sd">        Name of the service containing the event.</span>
+<span class="sd">    event_name : string</span>
+<span class="sd">        Name of the event that was triggered.</span>
+<span class="sd">    pargs : iterable</span>
+<span class="sd">        Positional arguments passed to the event.</span>
+<span class="sd">    kwargs : dict</span>
+<span class="sd">        Keyword arguments passed to the event.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service_name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">event_name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">pargs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -120,7 +168,14 @@
 </div>
 <div class="viewcode-block" id="ServerMotdMessage"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.messages.ServerMotdMessage">[docs]</a><span class="k">class</span> <span class="nc">ServerMotdMessage</span><span class="p">(</span><span class="n">Message</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    MOTD message received from the server upon connection.</span>
+<span class="sd">    MOTD message received from the server upon connection. Part of the initial handshake.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    motd : string</span>
+<span class="sd">        Message of the day. Short message from the server for new clients.</span>
+<span class="sd">    client_id : UUID</span>
+<span class="sd">        Unique identifier of the client at the server side.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">motd</span><span class="o">=</span><span class="s">&quot;Hello there!&quot;</span><span class="p">,</span> <span class="n">client_id</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -132,8 +187,18 @@
 </div>
 <div class="viewcode-block" id="parse_message_string"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.messages.parse_message_string">[docs]</a><span class="k">def</span> <span class="nf">parse_message_string</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Parse a string for an xml message an return an instance of the contained</span>
+<span class="sd">    Parse a string for an XML message an return an instance of the contained</span>
 <span class="sd">    message type.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    string : string</span>
+<span class="sd">        A string containing an XML message to be parsed.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    node</span>
+<span class="sd">        An XML node containing the XML from the input string.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">node</span> <span class="o">=</span> <span class="n">et</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
@@ -143,6 +208,17 @@
 <div class="viewcode-block" id="create_message_string"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.messages.create_message_string">[docs]</a><span class="k">def</span> <span class="nf">create_message_string</span><span class="p">(</span><span class="n">msg</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Create an xml string to represent the given message.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    msg : :class:`quartjes.connector.messages.Message`</span>
+<span class="sd">        Message object to create XML for.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    xml : string</span>
+<span class="sd">        The XML for the input object.</span>
+<span class="sd">        </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">root</span> <span class="o">=</span> <span class="n">serializer</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">tag_name</span><span class="o">=</span><span class="s">&quot;message&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">et</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
@@ -178,6 +254,9 @@
              >index</a></li>
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 

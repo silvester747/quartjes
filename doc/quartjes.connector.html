@@ -40,6 +40,9 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
           <a href="quartjes.html" title="quartjes Package"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
@@ -276,7 +279,7 @@ The Reactor loop remains active as the reactor cannot be restarted.</p>
 
 <dl class="function">
 <dt id="quartjes.connector.client.self_test">
-<tt class="descclassname">quartjes.connector.client.</tt><tt class="descname">self_test</tt><big>(</big><big>)</big><a class="headerlink" href="#quartjes.connector.client.self_test" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">quartjes.connector.client.</tt><tt class="descname">self_test</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/connector/client.html#self_test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.client.self_test" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform a self test of this module.</p>
 <p>Requires that the test from <a class="reference internal" href="#module-quartjes.connector.server" title="quartjes.connector.server"><tt class="xref py py-mod docutils literal"><span class="pre">quartjes.connector.server</span></tt></a> is running.</p>
 </dd></dl>
@@ -695,7 +698,7 @@ in <a class="reference internal" href="#module-quartjes.connector.server" title=
 <p>The protocol implementation in Twisted is asynchronous. The methods in this file
 translate between the asynchronous calls in the reactor thread and synchronous
 or blocking calls from other threads. Methods designed to run in the reactor
-thread are prefixed with &#8220;<a href="#id2"><span class="problematic" id="id3">r_</span></a>&#8221;. Do not call these method from any other thread.</p>
+thread are prefixed with &#8220;<a href="#id3"><span class="problematic" id="id4">r_</span></a>&#8221;. Do not call these method from any other thread.</p>
 <dl class="class">
 <dt id="quartjes.connector.protocol.MessageResult">
 <em class="property">class </em><tt class="descclassname">quartjes.connector.protocol.</tt><tt class="descname">MessageResult</tt><big>(</big><em>response=None</em>, <em>original_message=None</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/protocol.html#MessageResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.protocol.MessageResult" title="Permalink to this definition">¶</a></dt>
@@ -1005,7 +1008,7 @@ Returns nothing, but an exception can be raised.</p>
 
 <dl class="attribute">
 <dt id="quartjes.connector.protocol.QuartjesClientFactory.timeout">
-<tt class="descname">timeout</tt><a class="headerlink" href="#quartjes.connector.protocol.QuartjesClientFactory.timeout" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">timeout</tt><a class="reference internal" href="_modules/quartjes/connector/protocol.html#QuartjesClientFactory.timeout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.protocol.QuartjesClientFactory.timeout" title="Permalink to this definition">¶</a></dt>
 <dd><p>Timeout in seconds for messages. If no response is received within this time
 an exception will be returned.</p>
 </dd></dl>
@@ -1304,19 +1307,63 @@ over the network or maybe even storing in files or other locations.</p>
 <ul class="simple">
 <li>objects implementing a __serialize__ class variable and a constructor allowing
 zero arguments</li>
-<li>objects with a __dict__ variable and a constructor allowing zero arguments</li>
+<li>objects with a __dict__ variable (e.g. python classes) and a constructor 
+allowing zero arguments</li>
 <li>several builtin types like str, int, float, uuid</li>
 <li>tuples, lists and dictionaries of supported types</li>
 <li>custom types that are registered with this module</li>
 </ul>
+<p>For class instances with an id attribute containing a UUID, that id is used
+as identifier of the serialized object. If no id attribute is present, one
+is added to the instance.</p>
+<div class="section" id="id2">
+<h3>Usage<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>In most cases only <a class="reference internal" href="#quartjes.connector.serializer.serialize" title="quartjes.connector.serializer.serialize"><tt class="xref py py-func docutils literal"><span class="pre">serialize()</span></tt></a> and <a class="reference internal" href="#quartjes.connector.serializer.deserialize" title="quartjes.connector.serializer.deserialize"><tt class="xref py py-func docutils literal"><span class="pre">deserialize()</span></tt></a> need to be used.</p>
+</div>
+<div class="section" id="cache">
+<h3>Cache<a class="headerlink" href="#cache" title="Permalink to this headline">¶</a></h3>
+<p>Troughout this module a parameter cache is used for most functions. This cache
+parameter should contain a dictionary where the key is the unique id of the
+object and the value is the object. If an object is present in the cache it
+is considered already serialized or deserialized. In case of serializing this
+will result in only a reference being added. In case of deserializing the 
+object is directly referenced if the stream contains only a reference and
+if the stream contains the full object it is fully deserialized.</p>
 <dl class="class">
 <dt id="quartjes.connector.serializer.ValueSerializer">
 <em class="property">class </em><tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">ValueSerializer</tt><big>(</big><em>klass</em>, <em>serialize_method</em>, <em>deserialize_method</em>, <em>klass_name=None</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer.html#ValueSerializer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer.ValueSerializer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>Object for serializing a type of object containing only a single value. The
 value should be serialized into a single string that is stored in a single
-element.
-Create your custom version of this class to add unsupported data types.</p>
+element.</p>
+<p>Instantiate your custom version of this class to add unsupported data types.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>klass</strong> : type</p>
+<blockquote>
+<div><p>Class object this serializer will handle.</p>
+</div></blockquote>
+<p><strong>serialize_method</strong> : callable object</p>
+<blockquote>
+<div><p>Method or other callable object that accepts a value to serialize and
+returns the serialized string.</p>
+</div></blockquote>
+<p><strong>deserialize_method</strong> : callable object</p>
+<blockquote>
+<div><p>Method or other callable object that accepts a string and returns the
+contained value.</p>
+</div></blockquote>
+<p><strong>klass_name</strong> : string</p>
+<blockquote class="last">
+<div><p>Name of the value class. If omitted the name is extracted from the 
+klass parameter.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 <p class="rubric">Methods</p>
 <table border="1" class="longtable docutils">
 <colgroup>
@@ -1325,55 +1372,192 @@ Create your custom version of this class to add unsupported data types.</p>
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.serializer.ValueSerializer.deserialize" title="quartjes.connector.serializer.ValueSerializer.deserialize"><tt class="xref py py-obj docutils literal"><span class="pre">deserialize</span></tt></a>(string)</td>
-<td>Deserialize the given string and return the value.</td>
+<td>Deserialize the given string.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#quartjes.connector.serializer.ValueSerializer.serialize" title="quartjes.connector.serializer.ValueSerializer.serialize"><tt class="xref py py-obj docutils literal"><span class="pre">serialize</span></tt></a>(value)</td>
-<td>Serialize the value into string format and return it.</td>
+<td>Serialize the value into string format.</td>
 </tr>
 </tbody>
 </table>
 <dl class="method">
 <dt id="quartjes.connector.serializer.ValueSerializer.deserialize">
 <tt class="descname">deserialize</tt><big>(</big><em>string</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer.html#ValueSerializer.deserialize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer.ValueSerializer.deserialize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Deserialize the given string and return the value.</p>
+<dd><p>Deserialize the given string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>string</strong> : string</p>
+<blockquote>
+<div><p>Serialized object.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>value</strong> :</p>
+<blockquote class="last">
+<div><p>Value present in the serialized string.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="quartjes.connector.serializer.ValueSerializer.klass">
+<tt class="descname">klass</tt><a class="reference internal" href="_modules/quartjes/connector/serializer.html#ValueSerializer.klass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer.ValueSerializer.klass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class type this serializer handles.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="quartjes.connector.serializer.ValueSerializer.klass_name">
+<tt class="descname">klass_name</tt><a class="reference internal" href="_modules/quartjes/connector/serializer.html#ValueSerializer.klass_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer.ValueSerializer.klass_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the class this serializer handles.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="quartjes.connector.serializer.ValueSerializer.serialize">
 <tt class="descname">serialize</tt><big>(</big><em>value</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer.html#ValueSerializer.serialize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer.ValueSerializer.serialize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Serialize the value into string format and return it.</p>
+<dd><p>Serialize the value into string format.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>value</strong> :</p>
+<blockquote>
+<div><p>Object to serialize.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>string</strong> :</p>
+<blockquote class="last">
+<div><p>Serialized object.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="function">
 <dt id="quartjes.connector.serializer.add_element">
-<tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">add_element</tt><big>(</big><em>tag_name</em>, <em>text=None</em>, <em>parent=None</em>, <em>type=None</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer.html#add_element"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer.add_element" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add a new element with the given name to the XML document as a child of the given parent.
-If text is not None, a text node is added as a child of the new node.
-The new node is returned.</p>
+<tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">add_element</tt><big>(</big><em>tag_name</em>, <em>text=None</em>, <em>parent=None</em>, <em>type_name=None</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer.html#add_element"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer.add_element" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a new element with the given name to the XML document as a child of the given parent.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>tag_name</strong> : string</p>
+<blockquote>
+<div><p>Name of the tag to add.</p>
+</div></blockquote>
+<p><strong>text</strong> : string</p>
+<blockquote>
+<div><p>Text node to add to the element. None if no text node should be created.</p>
+</div></blockquote>
+<p><strong>parent</strong> : ElementTree Node</p>
+<blockquote>
+<div><p>Node to add the new element in.</p>
+</div></blockquote>
+<p><strong>type_name</strong> : string</p>
+<blockquote>
+<div><p>Type to include in the type attribute of the new element. None to skip.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>node</strong> : ElementTree Node</p>
+<blockquote class="last">
+<div><p>The newly created node.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="quartjes.connector.serializer.add_value_element">
 <tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">add_value_element</tt><big>(</big><em>value</em>, <em>parent=None</em>, <em>tag_name='value'</em>, <em>cache=None</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer.html#add_value_element"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer.add_value_element" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a value inside an element. Use the correct way to serialize built-in
-types, library types or serializable types. The element is added to the
-parent. If no tagName is given, the default tag for the type of value is
-used.
-Returns the newly created element.</p>
+types, library types or serializable types.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>value</strong> :</p>
+<blockquote>
+<div><p>Value to add inside the element.</p>
+</div></blockquote>
+<p><strong>parent</strong> : ElementTree Node</p>
+<blockquote>
+<div><p>Node to add the element to. Can be None.</p>
+</div></blockquote>
+<p><strong>tag_name</strong> : string</p>
+<blockquote>
+<div><p>Name of the tag the value is encapsulated in.</p>
+</div></blockquote>
+<p><strong>cache</strong> : dict</p>
+<blockquote>
+<div><p>Dictionary to use as cache.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>node</strong> : ElementTree Node</p>
+<blockquote class="last">
+<div><p>The newly created node.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="quartjes.connector.serializer.add_value_serializer">
 <tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">add_value_serializer</tt><big>(</big><em>ser</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer.html#add_value_serializer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer.add_value_serializer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a value serializer to the list of available serializers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>ser</strong> : <a class="reference internal" href="#quartjes.connector.serializer.ValueSerializer" title="quartjes.connector.serializer.ValueSerializer"><tt class="xref py py-class docutils literal"><span class="pre">ValueSerializer</span></tt></a></p>
+<blockquote class="last">
+<div><p>Value serializer to add.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="quartjes.connector.serializer.deserialize">
 <tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">deserialize</tt><big>(</big><em>node</em>, <em>cache=None</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer.html#deserialize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer.deserialize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Deserialize the contents of the given node and return the instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>node</strong> : ElementTree Node</p>
+<blockquote>
+<div><p>Root node of the object to deserialize.</p>
+</div></blockquote>
+<p><strong>cache</strong> : dict</p>
+<blockquote>
+<div><p>Dictionary to use as cache.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>obj</strong> :</p>
+<blockquote class="last">
+<div><p>Deserialized object.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -1381,71 +1565,321 @@ Returns the newly created element.</p>
 <tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">deserialize_dict</tt><big>(</big><em>node</em>, <em>cache=None</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer.html#deserialize_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer.deserialize_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse the contents of the given node as a dictionary and return the
 contents.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>node</strong> : ElementTree Node</p>
+<blockquote>
+<div><p>Root node of the object to deserialize.</p>
+</div></blockquote>
+<p><strong>cache</strong> : dict</p>
+<blockquote>
+<div><p>Dictionary to use as cache.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>obj</strong> : dict</p>
+<blockquote class="last">
+<div><p>Deserialized dictionary.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="quartjes.connector.serializer.deserialize_instance">
 <tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">deserialize_instance</tt><big>(</big><em>node</em>, <em>cache=None</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer.html#deserialize_instance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer.deserialize_instance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read an object instance serialized to XML and return the instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>node</strong> : ElementTree Node</p>
+<blockquote>
+<div><p>Root node of the object to deserialize.</p>
+</div></blockquote>
+<p><strong>cache</strong> : dict</p>
+<blockquote>
+<div><p>Dictionary to use as cache.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>obj</strong> :</p>
+<blockquote class="last">
+<div><p>Deserialized object instance.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="quartjes.connector.serializer.deserialize_list_or_tuple">
 <tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">deserialize_list_or_tuple</tt><big>(</big><em>node</em>, <em>cache=None</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer.html#deserialize_list_or_tuple"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer.deserialize_list_or_tuple" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse an XML list node. Returns the original list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>node</strong> : ElementTree Node</p>
+<blockquote>
+<div><p>Root node of the object to deserialize.</p>
+</div></blockquote>
+<p><strong>cache</strong> : dict</p>
+<blockquote>
+<div><p>Dictionary to use as cache.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>obj</strong> : list or tuple</p>
+<blockquote class="last">
+<div><p>Deserialized list or tuple.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="quartjes.connector.serializer.get_class_by_name">
 <tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">get_class_by_name</tt><big>(</big><em>class_name</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer.html#get_class_by_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer.get_class_by_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a class using the fully qualified name.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>class_name</strong> : string</p>
+<blockquote>
+<div><p>Fully qualified name of the class.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>klass</strong> :</p>
+<blockquote class="last">
+<div><p>Class object matching the name.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="quartjes.connector.serializer.get_serialized_value">
 <tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">get_serialized_value</tt><big>(</big><em>value</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer.html#get_serialized_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer.get_serialized_value" title="Permalink to this definition">¶</a></dt>
 <dd><p>Serialize the given value using a value serializer.
-Returns a tuple of: serialized value, type name
 If no serializer is present, the value is serialized as None.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>value</strong> :</p>
+<blockquote>
+<div><p>Value to serialize.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>serial_value</strong> : string</p>
+<blockquote>
+<div><p>The serialized value.</p>
+</div></blockquote>
+<p><strong>type_name</strong> : string</p>
+<blockquote class="last">
+<div><p>Name of the serialized type.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="quartjes.connector.serializer.parse_value_element">
 <tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">parse_value_element</tt><big>(</big><em>node</em>, <em>cache=None</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer.html#parse_value_element"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer.parse_value_element" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse an element and based on the type call the correct deserializer.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>node</strong> : ElementTree Node</p>
+<blockquote>
+<div><p>Node from which the value should be extracted.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>obj</strong> :</p>
+<blockquote class="last">
+<div><p>The object contain within the node.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="quartjes.connector.serializer.serialize">
 <tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">serialize</tt><big>(</big><em>obj</em>, <em>parent=None</em>, <em>tag_name='unknown'</em>, <em>cache=None</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer.html#serialize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer.serialize" title="Permalink to this definition">¶</a></dt>
-<dd><p>If a parent node is supplied the data is serialized as a sub element of the parent
-node. tagName is used as the name of the top level tag.</p>
+<dd><p>Serialize an object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>obj</strong> :</p>
+<blockquote>
+<div><p>The object to serialize.</p>
+</div></blockquote>
+<p><strong>parent</strong> : ElementTree Node</p>
+<blockquote>
+<div><p>If present: Node to use as a parent of this object.</p>
+</div></blockquote>
+<p><strong>tag_name</strong> : string</p>
+<blockquote>
+<div><p>Name of the tag to enclose the object in.</p>
+</div></blockquote>
+<p><strong>cache</strong> : dict</p>
+<blockquote>
+<div><p>Dictionary to use as cache.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>node</strong> : ElementTree Node</p>
+<blockquote class="last">
+<div><p>Root node containing the serialized object.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="quartjes.connector.serializer.serialize_dict">
 <tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">serialize_dict</tt><big>(</big><em>value</em>, <em>parent=None</em>, <em>tag_name='dict'</em>, <em>cache=None</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer.html#serialize_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer.serialize_dict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Construct an XML representation of the given dictionary.
-Returns the created element.</p>
+<dd><p>Construct an XML representation of the given dictionary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>value</strong> : dict</p>
+<blockquote>
+<div><p>The dictionary to serialize.</p>
+</div></blockquote>
+<p><strong>parent</strong> : ElementTree Node</p>
+<blockquote>
+<div><p>If present: Node to use as a parent of this object.</p>
+</div></blockquote>
+<p><strong>tag_name</strong> : string</p>
+<blockquote>
+<div><p>Name of the tag to enclose the object in.</p>
+</div></blockquote>
+<p><strong>cache</strong> : dict</p>
+<blockquote>
+<div><p>Dictionary to use as cache.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>node</strong> : ElementTree Node</p>
+<blockquote class="last">
+<div><p>Root node containing the serialized dictionary.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="quartjes.connector.serializer.serialize_instance">
 <tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">serialize_instance</tt><big>(</big><em>obj=None</em>, <em>parent=None</em>, <em>tag_name='object'</em>, <em>cache=None</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer.html#serialize_instance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer.serialize_instance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create an XML representation of an object instance. All variables are stored in a
-parameter list. Returns the root element of the object.
-root can be None, in that case the object will have no parent.
-obj can be None, in that case a None value is stored.
-tagName can be used to override the default &lt;object&gt; tag.</p>
+parameter list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>obj</strong> :</p>
+<blockquote>
+<div><p>The object instance to serialize.</p>
+</div></blockquote>
+<p><strong>parent</strong> : ElementTree Node</p>
+<blockquote>
+<div><p>If present: Node to use as a parent of this object.</p>
+</div></blockquote>
+<p><strong>tag_name</strong> : string</p>
+<blockquote>
+<div><p>Name of the tag to enclose the object in.</p>
+</div></blockquote>
+<p><strong>cache</strong> : dict</p>
+<blockquote>
+<div><p>Dictionary to use as cache.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>node</strong> : ElementTree Node</p>
+<blockquote class="last">
+<div><p>Root node containing the serialized object.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="quartjes.connector.serializer.serialize_list_or_tuple">
 <tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">serialize_list_or_tuple</tt><big>(</big><em>values</em>, <em>parent=None</em>, <em>tag_name='list'</em>, <em>cache=None</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer.html#serialize_list_or_tuple"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer.serialize_list_or_tuple" title="Permalink to this definition">¶</a></dt>
-<dd><p>Serialize the contents of a list to xml.
-Returns the top element of the list.</p>
+<dd><p>Serialize the contents of a list to xml.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>values</strong> : list or tuple</p>
+<blockquote>
+<div><p>The list or tuple to serialize.</p>
+</div></blockquote>
+<p><strong>parent</strong> : ElementTree Node</p>
+<blockquote>
+<div><p>If present: Node to use as a parent of this object.</p>
+</div></blockquote>
+<p><strong>tag_name</strong> : string</p>
+<blockquote>
+<div><p>Name of the tag to enclose the object in.</p>
+</div></blockquote>
+<p><strong>cache</strong> : dict</p>
+<blockquote>
+<div><p>Dictionary to use as cache.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>node</strong> : ElementTree Node</p>
+<blockquote class="last">
+<div><p>Root node containing the serialized list or tuple.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
+<dl class="data">
+<dt id="quartjes.connector.serializer.value_serializers_by_klass">
+<tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">value_serializers_by_klass</tt><em class="property"> = {&lt;type 'float'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x32bd150&gt;, &lt;class 'uuid.UUID'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x32bd190&gt;, &lt;type 'int'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x32bd0d0&gt;, &lt;type 'str'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x32bd110&gt;}</em><a class="headerlink" href="#quartjes.connector.serializer.value_serializers_by_klass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of registered value serializers by class. Key is the corresponding class object.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="quartjes.connector.serializer.value_serializers_by_klass_name">
+<tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">value_serializers_by_klass_name</tt><em class="property"> = {'int': &lt;quartjes.connector.serializer.ValueSerializer object at 0x32bd0d0&gt;, 'float': &lt;quartjes.connector.serializer.ValueSerializer object at 0x32bd150&gt;, 'uuid': &lt;quartjes.connector.serializer.ValueSerializer object at 0x32bd190&gt;, 'str': &lt;quartjes.connector.serializer.ValueSerializer object at 0x32bd110&gt;}</em><a class="headerlink" href="#quartjes.connector.serializer.value_serializers_by_klass_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of registered value serializers by class name.</p>
+</dd></dl>
+
+</div>
 </div>
 <div class="section" id="module-quartjes.connector.serializer_tests">
 <span id="serializer-tests-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">serializer_tests</span></tt> Module<a class="headerlink" href="#module-quartjes.connector.serializer_tests" title="Permalink to this headline">¶</a></h2>
@@ -2150,7 +2584,7 @@ being (un)registered to the server event.</p>
 
 <dl class="attribute">
 <dt id="quartjes.connector.services.TestRemoteService.on_trigger">
-<tt class="descname">on_trigger</tt><em class="property"> = &lt;axel.axel.Event object at 0x1ff5450&gt;</em><a class="headerlink" href="#quartjes.connector.services.TestRemoteService.on_trigger" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">on_trigger</tt><em class="property"> = &lt;axel.axel.Event object at 0x32c2550&gt;</em><a class="headerlink" href="#quartjes.connector.services.TestRemoteService.on_trigger" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -2160,7 +2594,7 @@ being (un)registered to the server event.</p>
 
 <dl class="method">
 <dt id="quartjes.connector.services.TestRemoteService.test_timeout">
-<tt class="descname">test_timeout</tt><big>(</big><em>timeout</em><big>)</big><a class="headerlink" href="#quartjes.connector.services.TestRemoteService.test_timeout" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">test_timeout</tt><big>(</big><em>timeout</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/services.html#TestRemoteService.test_timeout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.services.TestRemoteService.test_timeout" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -2247,6 +2681,10 @@ Also requires the class to be decorated as &#8216;remote_service&#8217;.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-quartjes.connector.serializer"><tt class="docutils literal"><span class="pre">serializer</span></tt> Module</a><ul>
+<li><a class="reference internal" href="#id2">Usage</a></li>
+<li><a class="reference internal" href="#cache">Cache</a><ul>
+</ul>
+</li>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-quartjes.connector.serializer_tests"><tt class="docutils literal"><span class="pre">serializer_tests</span></tt> Module</a><ul>
@@ -2295,6 +2733,9 @@ Also requires the class to be decorated as &#8216;remote_service&#8217;.</p>
              >index</a></li>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
           <a href="quartjes.html" title="quartjes Package"

@@ -38,6 +38,9 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
@@ -51,9 +54,28 @@
   <h1>Source code for quartjes.connector.services</h1><div class="highlight"><pre>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Base definitions of services.</span>
-<span class="sd">The quartjes server is capable of offering multiple services. Each service</span>
-<span class="sd">is identified by its service name.</span>
+
+<span class="sd">A service is an object of which methods and events can be exposed for remote</span>
+<span class="sd">invocation. Quartjesavond uses services to let clients communicate with</span>
+<span class="sd">objects on the server.</span>
+
+<span class="sd">To define a service first create a class containing the functionality to be</span>
+<span class="sd">used by remote clients. Decorate this class with :meth:`remote_service`. Then decorate</span>
+<span class="sd">each method that should be available remotely with :meth:`remote_method`. </span>
+<span class="sd">If the class contains any axel events, these can also be exposed. Define the</span>
+<span class="sd">event using :meth:`remote_event` instead of Event.</span>
+
+<span class="sd">The service can now be registered with the :class:`ServerConnector </span>
+<span class="sd">&lt;quartjes.connector.server.ServerConnector&gt;`. </span>
+<span class="sd">During registration a service name is given, which remote clients must use to gain access to</span>
+<span class="sd">the service.</span>
+
+<span class="sd">For an example, please see :class:`TestRemoteService`.</span>
 <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;Rob van der Most&quot;</span>
+<span class="n">__docformat__</span> <span class="o">=</span> <span class="s">&quot;restructuredtext en&quot;</span>
+
 <span class="kn">import</span> <span class="nn">traceback</span>
 <span class="kn">from</span> <span class="nn">quartjes.connector.exceptions</span> <span class="kn">import</span> <span class="n">MessageHandleError</span>
 <span class="kn">from</span> <span class="nn">axel</span> <span class="kn">import</span> <span class="n">Event</span>
@@ -280,11 +302,18 @@
 </div>
 <span class="nd">@remote_service</span>
 <div class="viewcode-block" id="TestRemoteService"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.TestRemoteService">[docs]</a><span class="k">class</span> <span class="nc">TestRemoteService</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Special class to test the remote service functionality.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="nd">@remote_method</span>
 <div class="viewcode-block" id="TestRemoteService.test"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.TestRemoteService.test">[docs]</a>    <span class="k">def</span> <span class="nf">test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">text</span>
     </div>
+    <span class="nd">@remote_method</span>
+<div class="viewcode-block" id="TestRemoteService.test_timeout"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.TestRemoteService.test_timeout">[docs]</a>    <span class="k">def</span> <span class="nf">test_timeout</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">time</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span>
+</div>
     <span class="nd">@remote_method</span>
 <div class="viewcode-block" id="TestRemoteService.trigger"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.TestRemoteService.trigger">[docs]</a>    <span class="k">def</span> <span class="nf">trigger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">on_trigger</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s">&quot;Callback: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">text</span><span class="p">)</span>
@@ -331,6 +360,9 @@
              >index</a></li>
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 

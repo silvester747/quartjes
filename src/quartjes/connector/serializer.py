@@ -6,10 +6,29 @@ Several types of objects are supported for serialization:
 
 * objects implementing a __serialize__ class variable and a constructor allowing
   zero arguments
-* objects with a __dict__ variable and a constructor allowing zero arguments
+* objects with a __dict__ variable (e.g. python classes) and a constructor 
+  allowing zero arguments
 * several builtin types like str, int, float, uuid
 * tuples, lists and dictionaries of supported types
 * custom types that are registered with this module
+
+For class instances with an id attribute containing a UUID, that id is used
+as identifier of the serialized object. If no id attribute is present, one
+is added to the instance.
+
+Usage
+-----
+In most cases only :func:`serialize` and :func:`deserialize` need to be used.
+
+Cache
+-----
+Troughout this module a parameter cache is used for most functions. This cache
+parameter should contain a dictionary where the key is the unique id of the
+object and the value is the object. If an object is present in the cache it
+is considered already serialized or deserialized. In case of serializing this
+will result in only a reference being added. In case of deserializing the 
+object is directly referenced if the stream contains only a reference and
+if the stream contains the full object it is fully deserialized.
 """
 
 __author__ = "Rob van der Most"
@@ -22,8 +41,23 @@ import uuid
 
 def serialize(obj, parent=None, tag_name="unknown", cache=None):
     """
-    If a parent node is supplied the data is serialized as a sub element of the parent
-    node. tagName is used as the name of the top level tag.
+    Serialize an object.
+    
+    Parameters
+    ----------
+    obj
+        The object to serialize.
+    parent : ElementTree Node
+        If present: Node to use as a parent of this object.
+    tag_name : string
+        Name of the tag to enclose the object in.
+    cache : dict
+        Dictionary to use as cache.
+    
+    Returns
+    -------
+    node : ElementTree Node
+        Root node containing the serialized object.
     """
     if cache == None:
         cache = {}
@@ -33,6 +67,18 @@ def serialize(obj, parent=None, tag_name="unknown", cache=None):
 def deserialize(node, cache=None):
     """
     Deserialize the contents of the given node and return the instance.
+    
+    Parameters
+    ----------
+    node : ElementTree Node
+        Root node of the object to deserialize.
+    cache : dict
+        Dictionary to use as cache.
+
+    Returns
+    -------
+    obj
+        Deserialized object.
     """
     if cache == None:
         cache = {}
@@ -43,7 +89,22 @@ def deserialize(node, cache=None):
 def serialize_dict(value, parent=None, tag_name="dict", cache=None):
     """
     Construct an XML representation of the given dictionary.
-    Returns the created element.
+
+    Parameters
+    ----------
+    value : dict
+        The dictionary to serialize.
+    parent : ElementTree Node
+        If present: Node to use as a parent of this object.
+    tag_name : string
+        Name of the tag to enclose the object in.
+    cache : dict
+        Dictionary to use as cache.
+    
+    Returns
+    -------
+    node : ElementTree Node
+        Root node containing the serialized dictionary.
     """
     #print("serializeDict %s" % value)
     dict_node = add_element(tag_name, parent=parent, type="dict")
@@ -60,6 +121,18 @@ def deserialize_dict(node, cache=None):
     """
     Parse the contents of the given node as a dictionary and return the
     contents.
+    
+    Parameters
+    ----------
+    node : ElementTree Node
+        Root node of the object to deserialize.
+    cache : dict
+        Dictionary to use as cache.
+
+    Returns
+    -------
+    obj : dict
+        Deserialized dictionary.
     """
     params = {}
 
@@ -78,14 +151,29 @@ def deserialize_dict(node, cache=None):
 def serialize_list_or_tuple(values, parent=None, tag_name="list", cache=None):
     """
     Serialize the contents of a list to xml.
-    Returns the top element of the list.
+
+    Parameters
+    ----------
+    values : list or tuple
+        The list or tuple to serialize.
+    parent : ElementTree Node
+        If present: Node to use as a parent of this object.
+    tag_name : string
+        Name of the tag to enclose the object in.
+    cache : dict
+        Dictionary to use as cache.
+    
+    Returns
+    -------
+    node : ElementTree Node
+        Root node containing the serialized list or tuple.
     """
 
-    type = "list"
+    type_name = "list"
     if isinstance(values, tuple):
-        type = "tuple"
+        type_name = "tuple"
 
-    node = add_element(tag_name, parent=parent, type=type)
+    node = add_element(tag_name, parent=parent, type=type_name)
     for value in values:
         add_value_element(value, parent=node, tag_name="value", cache=cache)
 
@@ -94,13 +182,25 @@ def serialize_list_or_tuple(values, parent=None, tag_name="list", cache=None):
 def deserialize_list_or_tuple(node, cache=None):
     """
     Parse an XML list node. Returns the original list.
+    
+    Parameters
+    ----------
+    node : ElementTree Node
+        Root node of the object to deserialize.
+    cache : dict
+        Dictionary to use as cache.
+
+    Returns
+    -------
+    obj : list or tuple
+        Deserialized list or tuple.
     """
     value = []
     for item in node:
         value.append(parse_value_element(item, cache=cache))
 
-    type = node.get("type")
-    if type == "tuple":
+    type_name = node.get("type")
+    if type_name == "tuple":
         return tuple(value)
     else:
         return value
@@ -108,10 +208,23 @@ def deserialize_list_or_tuple(node, cache=None):
 def serialize_instance(obj=None, parent=None, tag_name="object", cache=None):
     """
     Create an XML representation of an object instance. All variables are stored in a
-    parameter list. Returns the root element of the object.
-    root can be None, in that case the object will have no parent.
-    obj can be None, in that case a None value is stored.
-    tagName can be used to override the default <object> tag.
+    parameter list. 
+
+    Parameters
+    ----------
+    obj
+        The object instance to serialize.
+    parent : ElementTree Node
+        If present: Node to use as a parent of this object.
+    tag_name : string
+        Name of the tag to enclose the object in.
+    cache : dict
+        Dictionary to use as cache.
+    
+    Returns
+    -------
+    node : ElementTree Node
+        Root node containing the serialized object.
     """
     #print("serializeInstance %s" % obj)
 
@@ -147,27 +260,39 @@ def serialize_instance(obj=None, parent=None, tag_name="object", cache=None):
 def deserialize_instance(node, cache=None):
     """
     Read an object instance serialized to XML and return the instance.
+    
+    Parameters
+    ----------
+    node : ElementTree Node
+        Root node of the object to deserialize.
+    cache : dict
+        Dictionary to use as cache.
+
+    Returns
+    -------
+    obj
+        Deserialized object instance.
     """
     
-    id = uuid.UUID(node.get("id"))
+    obj_id = uuid.UUID(node.get("id"))
     class_name = node.get("class")
 
-    if id == None or class_name == None:
+    if obj_id == None or class_name == None:
         return None
 
     obj = None
     stub = node.get("stub")
     if stub == "yes":
-        assert cache != None
-        obj = cache.get(id)
+        assert cache != None, "When stubs are present, cache is required."
+        obj = cache.get(obj_id)
 
     if obj == None:
         klass = get_class_by_name(class_name)
         obj = klass()
-        obj.id = id
+        obj.id = obj_id
 
         if cache != None:
-            cache[id] = obj
+            cache[obj_id] = obj
 
         for element in node:
             value = parse_value_element(element, cache=cache)
@@ -178,6 +303,16 @@ def deserialize_instance(node, cache=None):
 def get_class_by_name(class_name):
     """
     Get a class using the fully qualified name.
+    
+    Parameters
+    ----------
+    class_name : string
+        Fully qualified name of the class.
+        
+    Returns
+    -------
+    klass
+        Class object matching the name.
     """
     parts = class_name.split('.')
     module = ".".join(parts[:-1])
@@ -187,11 +322,25 @@ def get_class_by_name(class_name):
     return m
 
 
-def add_element(tag_name, text=None, parent=None, type=None):
+def add_element(tag_name, text=None, parent=None, type_name=None):
     """
     Add a new element with the given name to the XML document as a child of the given parent.
-    If text is not None, a text node is added as a child of the new node.
-    The new node is returned.
+    
+    Parameters
+    ----------
+    tag_name : string
+        Name of the tag to add.
+    text : string
+        Text node to add to the element. None if no text node should be created.
+    parent : ElementTree Node
+        Node to add the new element in.
+    type_name : string
+        Type to include in the type attribute of the new element. None to skip.
+    
+    Returns
+    -------
+    node : ElementTree Node
+        The newly created node.
     """
 
     node = None
@@ -203,18 +352,31 @@ def add_element(tag_name, text=None, parent=None, type=None):
     if text != None:
         node.text = text
 
-    if type != None:
-        node.set("type", type)
+    if type_name != None:
+        node.set("type", type_name)
 
     return node
 
 def add_value_element(value, parent=None, tag_name="value", cache=None):
     """
     Add a value inside an element. Use the correct way to serialize built-in
-    types, library types or serializable types. The element is added to the
-    parent. If no tagName is given, the default tag for the type of value is
-    used.
-    Returns the newly created element.
+    types, library types or serializable types. 
+    
+    Parameters
+    ----------
+    value
+        Value to add inside the element.
+    parent : ElementTree Node
+        Node to add the element to. Can be None.
+    tag_name : string
+        Name of the tag the value is encapsulated in.
+    cache : dict
+        Dictionary to use as cache.
+    
+    Returns
+    -------
+    node : ElementTree Node
+        The newly created node.
     """
     #print("addValueElement %s" % value)
 
@@ -231,9 +393,9 @@ def add_value_element(value, parent=None, tag_name="value", cache=None):
         return serialize_list_or_tuple(parent=parent, values=value, tag_name=tag_name, cache=cache)
         
     elif value.__class__ in value_serializers_by_klass:
-        (string, type) = get_serialized_value(value)
+        (string, type_name) = get_serialized_value(value)
 
-        return add_element(tag_name, string, parent, type)
+        return add_element(tag_name, string, parent, type_name)
 
     elif hasattr(value, "__dict__"):
 
@@ -246,36 +408,64 @@ def add_value_element(value, parent=None, tag_name="value", cache=None):
 def parse_value_element(node, cache=None):
     """
     Parse an element and based on the type call the correct deserializer.
+    
+    Parameters
+    ----------
+    node : ElementTree Node
+        Node from which the value should be extracted.
+        
+    Returns
+    -------
+    obj
+        The object contain within the node.
     """
-    type = node.get("type")
+    type_name = node.get("type")
 
-    if type == None or type == "NoneType":
+    if type_name == None or type_name == "NoneType":
         return None
 
-    if type == "instance":
+    if type_name == "instance":
         return deserialize_instance(node, cache=cache)
 
-    if type == "dict":
+    if type_name == "dict":
         return deserialize_dict(node, cache=cache)
 
-    if type == "list" or type == "tuple":
+    if type_name == "list" or type == "tuple":
         return deserialize_list_or_tuple(node, cache=cache)
 
-    if not type in value_serializers_by_klass_name:
+    if not type_name in value_serializers_by_klass_name:
         return None
 
-    ser = value_serializers_by_klass_name[type]
+    ser = value_serializers_by_klass_name[type_name]
     return ser.deserialize(node.text)
 
 
 value_serializers_by_klass = {}
+"""
+Dictionary of registered value serializers by class. Key is the corresponding class object.
+"""
+
 value_serializers_by_klass_name = {}
+"""
+Dictionary of registered value serializers by class name.
+"""
 
 def get_serialized_value(value):
     """
     Serialize the given value using a value serializer.
-    Returns a tuple of: serialized value, type name
     If no serializer is present, the value is serialized as None.
+    
+    Parameters
+    ----------
+    value
+        Value to serialize.
+    
+    Returns
+    -------
+    serial_value : string
+        The serialized value.
+    type_name : string
+        Name of the serialized type.
     """
     
     if value == None:
@@ -291,6 +481,11 @@ def get_serialized_value(value):
 def add_value_serializer(ser):
     """
     Add a value serializer to the list of available serializers.
+    
+    Parameters
+    ----------
+    ser : :class:`ValueSerializer`
+        Value serializer to add.
     """
     value_serializers_by_klass[ser.klass] = ser
     value_serializers_by_klass_name[ser.klass_name] = ser
@@ -300,33 +495,83 @@ class ValueSerializer(object):
     Object for serializing a type of object containing only a single value. The
     value should be serialized into a single string that is stored in a single
     element.
-    Create your custom version of this class to add unsupported data types.
+    
+    Instantiate your custom version of this class to add unsupported data types.
+    
+    Parameters
+    ----------
+    klass : type
+        Class object this serializer will handle.
+    serialize_method : callable object
+        Method or other callable object that accepts a value to serialize and
+        returns the serialized string.
+    deserialize_method : callable object
+        Method or other callable object that accepts a string and returns the
+        contained value.
+    klass_name : string
+        Name of the value class. If omitted the name is extracted from the 
+        klass parameter.
+    
     """
 
     def __init__(self, klass, serialize_method, deserialize_method, klass_name=None):
-        self.klass = klass
-        self.serialize_method = serialize_method
-        self.deserialize_method = deserialize_method
+        self._klass = klass
+        self._serialize_method = serialize_method
+        self._deserialize_method = deserialize_method
 
         if klass_name:
-            self.klass_name = klass_name
+            self._klass_name = klass_name
         else:
             if klass.__module__ == "__builtin__":
-                self.klass_name = klass.__name__
+                self._klass_name = klass.__name__
             else:
-                self.klass_name = "%s.%s" % (klass.__module__, klass.__name__)
+                self._klass_name = "%s.%s" % (klass.__module__, klass.__name__)
+
+    @property
+    def klass(self):
+        """
+        Class type this serializer handles.
+        """
+        return self._klass
+    
+    @property
+    def klass_name(self):
+        """
+        Name of the class this serializer handles.
+        """
+        return self._klass_name
 
     def serialize(self, value):
         """
-        Serialize the value into string format and return it.
+        Serialize the value into string format.
+        
+        Parameters
+        ----------
+        value
+            Object to serialize.
+            
+        Returns
+        -------
+        string
+            Serialized object.
         """
-        return self.serialize_method(value)
+        return self._serialize_method(value)
 
     def deserialize(self, string):
         """
-        Deserialize the given string and return the value.
+        Deserialize the given string.
+        
+        Parameters
+        ----------
+        string : string
+            Serialized object.
+            
+        Returns
+        -------
+        value
+            Value present in the serialized string.
         """
-        return self.deserialize_method(string)
+        return self._deserialize_method(string)
 
 # Already included value serializers. Mostly for builtin python data types.
 _int_serializer = ValueSerializer(int, str, int)

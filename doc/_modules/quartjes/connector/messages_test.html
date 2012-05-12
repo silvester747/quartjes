@@ -38,6 +38,9 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
@@ -53,29 +56,47 @@
 <span class="sd">Set of test cases for quartjes.connector.messages</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="n">__author__</span><span class="o">=</span><span class="s">&quot;rob&quot;</span>
-<span class="n">__date__</span> <span class="o">=</span><span class="s">&quot;$Aug 24, 2011 7:13:27 PM$&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;Rob van der Most&quot;</span>
+<span class="n">__docformat__</span> <span class="o">=</span> <span class="s">&quot;restructuredtext en&quot;</span>
 
 <span class="kn">import</span> <span class="nn">unittest</span>
 
-<span class="kn">from</span> <span class="nn">quartjes.connector.messages</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">quartjes.connector.messages</span> <span class="kn">import</span> <span class="n">MethodCallMessage</span><span class="p">,</span> <span class="n">create_message_string</span><span class="p">,</span> <span class="n">parse_message_string</span>
 <span class="kn">from</span> <span class="nn">quartjes.models.drink</span> <span class="kn">import</span> <span class="n">Drink</span>
 
 <div class="viewcode-block" id="TestMessages"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.messages_test.TestMessages">[docs]</a><span class="k">class</span> <span class="nc">TestMessages</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Test basic functionality for message objects.</span>
+<span class="sd">    </span>
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    setUp</span>
+<span class="sd">    test_equality</span>
+<span class="sd">    test_create_and_parse</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="TestMessages.setUp"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.messages_test.TestMessages.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prepare some objects to perform the test on.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">drink</span> <span class="o">=</span> <span class="n">Drink</span><span class="p">(</span><span class="s">&quot;Cola&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pargs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mf">2.10</span><span class="p">,</span> <span class="s">&quot;bla&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">drink</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;what&quot;</span><span class="p">:</span><span class="s">&quot;that&quot;</span><span class="p">,</span> <span class="s">&quot;howmany&quot;</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="s">&quot;price&quot;</span><span class="p">:</span><span class="mf">2.10</span><span class="p">,</span> <span class="s">&quot;drink&quot;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">drink</span><span class="p">}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">ActionRequestMessage</span><span class="p">(</span><span class="s">&quot;myservice&quot;</span><span class="p">,</span> <span class="s">&quot;myaction&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pargs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">message2</span> <span class="o">=</span> <span class="n">ActionRequestMessage</span><span class="p">(</span><span class="s">&quot;myservice&quot;</span><span class="p">,</span> <span class="s">&quot;myaction&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pargs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">MethodCallMessage</span><span class="p">(</span><span class="s">&quot;myservice&quot;</span><span class="p">,</span> <span class="s">&quot;myaction&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pargs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message2</span> <span class="o">=</span> <span class="n">MethodCallMessage</span><span class="p">(</span><span class="s">&quot;myservice&quot;</span><span class="p">,</span> <span class="s">&quot;myaction&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pargs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">message2</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">id</span>
 </div>
 <div class="viewcode-block" id="TestMessages.test_equality"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.messages_test.TestMessages.test_equality">[docs]</a>    <span class="k">def</span> <span class="nf">test_equality</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Test whether the equality operators work as expected.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">message2</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">message2</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="TestMessages.test_create_and_parse"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.messages_test.TestMessages.test_create_and_parse">[docs]</a>    <span class="k">def</span> <span class="nf">test_create_and_parse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Test whether a message can be correctly serialised and deserialised again.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">string</span> <span class="o">=</span> <span class="n">create_message_string</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertIsNotNone</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertGreater</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">string</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
@@ -117,6 +138,9 @@
              >index</a></li>
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li><a href="../../../index.html">Quartjesavond Python 2012 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
