@@ -93,24 +93,12 @@ create the object without any arguments.</p>
 </div>
 <div class="section" id="available-server-methods">
 <h3>Available server methods<a class="headerlink" href="#available-server-methods" title="Permalink to this headline">¶</a></h3>
-<div class="section" id="database">
-<h4>database<a class="headerlink" href="#database" title="Permalink to this headline">¶</a></h4>
-<p>get_drinks()
-update_drink(drink)
-add_drink(drink)
-remove_drink(drink)</p>
-<p>get_mixes()
-update_mix(mix)
-add_mix(mix)
-remove_mix(mix)</p>
-<p>add(obj)
-remove(obj)
-update(obj)</p>
-</div>
-<div class="section" id="stock-exchange">
-<h4>stock_exchange<a class="headerlink" href="#stock-exchange" title="Permalink to this headline">¶</a></h4>
-<p>sell(drink, amount)</p>
-</div>
+<p>Currently two server objects are made available upon connection. Please see the
+documentation for the server object for available methods and events:</p>
+<ul class="simple">
+<li>database: <a class="reference internal" href="quartjes.controllers.html#quartjes.controllers.database.Database" title="quartjes.controllers.database.Database"><tt class="xref py py-class docutils literal"><span class="pre">quartjes.controllers.database.Database</span></tt></a></li>
+<li>stock_exchange: <a class="reference internal" href="quartjes.controllers.html#quartjes.controllers.stock_exchange.StockExchange" title="quartjes.controllers.stock_exchange.StockExchange"><tt class="xref py py-class docutils literal"><span class="pre">quartjes.controllers.stock_exchange.StockExchange</span></tt></a></li>
+</ul>
 </div>
 <div class="section" id="advanced">
 <h3>Advanced<a class="headerlink" href="#advanced" title="Permalink to this headline">¶</a></h3>
@@ -118,11 +106,54 @@ update(obj)</p>
 service.</p>
 <p>As long as the connector is running, it will keep trying to reconnect any
 lost connections using an exponential back-off.</p>
+</div>
+<div class="section" id="clientconnector-class">
+<h3>ClientConnector class<a class="headerlink" href="#clientconnector-class" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="quartjes.connector.client.ClientConnector">
 <em class="property">class </em><tt class="descclassname">quartjes.connector.client.</tt><tt class="descname">ClientConnector</tt><big>(</big><em>host=None</em>, <em>port=1234</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/client.html#ClientConnector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.client.ClientConnector" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>Client side endpoint of the Quartjes connector.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>host</strong> : string</p>
+<blockquote>
+<div><p>Host to connect to. If no host is specified, a local server is started.</p>
+</div></blockquote>
+<p><strong>port</strong> : int</p>
+<blockquote class="last">
+<div><p>Port to connect to.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.client.ClientConnector.host" title="quartjes.connector.client.ClientConnector.host"><tt class="xref py py-obj docutils literal"><span class="pre">host</span></tt></a></td>
+<td>Hostname to connect to.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#quartjes.connector.client.ClientConnector.port" title="quartjes.connector.client.ClientConnector.port"><tt class="xref py py-obj docutils literal"><span class="pre">port</span></tt></a></td>
+<td>Port to connect to.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.client.ClientConnector.factory" title="quartjes.connector.client.ClientConnector.factory"><tt class="xref py py-obj docutils literal"><span class="pre">factory</span></tt></a></td>
+<td>The protocol factory used by the client to connect to the server.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#quartjes.connector.client.ClientConnector.database" title="quartjes.connector.client.ClientConnector.database"><tt class="xref py py-obj docutils literal"><span class="pre">database</span></tt></a></td>
+<td>Reference to the currently running database.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.client.ClientConnector.stock_exchange" title="quartjes.connector.client.ClientConnector.stock_exchange"><tt class="xref py py-obj docutils literal"><span class="pre">stock_exchange</span></tt></a></td>
+<td>Reference to the currently running stock exchange.</td>
+</tr>
+</tbody>
+</table>
 <p class="rubric">Methods</p>
 <table border="1" class="longtable docutils">
 <colgroup>
@@ -134,7 +165,7 @@ lost connections using an exponential back-off.</p>
 <td>Construct a service interface for the service with the given name.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#quartjes.connector.client.ClientConnector.is_connected" title="quartjes.connector.client.ClientConnector.is_connected"><tt class="xref py py-obj docutils literal"><span class="pre">is_connected</span></tt></a>()</td>
-<td>Determine whether a connection is active.</td>
+<td>Determine whether the connection to the server is active.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.client.ClientConnector.start" title="quartjes.connector.client.ClientConnector.start"><tt class="xref py py-obj docutils literal"><span class="pre">start</span></tt></a>()</td>
 <td>Start the connector and create a connection to the server.</td>
@@ -164,24 +195,60 @@ You normally should not need to access this. It is for advanced options.</p>
 <dd><p>Construct a service interface for the service with the given name. Use
 the service interface to send requests to the corresponding service
 on the Quartjes server.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>service_name</strong> : string</p>
+<blockquote>
+<div><p>Name of the service on the server to which you want a remote
+interface.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>service_interface</strong> : <a class="reference internal" href="#quartjes.connector.services.ServiceInterface" title="quartjes.connector.services.ServiceInterface"><tt class="xref py py-class docutils literal"><span class="pre">quartjes.connector.services.ServiceInterface</span></tt></a></p>
+<blockquote class="last">
+<div><p>An interface to the service.
+Please note that the existence of the service on the server is not
+verified until an actual method call has been done.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="quartjes.connector.client.ClientConnector.host">
 <tt class="descname">host</tt><a class="reference internal" href="_modules/quartjes/connector/client.html#ClientConnector.host"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.client.ClientConnector.host" title="Permalink to this definition">¶</a></dt>
-<dd><p>Hostname to connect to.</p>
+<dd><p>Hostname to connect to.
+Can only be changed when there is no active connection.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="quartjes.connector.client.ClientConnector.is_connected">
 <tt class="descname">is_connected</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/connector/client.html#ClientConnector.is_connected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.client.ClientConnector.is_connected" title="Permalink to this definition">¶</a></dt>
-<dd><p>Determine whether a connection is active.</p>
+<dd><p>Determine whether the connection to the server is active.
+A local service is also considered connected.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>connected</strong> : boolean</p>
+<blockquote class="last">
+<div><p>True if connected, False if not.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="quartjes.connector.client.ClientConnector.port">
 <tt class="descname">port</tt><a class="reference internal" href="_modules/quartjes/connector/client.html#ClientConnector.port"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.client.ClientConnector.port" title="Permalink to this definition">¶</a></dt>
-<dd><p>Port to connect to.</p>
+<dd><p>Port to connect to.
+Can only be changed when there is no active connection.</p>
 </dd></dl>
 
 <dl class="method">
@@ -207,233 +274,14 @@ The Reactor loop remains active as the reactor cannot be restarted.</p>
 
 </dd></dl>
 
-</div>
-</div>
-<div class="section" id="module-quartjes.connector.connector_test">
-<span id="connector-test-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">connector_test</span></tt> Module<a class="headerlink" href="#module-quartjes.connector.connector_test" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="quartjes.connector.connector_test.ServicesTestCase">
-<em class="property">class </em><tt class="descclassname">quartjes.connector.connector_test.</tt><tt class="descname">ServicesTestCase</tt><big>(</big><em>methodName='runTest'</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/connector_test.html#ServicesTestCase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.connector_test.ServicesTestCase" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">unittest.case.TestCase</span></tt></p>
-<p class="rubric">Methods</p>
-<table border="1" class="longtable docutils">
-<colgroup>
-<col width="10%" />
-<col width="90%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">addCleanup</span></tt>(function,&nbsp;*args,&nbsp;**kwargs)</td>
-<td>Add a function, with arguments, to be called when the test is completed.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">addTypeEqualityFunc</span></tt>(typeobj,&nbsp;function)</td>
-<td>Add a type specific assertEqual style function to compare a type.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertAlmostEqual</span></tt>(first,&nbsp;second[,&nbsp;places,&nbsp;...])</td>
-<td>Fail if the two objects are unequal as determined by their difference rounded to the given number of decimal places (default 7) and comparing to zero, or by comparing that the between the two objects is more than the given delta.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertAlmostEquals</span></tt>(first,&nbsp;second[,&nbsp;places,&nbsp;...])</td>
-<td>Fail if the two objects are unequal as determined by their difference rounded to the given number of decimal places (default 7) and comparing to zero, or by comparing that the between the two objects is more than the given delta.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertDictContainsSubset</span></tt>(expected,&nbsp;actual[,&nbsp;msg])</td>
-<td>Checks whether actual is a superset of expected.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertDictEqual</span></tt>(d1,&nbsp;d2[,&nbsp;msg])</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertEqual</span></tt>(first,&nbsp;second[,&nbsp;msg])</td>
-<td>Fail if the two objects are unequal as determined by the &#8216;==&#8217;</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertEquals</span></tt>(first,&nbsp;second[,&nbsp;msg])</td>
-<td>Fail if the two objects are unequal as determined by the &#8216;==&#8217;</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertFalse</span></tt>(expr[,&nbsp;msg])</td>
-<td>Check that the expression is false.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertGreater</span></tt>(a,&nbsp;b[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a &gt; b), but with a nicer default message.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertGreaterEqual</span></tt>(a,&nbsp;b[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a &gt;= b), but with a nicer default message.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertIn</span></tt>(member,&nbsp;container[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a in b), but with a nicer default message.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertIs</span></tt>(expr1,&nbsp;expr2[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a is b), but with a nicer default message.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertIsInstance</span></tt>(obj,&nbsp;cls[,&nbsp;msg])</td>
-<td>Same as self.assertTrue(isinstance(obj, cls)), with a nicer</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertIsNone</span></tt>(obj[,&nbsp;msg])</td>
-<td>Same as self.assertTrue(obj is None), with a nicer default message.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertIsNot</span></tt>(expr1,&nbsp;expr2[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a is not b), but with a nicer default message.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertIsNotNone</span></tt>(obj[,&nbsp;msg])</td>
-<td>Included for symmetry with assertIsNone.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertItemsEqual</span></tt>(expected_seq,&nbsp;actual_seq[,&nbsp;msg])</td>
-<td>An unordered sequence specific comparison.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertLess</span></tt>(a,&nbsp;b[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a &lt; b), but with a nicer default message.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertLessEqual</span></tt>(a,&nbsp;b[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a &lt;= b), but with a nicer default message.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertListEqual</span></tt>(list1,&nbsp;list2[,&nbsp;msg])</td>
-<td>A list-specific equality assertion.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertMultiLineEqual</span></tt>(first,&nbsp;second[,&nbsp;msg])</td>
-<td>Assert that two multi-line strings are equal.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotAlmostEqual</span></tt>(first,&nbsp;second[,&nbsp;...])</td>
-<td>Fail if the two objects are equal as determined by their difference rounded to the given number of decimal places (default 7) and comparing to zero, or by comparing that the between the two objects is less than the given delta.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotAlmostEquals</span></tt>(first,&nbsp;second[,&nbsp;...])</td>
-<td>Fail if the two objects are equal as determined by their difference rounded to the given number of decimal places (default 7) and comparing to zero, or by comparing that the between the two objects is less than the given delta.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotEqual</span></tt>(first,&nbsp;second[,&nbsp;msg])</td>
-<td>Fail if the two objects are equal as determined by the &#8216;==&#8217;</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotEquals</span></tt>(first,&nbsp;second[,&nbsp;msg])</td>
-<td>Fail if the two objects are equal as determined by the &#8216;==&#8217;</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotIn</span></tt>(member,&nbsp;container[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a not in b), but with a nicer default message.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotIsInstance</span></tt>(obj,&nbsp;cls[,&nbsp;msg])</td>
-<td>Included for symmetry with assertIsInstance.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotRegexpMatches</span></tt>(text,&nbsp;unexpected_regexp)</td>
-<td>Fail the test if the text matches the regular expression.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertRaises</span></tt>(excClass[,&nbsp;callableObj])</td>
-<td>Fail unless an exception of class excClass is thrown</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertRaisesRegexp</span></tt>(expected_exception,&nbsp;...)</td>
-<td>Asserts that the message in a raised exception matches a regexp.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertRegexpMatches</span></tt>(text,&nbsp;expected_regexp[,&nbsp;msg])</td>
-<td>Fail the test unless the text matches the regular expression.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertSequenceEqual</span></tt>(seq1,&nbsp;seq2[,&nbsp;msg,&nbsp;seq_type])</td>
-<td>An equality assertion for ordered sequences (like lists and tuples).</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertSetEqual</span></tt>(set1,&nbsp;set2[,&nbsp;msg])</td>
-<td>A set-specific equality assertion.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertTrue</span></tt>(expr[,&nbsp;msg])</td>
-<td>Check that the expression is true.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertTupleEqual</span></tt>(tuple1,&nbsp;tuple2[,&nbsp;msg])</td>
-<td>A tuple-specific equality assertion.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assert_</span></tt>(expr[,&nbsp;msg])</td>
-<td>Check that the expression is true.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">countTestCases</span></tt>()</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">debug</span></tt>()</td>
-<td>Run the test without collecting errors in a TestResult</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">defaultTestResult</span></tt>()</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">doCleanups</span></tt>()</td>
-<td>Execute all cleanup functions.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">fail</span></tt>([msg])</td>
-<td>Fail immediately, with the given message.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">failIf</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">failIfAlmostEqual</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">failIfEqual</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">failUnless</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">failUnlessAlmostEqual</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">failUnlessEqual</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">failUnlessRaises</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">failureException</span></tt></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">id</span></tt>()</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">run</span></tt>([result])</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.connector_test.ServicesTestCase.setUp" title="quartjes.connector.connector_test.ServicesTestCase.setUp"><tt class="xref py py-obj docutils literal"><span class="pre">setUp</span></tt></a>()</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">setUpClass</span></tt>()</td>
-<td>Hook method for setting up class fixture before running tests in the class.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">shortDescription</span></tt>()</td>
-<td>Returns a one-line description of the test, or None if no</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">skipTest</span></tt>(reason)</td>
-<td>Skip this test.</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.connector_test.ServicesTestCase.tearDown" title="quartjes.connector.connector_test.ServicesTestCase.tearDown"><tt class="xref py py-obj docutils literal"><span class="pre">tearDown</span></tt></a>()</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">tearDownClass</span></tt>()</td>
-<td>Hook method for deconstructing the class fixture after running all tests in the class.</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.connector_test.ServicesTestCase.test_correct_service_call" title="quartjes.connector.connector_test.ServicesTestCase.test_correct_service_call"><tt class="xref py py-obj docutils literal"><span class="pre">test_correct_service_call</span></tt></a>()</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#quartjes.connector.connector_test.ServicesTestCase.test_incorrect_action" title="quartjes.connector.connector_test.ServicesTestCase.test_incorrect_action"><tt class="xref py py-obj docutils literal"><span class="pre">test_incorrect_action</span></tt></a>()</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.connector_test.ServicesTestCase.test_incorrect_params" title="quartjes.connector.connector_test.ServicesTestCase.test_incorrect_params"><tt class="xref py py-obj docutils literal"><span class="pre">test_incorrect_params</span></tt></a>()</td>
-<td></td>
-</tr>
-</tbody>
-</table>
-<dl class="method">
-<dt id="quartjes.connector.connector_test.ServicesTestCase.setUp">
-<tt class="descname">setUp</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/connector/connector_test.html#ServicesTestCase.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.connector_test.ServicesTestCase.setUp" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="quartjes.connector.connector_test.ServicesTestCase.tearDown">
-<tt class="descname">tearDown</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/connector/connector_test.html#ServicesTestCase.tearDown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.connector_test.ServicesTestCase.tearDown" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="quartjes.connector.connector_test.ServicesTestCase.test_correct_service_call">
-<tt class="descname">test_correct_service_call</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/connector/connector_test.html#ServicesTestCase.test_correct_service_call"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.connector_test.ServicesTestCase.test_correct_service_call" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="quartjes.connector.connector_test.ServicesTestCase.test_incorrect_action">
-<tt class="descname">test_incorrect_action</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/connector/connector_test.html#ServicesTestCase.test_incorrect_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.connector_test.ServicesTestCase.test_incorrect_action" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="quartjes.connector.connector_test.ServicesTestCase.test_incorrect_params">
-<tt class="descname">test_incorrect_params</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/connector/connector_test.html#ServicesTestCase.test_incorrect_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.connector_test.ServicesTestCase.test_incorrect_params" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<dl class="function">
+<dt id="quartjes.connector.client.self_test">
+<tt class="descclassname">quartjes.connector.client.</tt><tt class="descname">self_test</tt><big>(</big><big>)</big><a class="headerlink" href="#quartjes.connector.client.self_test" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform a self test of this module.</p>
+<p>Requires that the test from <a class="reference internal" href="#module-quartjes.connector.server" title="quartjes.connector.server"><tt class="xref py py-mod docutils literal"><span class="pre">quartjes.connector.server</span></tt></a> is running.</p>
 </dd></dl>
 
+</div>
 </div>
 <div class="section" id="module-quartjes.connector.exceptions">
 <span id="exceptions-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">exceptions</span></tt> Module<a class="headerlink" href="#module-quartjes.connector.exceptions" title="Permalink to this headline">¶</a></h2>
@@ -471,7 +319,7 @@ can be thrown.</p>
 <tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>error_code</strong> : int</p>
 <blockquote>
 <div><p>An error code stating what went wrong handling the message. Should be one of the
-codes in this class.</p>
+result codes in this class.</p>
 </div></blockquote>
 <p><strong>original_message</strong> : quartjes.connector.messages.Message</p>
 <blockquote>
@@ -796,6 +644,7 @@ message type.</p>
 <dt id="quartjes.connector.messages_test.TestMessages">
 <em class="property">class </em><tt class="descclassname">quartjes.connector.messages_test.</tt><tt class="descname">TestMessages</tt><big>(</big><em>methodName='runTest'</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/messages_test.html#TestMessages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.messages_test.TestMessages" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">unittest.case.TestCase</span></tt></p>
+<p>Test basic functionality for message objects.</p>
 <p class="rubric">Methods</p>
 <table border="1" class="longtable docutils">
 <colgroup>
@@ -803,202 +652,34 @@ message type.</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">addCleanup</span></tt>(function,&nbsp;*args,&nbsp;**kwargs)</td>
-<td>Add a function, with arguments, to be called when the test is completed.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">addTypeEqualityFunc</span></tt>(typeobj,&nbsp;function)</td>
-<td>Add a type specific assertEqual style function to compare a type.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertAlmostEqual</span></tt>(first,&nbsp;second[,&nbsp;places,&nbsp;...])</td>
-<td>Fail if the two objects are unequal as determined by their difference rounded to the given number of decimal places (default 7) and comparing to zero, or by comparing that the between the two objects is more than the given delta.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertAlmostEquals</span></tt>(first,&nbsp;second[,&nbsp;places,&nbsp;...])</td>
-<td>Fail if the two objects are unequal as determined by their difference rounded to the given number of decimal places (default 7) and comparing to zero, or by comparing that the between the two objects is more than the given delta.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertDictContainsSubset</span></tt>(expected,&nbsp;actual[,&nbsp;msg])</td>
-<td>Checks whether actual is a superset of expected.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertDictEqual</span></tt>(d1,&nbsp;d2[,&nbsp;msg])</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertEqual</span></tt>(first,&nbsp;second[,&nbsp;msg])</td>
-<td>Fail if the two objects are unequal as determined by the &#8216;==&#8217;</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertEquals</span></tt>(first,&nbsp;second[,&nbsp;msg])</td>
-<td>Fail if the two objects are unequal as determined by the &#8216;==&#8217;</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertFalse</span></tt>(expr[,&nbsp;msg])</td>
-<td>Check that the expression is false.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertGreater</span></tt>(a,&nbsp;b[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a &gt; b), but with a nicer default message.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertGreaterEqual</span></tt>(a,&nbsp;b[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a &gt;= b), but with a nicer default message.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertIn</span></tt>(member,&nbsp;container[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a in b), but with a nicer default message.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertIs</span></tt>(expr1,&nbsp;expr2[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a is b), but with a nicer default message.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertIsInstance</span></tt>(obj,&nbsp;cls[,&nbsp;msg])</td>
-<td>Same as self.assertTrue(isinstance(obj, cls)), with a nicer</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertIsNone</span></tt>(obj[,&nbsp;msg])</td>
-<td>Same as self.assertTrue(obj is None), with a nicer default message.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertIsNot</span></tt>(expr1,&nbsp;expr2[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a is not b), but with a nicer default message.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertIsNotNone</span></tt>(obj[,&nbsp;msg])</td>
-<td>Included for symmetry with assertIsNone.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertItemsEqual</span></tt>(expected_seq,&nbsp;actual_seq[,&nbsp;msg])</td>
-<td>An unordered sequence specific comparison.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertLess</span></tt>(a,&nbsp;b[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a &lt; b), but with a nicer default message.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertLessEqual</span></tt>(a,&nbsp;b[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a &lt;= b), but with a nicer default message.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertListEqual</span></tt>(list1,&nbsp;list2[,&nbsp;msg])</td>
-<td>A list-specific equality assertion.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertMultiLineEqual</span></tt>(first,&nbsp;second[,&nbsp;msg])</td>
-<td>Assert that two multi-line strings are equal.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotAlmostEqual</span></tt>(first,&nbsp;second[,&nbsp;...])</td>
-<td>Fail if the two objects are equal as determined by their difference rounded to the given number of decimal places (default 7) and comparing to zero, or by comparing that the between the two objects is less than the given delta.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotAlmostEquals</span></tt>(first,&nbsp;second[,&nbsp;...])</td>
-<td>Fail if the two objects are equal as determined by their difference rounded to the given number of decimal places (default 7) and comparing to zero, or by comparing that the between the two objects is less than the given delta.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotEqual</span></tt>(first,&nbsp;second[,&nbsp;msg])</td>
-<td>Fail if the two objects are equal as determined by the &#8216;==&#8217;</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotEquals</span></tt>(first,&nbsp;second[,&nbsp;msg])</td>
-<td>Fail if the two objects are equal as determined by the &#8216;==&#8217;</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotIn</span></tt>(member,&nbsp;container[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a not in b), but with a nicer default message.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotIsInstance</span></tt>(obj,&nbsp;cls[,&nbsp;msg])</td>
-<td>Included for symmetry with assertIsInstance.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotRegexpMatches</span></tt>(text,&nbsp;unexpected_regexp)</td>
-<td>Fail the test if the text matches the regular expression.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertRaises</span></tt>(excClass[,&nbsp;callableObj])</td>
-<td>Fail unless an exception of class excClass is thrown</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertRaisesRegexp</span></tt>(expected_exception,&nbsp;...)</td>
-<td>Asserts that the message in a raised exception matches a regexp.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertRegexpMatches</span></tt>(text,&nbsp;expected_regexp[,&nbsp;msg])</td>
-<td>Fail the test unless the text matches the regular expression.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertSequenceEqual</span></tt>(seq1,&nbsp;seq2[,&nbsp;msg,&nbsp;seq_type])</td>
-<td>An equality assertion for ordered sequences (like lists and tuples).</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertSetEqual</span></tt>(set1,&nbsp;set2[,&nbsp;msg])</td>
-<td>A set-specific equality assertion.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertTrue</span></tt>(expr[,&nbsp;msg])</td>
-<td>Check that the expression is true.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertTupleEqual</span></tt>(tuple1,&nbsp;tuple2[,&nbsp;msg])</td>
-<td>A tuple-specific equality assertion.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assert_</span></tt>(expr[,&nbsp;msg])</td>
-<td>Check that the expression is true.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">countTestCases</span></tt>()</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">debug</span></tt>()</td>
-<td>Run the test without collecting errors in a TestResult</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">defaultTestResult</span></tt>()</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">doCleanups</span></tt>()</td>
-<td>Execute all cleanup functions.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">fail</span></tt>([msg])</td>
-<td>Fail immediately, with the given message.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">failIf</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">failIfAlmostEqual</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">failIfEqual</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">failUnless</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">failUnlessAlmostEqual</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">failUnlessEqual</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">failUnlessRaises</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">failureException</span></tt></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">id</span></tt>()</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">run</span></tt>([result])</td>
-<td></td>
-</tr>
 <tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.messages_test.TestMessages.setUp" title="quartjes.connector.messages_test.TestMessages.setUp"><tt class="xref py py-obj docutils literal"><span class="pre">setUp</span></tt></a>()</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">setUpClass</span></tt>()</td>
-<td>Hook method for setting up class fixture before running tests in the class.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">shortDescription</span></tt>()</td>
-<td>Returns a one-line description of the test, or None if no</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">skipTest</span></tt>(reason)</td>
-<td>Skip this test.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">tearDown</span></tt>()</td>
-<td>Hook method for deconstructing the test fixture after testing it.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">tearDownClass</span></tt>()</td>
-<td>Hook method for deconstructing the class fixture after running all tests in the class.</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.messages_test.TestMessages.test_create_and_parse" title="quartjes.connector.messages_test.TestMessages.test_create_and_parse"><tt class="xref py py-obj docutils literal"><span class="pre">test_create_and_parse</span></tt></a>()</td>
-<td></td>
+<td>Prepare some objects to perform the test on.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#quartjes.connector.messages_test.TestMessages.test_equality" title="quartjes.connector.messages_test.TestMessages.test_equality"><tt class="xref py py-obj docutils literal"><span class="pre">test_equality</span></tt></a>()</td>
-<td></td>
+<td>Test whether the equality operators work as expected.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.messages_test.TestMessages.test_create_and_parse" title="quartjes.connector.messages_test.TestMessages.test_create_and_parse"><tt class="xref py py-obj docutils literal"><span class="pre">test_create_and_parse</span></tt></a>()</td>
+<td>Test whether a message can be correctly serialised and deserialised again.</td>
 </tr>
 </tbody>
 </table>
 <dl class="method">
 <dt id="quartjes.connector.messages_test.TestMessages.setUp">
 <tt class="descname">setUp</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/connector/messages_test.html#TestMessages.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.messages_test.TestMessages.setUp" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Prepare some objects to perform the test on.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="quartjes.connector.messages_test.TestMessages.test_create_and_parse">
 <tt class="descname">test_create_and_parse</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/connector/messages_test.html#TestMessages.test_create_and_parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.messages_test.TestMessages.test_create_and_parse" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Test whether a message can be correctly serialised and deserialised again.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="quartjes.connector.messages_test.TestMessages.test_equality">
 <tt class="descname">test_equality</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/connector/messages_test.html#TestMessages.test_equality"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.messages_test.TestMessages.test_equality" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Test whether the equality operators work as expected.</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -1006,8 +687,11 @@ message type.</p>
 <div class="section" id="module-quartjes.connector.protocol">
 <span id="protocol-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">protocol</span></tt> Module<a class="headerlink" href="#module-quartjes.connector.protocol" title="Permalink to this headline">¶</a></h2>
 <p>Implementation of the Quartjes protocol in Twisted.</p>
-<p>Contents of this file are not to be used directly. Use either the ServerConnector
-in quartjes.connector.server or the ClientConnector in quartjes.connector.client.</p>
+<p>Contents of this file are not to be used directly. Use either the 
+<a class="reference internal" href="#quartjes.connector.server.ServerConnector" title="quartjes.connector.server.ServerConnector"><tt class="xref py py-class docutils literal"><span class="pre">ServerConnector</span></tt></a>
+in <a class="reference internal" href="#module-quartjes.connector.server" title="quartjes.connector.server"><tt class="xref py py-mod docutils literal"><span class="pre">quartjes.connector.server</span></tt></a> or the 
+<a class="reference internal" href="#quartjes.connector.client.ClientConnector" title="quartjes.connector.client.ClientConnector"><tt class="xref py py-class docutils literal"><span class="pre">ClientConnector</span></tt></a> in 
+<a class="reference internal" href="#module-quartjes.connector.client" title="quartjes.connector.client"><tt class="xref py py-mod docutils literal"><span class="pre">quartjes.connector.client</span></tt></a>.</p>
 <p>The protocol implementation in Twisted is asynchronous. The methods in this file
 translate between the asynchronous calls in the reactor thread and synchronous
 or blocking calls from other threads. Methods designed to run in the reactor
@@ -1019,6 +703,40 @@ thread are prefixed with &#8220;<a href="#id2"><span class="problematic" id="id3
 <p>Intermediate result of an incoming message in the server protocol.
 Contains both the original message and optionally the result to sent back
 to the client.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>response</strong> : string</p>
+<blockquote>
+<div><p>Serialised response to the message.</p>
+</div></blockquote>
+<p><strong>original_message: :class:`quartjes.connector.messages.Message`</strong> :</p>
+<blockquote class="last">
+<div><p>Original message this is a result from.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="15%" />
+<col width="50%" />
+<col width="36%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>response</td>
+<td>string</td>
+<td>Serialised response to the message.</td>
+</tr>
+<tr class="row-even"><td>original_message</td>
+<td><a class="reference internal" href="#quartjes.connector.messages.Message" title="quartjes.connector.messages.Message"><tt class="xref py py-class docutils literal"><span class="pre">Message</span></tt></a></td>
+<td>Original message this is a result from.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="class">
@@ -1027,6 +745,34 @@ to the client.</p>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">twisted.internet.protocol.ReconnectingClientFactory</span></tt></p>
 <p>Client factory for quartjes client. Implements the reconnecting client factory
 to make sure it reconnects in case of errors.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>timeout</strong> : int</p>
+<blockquote class="last">
+<div><p>Timeout in seconds for messages. If no response is received within this time
+an exception will be returned.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>When connected this class keeps a reference to the protocol currently 
+connected to the server. If no connection is present, the reference
+should be None.</p>
+<p>Blocking method calls are performed by using the blockingCallFromThread
+functionality in Twisted. The method sending the message returns a
+defered object which is saved in a dictionary with the message id. Once
+a response is received the defered is triggered with the server response.
+That moment the blockingCallFromThread method will unblock and return
+the result.</p>
+<p>For timeouts a special defered is created. A call is scheduled in the
+reactor to return a <a class="reference internal" href="#quartjes.connector.exceptions.TimeoutError" title="quartjes.connector.exceptions.TimeoutError"><tt class="xref py py-class docutils literal"><span class="pre">TimeoutError</span></tt></a>
+to the deferred after the timeout has expired. In the defered a callback
+is added that will make sure the timeout call is cancelled when a response
+is received.</p>
 <p class="rubric">Attributes</p>
 <table border="1" class="longtable docutils">
 <colgroup>
@@ -1034,13 +780,62 @@ to make sure it reconnects in case of errors.</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">clock</span></tt></td>
-<td></td>
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.protocol.QuartjesClientFactory.timeout" title="quartjes.connector.protocol.QuartjesClientFactory.timeout"><tt class="xref py py-obj docutils literal"><span class="pre">timeout</span></tt></a></td>
+<td>Timeout in seconds for messages.</td>
 </tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">connector</span></tt></td>
-<td></td>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.protocol.QuartjesClientFactory.is_connected" title="quartjes.connector.protocol.QuartjesClientFactory.is_connected"><tt class="xref py py-obj docutils literal"><span class="pre">is_connected</span></tt></a>()</td>
+<td>Is the client connected to the server?</td>
 </tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">maxRetries</span></tt></td>
+<tr class="row-even"><td><a class="reference internal" href="#quartjes.connector.protocol.QuartjesClientFactory.send_message_blocking" title="quartjes.connector.protocol.QuartjesClientFactory.send_message_blocking"><tt class="xref py py-obj docutils literal"><span class="pre">send_message_blocking</span></tt></a>(message)</td>
+<td>Call from another thread to send a message to the server and wait for the result.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.protocol.QuartjesClientFactory.send_method_call" title="quartjes.connector.protocol.QuartjesClientFactory.send_method_call"><tt class="xref py py-obj docutils literal"><span class="pre">send_method_call</span></tt></a>(service_name,&nbsp;method_name,&nbsp;...)</td>
+<td>Call from another thread to request a method call to be performed at the server and wait for the result.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#quartjes.connector.protocol.QuartjesClientFactory.subscribe" title="quartjes.connector.protocol.QuartjesClientFactory.subscribe"><tt class="xref py py-obj docutils literal"><span class="pre">subscribe</span></tt></a>(service_name,&nbsp;event_name,&nbsp;callback)</td>
+<td>Call from another thread to subscribe to an event on a specific service.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.protocol.QuartjesClientFactory.wait_for_connection" title="quartjes.connector.protocol.QuartjesClientFactory.wait_for_connection"><tt class="xref py py-obj docutils literal"><span class="pre">wait_for_connection</span></tt></a>([timeout])</td>
+<td>Wait for the connection to be established.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="quartjes.connector.protocol.QuartjesClientFactory.is_connected">
+<tt class="descname">is_connected</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/connector/protocol.html#QuartjesClientFactory.is_connected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.protocol.QuartjesClientFactory.is_connected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Is the client connected to the server?</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><strong>True if currently connected, False if not.</strong> :</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="quartjes.connector.protocol.QuartjesClientFactory.protocol">
+<tt class="descname">protocol</tt><a class="headerlink" href="#quartjes.connector.protocol.QuartjesClientFactory.protocol" title="Permalink to this definition">¶</a></dt>
+<dd><p>The protocol class variable is used by twisted to determine the protocol
+to use for this factory.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">transport</span></tt></td>
 <td></td>
 </tr>
 </tbody>
@@ -1052,76 +847,33 @@ to make sure it reconnects in case of errors.</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">buildProtocol</span></tt>(addr)</td>
-<td>Create an instance of a subclass of Protocol.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">clientConnectionFailed</span></tt>(connector,&nbsp;reason)</td>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">connectionLost</span></tt></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">clientConnectionLost</span></tt>(connector,&nbsp;unused_reason)</td>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">connectionMade</span></tt></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">doStart</span></tt>()</td>
-<td>Make sure startFactory is called.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">doStop</span></tt>()</td>
-<td>Make sure stopFactory is called.</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#quartjes.connector.protocol.QuartjesClientFactory.is_connected" title="quartjes.connector.protocol.QuartjesClientFactory.is_connected"><tt class="xref py py-obj docutils literal"><span class="pre">is_connected</span></tt></a>()</td>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">dataReceived</span></tt></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">logPrefix</span></tt>()</td>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">logPrefix</span></tt>()</td>
 <td>Describe this factory for log messages.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#quartjes.connector.protocol.QuartjesClientFactory.protocol" title="quartjes.connector.protocol.QuartjesClientFactory.protocol"><tt class="xref py py-obj docutils literal"><span class="pre">protocol</span></tt></a></td>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">makeConnection</span></tt></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">resetDelay</span></tt>()</td>
-<td>Call this method after a successful connection: it resets the delay and</td>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">sendString</span></tt></td>
+<td></td>
 </tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">retry</span></tt>([connector])</td>
-<td>Have this connector connect again, after a suitable delay.</td>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">send_message</span></tt></td>
+<td></td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.protocol.QuartjesClientFactory.send_message_blocking" title="quartjes.connector.protocol.QuartjesClientFactory.send_message_blocking"><tt class="xref py py-obj docutils literal"><span class="pre">send_message_blocking</span></tt></a>(message)</td>
-<td>Call from another thread to send a message to the server and wait for the result.</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#quartjes.connector.protocol.QuartjesClientFactory.send_method_call" title="quartjes.connector.protocol.QuartjesClientFactory.send_method_call"><tt class="xref py py-obj docutils literal"><span class="pre">send_method_call</span></tt></a>(service_name,&nbsp;method_name,&nbsp;...)</td>
-<td>Call from another thread to request an method_name to be performed at the server and wait for the result.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">startFactory</span></tt>()</td>
-<td>This will be called before I begin listening on a Port or Connector.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">startedConnecting</span></tt>(connector)</td>
-<td>Called when a connection has been started.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">stopFactory</span></tt>()</td>
-<td>This will be called before I stop listening on all Ports/Connectors.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">stopTrying</span></tt>()</td>
-<td>Put a stop to any attempt to reconnect in progress.</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.protocol.QuartjesClientFactory.subscribe" title="quartjes.connector.protocol.QuartjesClientFactory.subscribe"><tt class="xref py py-obj docutils literal"><span class="pre">subscribe</span></tt></a>(service_name,&nbsp;event_name,&nbsp;callback)</td>
-<td>Call from another thread to subscribe to a event_name of a specific service.</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#quartjes.connector.protocol.QuartjesClientFactory.wait_for_connection" title="quartjes.connector.protocol.QuartjesClientFactory.wait_for_connection"><tt class="xref py py-obj docutils literal"><span class="pre">wait_for_connection</span></tt></a>([timeout])</td>
-<td>Wait for the connection to be established.</td>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">stringReceived</span></tt></td>
+<td></td>
 </tr>
 </tbody>
 </table>
-<dl class="attribute">
-<dt id="quartjes.connector.protocol.QuartjesClientFactory.default_timeout">
-<tt class="descname">default_timeout</tt><em class="property"> = 5</em><a class="headerlink" href="#quartjes.connector.protocol.QuartjesClientFactory.default_timeout" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="quartjes.connector.protocol.QuartjesClientFactory.is_connected">
-<tt class="descname">is_connected</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/connector/protocol.html#QuartjesClientFactory.is_connected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.protocol.QuartjesClientFactory.is_connected" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="quartjes.connector.protocol.QuartjesClientFactory.protocol">
-<tt class="descname">protocol</tt><a class="headerlink" href="#quartjes.connector.protocol.QuartjesClientFactory.protocol" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="#quartjes.connector.protocol.QuartjesProtocol" title="quartjes.connector.protocol.QuartjesProtocol"><tt class="xref py py-class docutils literal"><span class="pre">QuartjesProtocol</span></tt></a></p>
+<p>alias of <a class="reference internal" href="#quartjes.connector.protocol.QuartjesProtocol" title="quartjes.connector.protocol.QuartjesProtocol"><tt class="xref py py-class docutils literal"><span class="pre">QuartjesProtocol</span></tt></a></p>
 </dd></dl>
 
 <dl class="method">
@@ -1130,24 +882,132 @@ to make sure it reconnects in case of errors.</p>
 <dd><p>Call from another thread to send a message to the server and wait for the result.
 Accepts a serializable message.
 Based on the response either the result is returned or an exception is raised.</p>
-<p>Can throw either a MessageHandleError or a ConnectionError</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>message</strong> : <a class="reference internal" href="#quartjes.connector.messages.Message" title="quartjes.connector.messages.Message"><tt class="xref py py-class docutils literal"><span class="pre">quartjes.connector.messages.Message</span></tt></a></p>
+<blockquote>
+<div><p>Message object to send to the server.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> :</p>
+<blockquote>
+<div><p>The response returned by the server.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises :</th><td class="field-body"><p class="first"><strong>MessageHandleError</strong> :</p>
+<blockquote>
+<div><p>Something went wrong while handling the message on the server.</p>
+</div></blockquote>
+<p><strong>ConnectionError</strong> :</p>
+<blockquote>
+<div><p>There is an issue with the connection to the server.</p>
+</div></blockquote>
+<p><strong>TimeoutError</strong> :</p>
+<blockquote class="last">
+<div><p>No response was received within the set timeout.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="quartjes.connector.protocol.QuartjesClientFactory.send_method_call">
 <tt class="descname">send_method_call</tt><big>(</big><em>service_name</em>, <em>method_name</em>, <em>*pargs</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/protocol.html#QuartjesClientFactory.send_method_call"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.protocol.QuartjesClientFactory.send_method_call" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call from another thread to request an method_name to be performed at the server
+<dd><p>Call from another thread to request a method call to be performed at the server
 and wait for the result.</p>
-<p>Can throw either a MessageHandleError or a ConnectionError</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>service_name</strong> : string</p>
+<blockquote>
+<div><p>Name of the service containing the method.</p>
+</div></blockquote>
+<p><strong>method_name</strong> : string</p>
+<blockquote>
+<div><p>Name of the method to call.</p>
+</div></blockquote>
+<p><strong>*pargs</strong> :</p>
+<blockquote>
+<div><p>Positional arguments to supply to the method.</p>
+</div></blockquote>
+<p><strong>**kwargs</strong> :</p>
+<blockquote>
+<div><p>Keyword arguments to supply to the method.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises :</th><td class="field-body"><p class="first"><strong>MessageHandleError</strong> :</p>
+<blockquote>
+<div><p>Something went wrong while handling the message on the server.</p>
+</div></blockquote>
+<p><strong>ConnectionError</strong> :</p>
+<blockquote>
+<div><p>There is an issue with the connection to the server.</p>
+</div></blockquote>
+<p><strong>TimeoutError</strong> :</p>
+<blockquote class="last">
+<div><p>No response was received within the set timeout.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="quartjes.connector.protocol.QuartjesClientFactory.subscribe">
 <tt class="descname">subscribe</tt><big>(</big><em>service_name</em>, <em>event_name</em>, <em>callback</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/protocol.html#QuartjesClientFactory.subscribe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.protocol.QuartjesClientFactory.subscribe" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call from another thread to subscribe to a event_name of a specific service.
-The given callback is called each time an update for the event_name is received.
-Returns None, but an exception can be raised.</p>
-<p>Can throw either a MessageHandleError or a ConnectionError</p>
+<dd><p>Call from another thread to subscribe to an event on a specific service.
+The given callback is called each time an update for the event is received.
+Returns nothing, but an exception can be raised.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>service_name</strong> : string</p>
+<blockquote>
+<div><p>Name of the service containing the event.</p>
+</div></blockquote>
+<p><strong>method_name</strong> : string</p>
+<blockquote>
+<div><p>Name of the event to subscribe to.</p>
+</div></blockquote>
+<p><strong>callback</strong> :</p>
+<blockquote>
+<div><p>Method to call when an event notification is received.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises :</th><td class="field-body"><p class="first"><strong>MessageHandleError</strong> :</p>
+<blockquote>
+<div><p>Something went wrong while handling the message on the server.</p>
+</div></blockquote>
+<p><strong>ConnectionError</strong> :</p>
+<blockquote>
+<div><p>There is an issue with the connection to the server.</p>
+</div></blockquote>
+<p><strong>TimeoutError</strong> :</p>
+<blockquote class="last">
+<div><p>No response was received within the set timeout.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="quartjes.connector.protocol.QuartjesClientFactory.timeout">
+<tt class="descname">timeout</tt><a class="headerlink" href="#quartjes.connector.protocol.QuartjesClientFactory.timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timeout in seconds for messages. If no response is received within this time
+an exception will be returned.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1156,7 +1016,25 @@ Returns None, but an exception can be raised.</p>
 <dd><p>Wait for the connection to be established.
 Provide a timeout value to control the time waited for a connection. If no
 timeout value is provided, the default value is used.</p>
-<p>If a timeout occurs the TimeoutError is raised.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>timeout</strong> : int</p>
+<blockquote>
+<div><p>Time in seconds to wait for a connection to be established. If not
+given, the default will be used.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises :</th><td class="field-body"><p class="first"><strong>TimeoutError</strong> :</p>
+<blockquote class="last">
+<div><p>No connection was established within the timeout.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -1167,6 +1045,8 @@ timeout value is provided, the default value is used.</p>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">twisted.protocols.basic.NetstringReceiver</span></tt></p>
 <p>Protocol implementation for the Quartjes application. For now we are using a basic
 Netstring receiver to listen for xml messages encoded as netstrings.</p>
+<p>No need to make instances of this class yourself. It is set as the protocol
+in the server and client factories.</p>
 <p class="rubric">Attributes</p>
 <table border="1" class="longtable docutils">
 <colgroup>
@@ -1243,6 +1123,24 @@ Netstring receiver to listen for xml messages encoded as netstrings.</p>
 <em class="property">class </em><tt class="descclassname">quartjes.connector.protocol.</tt><tt class="descname">QuartjesServerFactory</tt><a class="reference internal" href="_modules/quartjes/connector/protocol.html#QuartjesServerFactory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.protocol.QuartjesServerFactory" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">twisted.internet.protocol.ServerFactory</span></tt></p>
 <p>Protocol factory to handle incoming connections for the Quartjes server.</p>
+<p class="rubric">Notes</p>
+<p>When a message is received from the client, it is handled in the
+twisted defered way. It contains multiple steps, some within the reactor
+thread and some in a separate thread. It is important to do most of the
+processing outside the reactor thread. As long as processing is inside
+the reactor thread, no other incoming messages can be handled.</p>
+<p>Currently the following steps are performed. Communication between steps
+is in the form of a <a class="reference internal" href="#quartjes.connector.protocol.MessageResult" title="quartjes.connector.protocol.MessageResult"><tt class="xref py py-class docutils literal"><span class="pre">MessageResult</span></tt></a> object.</p>
+<ul class="simple">
+<li><tt class="xref py py-meth docutils literal"><span class="pre">_parse_message()</span></tt>: Deserialise the message in a separate thread
+and perform any actions that do not need to run inside the reactor
+thread;</li>
+<li><tt class="xref py py-meth docutils literal"><span class="pre">_r_process_message()</span></tt>: Do any processing of the message inside
+the reactor thread;</li>
+<li><tt class="xref py py-meth docutils literal"><span class="pre">_r_send_result()</span></tt>: Send the result back to the client.</li>
+</ul>
+<p>If an exception occurs, any following step will be skipped and the error
+message is directly sent back using <tt class="xref py py-meth docutils literal"><span class="pre">_r_send_error()</span></tt>.</p>
 <p class="rubric">Methods</p>
 <table border="1" class="longtable docutils">
 <colgroup>
@@ -1250,42 +1148,68 @@ Netstring receiver to listen for xml messages encoded as netstrings.</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">buildProtocol</span></tt>(addr)</td>
-<td>Create an instance of a subclass of Protocol.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">doStart</span></tt>()</td>
-<td>Make sure startFactory is called.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">doStop</span></tt>()</td>
-<td>Make sure stopFactory is called.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">logPrefix</span></tt>()</td>
-<td>Describe this factory for log messages.</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.protocol.QuartjesServerFactory.protocol" title="quartjes.connector.protocol.QuartjesServerFactory.protocol"><tt class="xref py py-obj docutils literal"><span class="pre">protocol</span></tt></a></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#quartjes.connector.protocol.QuartjesServerFactory.register_service" title="quartjes.connector.protocol.QuartjesServerFactory.register_service"><tt class="xref py py-obj docutils literal"><span class="pre">register_service</span></tt></a>(service,&nbsp;name)</td>
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.protocol.QuartjesServerFactory.register_service" title="quartjes.connector.protocol.QuartjesServerFactory.register_service"><tt class="xref py py-obj docutils literal"><span class="pre">register_service</span></tt></a>(service,&nbsp;name)</td>
 <td>Register a service with the factory.</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.protocol.QuartjesServerFactory.send_event" title="quartjes.connector.protocol.QuartjesServerFactory.send_event"><tt class="xref py py-obj docutils literal"><span class="pre">send_event</span></tt></a>(service_name,&nbsp;event_name,&nbsp;...)</td>
-<td>Notify a client of an event.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">startFactory</span></tt>()</td>
-<td>This will be called before I begin listening on a Port or Connector.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">stopFactory</span></tt>()</td>
-<td>This will be called before I stop listening on all Ports/Connectors.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#quartjes.connector.protocol.QuartjesServerFactory.unregister_service" title="quartjes.connector.protocol.QuartjesServerFactory.unregister_service"><tt class="xref py py-obj docutils literal"><span class="pre">unregister_service</span></tt></a>(name)</td>
 <td>Unregister a service from the factory.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.protocol.QuartjesServerFactory.send_event" title="quartjes.connector.protocol.QuartjesServerFactory.send_event"><tt class="xref py py-obj docutils literal"><span class="pre">send_event</span></tt></a>(service_name,&nbsp;event_name,&nbsp;...)</td>
+<td>Notify a client of an event.</td>
 </tr>
 </tbody>
 </table>
 <dl class="attribute">
 <dt id="quartjes.connector.protocol.QuartjesServerFactory.protocol">
 <tt class="descname">protocol</tt><a class="headerlink" href="#quartjes.connector.protocol.QuartjesServerFactory.protocol" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="#quartjes.connector.protocol.QuartjesProtocol" title="quartjes.connector.protocol.QuartjesProtocol"><tt class="xref py py-class docutils literal"><span class="pre">QuartjesProtocol</span></tt></a></p>
+<dd><p>The protocol class variable is used by twisted to determine the protocol
+to use for this factory.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">transport</span></tt></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">connectionLost</span></tt></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">connectionMade</span></tt></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">dataReceived</span></tt></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">logPrefix</span></tt>()</td>
+<td>Describe this factory for log messages.</td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">makeConnection</span></tt></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">sendString</span></tt></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">send_message</span></tt></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">stringReceived</span></tt></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>alias of <a class="reference internal" href="#quartjes.connector.protocol.QuartjesProtocol" title="quartjes.connector.protocol.QuartjesProtocol"><tt class="xref py py-class docutils literal"><span class="pre">QuartjesProtocol</span></tt></a></p>
 </dd></dl>
 
 <dl class="method">
@@ -1293,18 +1217,80 @@ Netstring receiver to listen for xml messages encoded as netstrings.</p>
 <tt class="descname">register_service</tt><big>(</big><em>service</em>, <em>name</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/protocol.html#QuartjesServerFactory.register_service"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.protocol.QuartjesServerFactory.register_service" title="Permalink to this definition">¶</a></dt>
 <dd><p>Register a service with the factory.
 After registering the service, it can be remotely accessed through the given name.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>service</strong> : object decorated by <a class="reference internal" href="#quartjes.connector.services.remote_service" title="quartjes.connector.services.remote_service"><tt class="xref py py-func docutils literal"><span class="pre">remote_service</span></tt></a></p>
+<blockquote>
+<div><p>Service object to register with the factory. After registering it 
+will be available for remote clients.</p>
+</div></blockquote>
+<p><strong>name</strong> : string</p>
+<blockquote class="last">
+<div><p>Name the service is registered under. Clients must use this name to
+access the service.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="quartjes.connector.protocol.QuartjesServerFactory.send_event">
 <tt class="descname">send_event</tt><big>(</big><em>service_name</em>, <em>event_name</em>, <em>listener</em>, <em>*pargs</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/protocol.html#QuartjesServerFactory.send_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.protocol.QuartjesServerFactory.send_event" title="Permalink to this definition">¶</a></dt>
 <dd><p>Notify a client of an event.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>service_name</strong> : string</p>
+<blockquote>
+<div><p>Name of the service firing the event.</p>
+</div></blockquote>
+<p><strong>event_name</strong> : string</p>
+<blockquote>
+<div><p>Name of the event being fired.</p>
+</div></blockquote>
+<p><strong>listener</strong> :</p>
+<blockquote>
+<div><p>Twisted protocol object connected to the client that should receive
+event notifications.</p>
+</div></blockquote>
+<p><strong>*pargs</strong> :</p>
+<blockquote>
+<div><p>Any additional positional arguments will be sent as positional
+arguments to the client callback.</p>
+</div></blockquote>
+<p><strong>**kwargs</strong> :</p>
+<blockquote class="last">
+<div><p>Any additional keyword arguments will be sent as keyword
+arguments to the client callback.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="quartjes.connector.protocol.QuartjesServerFactory.unregister_service">
 <tt class="descname">unregister_service</tt><big>(</big><em>name</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/protocol.html#QuartjesServerFactory.unregister_service"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.protocol.QuartjesServerFactory.unregister_service" title="Permalink to this definition">¶</a></dt>
-<dd><p>Unregister a service from the factory.</p>
+<dd><p>Unregister a service from the factory. It is no longer accessible by
+remote clients.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>name</strong> : string</p>
+<blockquote class="last">
+<div><p>Name the service is currently registered under.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -2147,10 +2133,13 @@ being (un)registered to the server event.</p>
 <tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.services.TestRemoteService.test" title="quartjes.connector.services.TestRemoteService.test"><tt class="xref py py-obj docutils literal"><span class="pre">test</span></tt></a>(text)</td>
 <td></td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#quartjes.connector.services.TestRemoteService.trigger" title="quartjes.connector.services.TestRemoteService.trigger"><tt class="xref py py-obj docutils literal"><span class="pre">trigger</span></tt></a>(text)</td>
+<tr class="row-even"><td><a class="reference internal" href="#quartjes.connector.services.TestRemoteService.test_timeout" title="quartjes.connector.services.TestRemoteService.test_timeout"><tt class="xref py py-obj docutils literal"><span class="pre">test_timeout</span></tt></a>(timeout)</td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.services.TestRemoteService.trigger2" title="quartjes.connector.services.TestRemoteService.trigger2"><tt class="xref py py-obj docutils literal"><span class="pre">trigger2</span></tt></a>(text)</td>
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.services.TestRemoteService.trigger" title="quartjes.connector.services.TestRemoteService.trigger"><tt class="xref py py-obj docutils literal"><span class="pre">trigger</span></tt></a>(text)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#quartjes.connector.services.TestRemoteService.trigger2" title="quartjes.connector.services.TestRemoteService.trigger2"><tt class="xref py py-obj docutils literal"><span class="pre">trigger2</span></tt></a>(text)</td>
 <td></td>
 </tr>
 </tbody>
@@ -2162,12 +2151,17 @@ being (un)registered to the server event.</p>
 
 <dl class="attribute">
 <dt id="quartjes.connector.services.TestRemoteService.on_trigger">
-<tt class="descname">on_trigger</tt><em class="property"> = &lt;axel.axel.Event object at 0x31511d0&gt;</em><a class="headerlink" href="#quartjes.connector.services.TestRemoteService.on_trigger" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">on_trigger</tt><em class="property"> = &lt;axel.axel.Event object at 0x328f490&gt;</em><a class="headerlink" href="#quartjes.connector.services.TestRemoteService.on_trigger" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="quartjes.connector.services.TestRemoteService.test">
 <tt class="descname">test</tt><big>(</big><em>text</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/services.html#TestRemoteService.test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.services.TestRemoteService.test" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="quartjes.connector.services.TestRemoteService.test_timeout">
+<tt class="descname">test_timeout</tt><big>(</big><em>timeout</em><big>)</big><a class="headerlink" href="#quartjes.connector.services.TestRemoteService.test_timeout" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -2238,17 +2232,11 @@ Also requires the class to be decorated as &#8216;remote_service&#8217;.</p>
 <li><a class="reference internal" href="#module-quartjes.connector.client"><tt class="docutils literal"><span class="pre">client</span></tt> Module</a><ul>
 <li><a class="reference internal" href="#usage">Usage</a></li>
 <li><a class="reference internal" href="#example">Example</a></li>
-<li><a class="reference internal" href="#available-server-methods">Available server methods</a><ul>
-<li><a class="reference internal" href="#database">database</a></li>
-<li><a class="reference internal" href="#stock-exchange">stock_exchange</a></li>
+<li><a class="reference internal" href="#available-server-methods">Available server methods</a></li>
+<li><a class="reference internal" href="#advanced">Advanced</a></li>
+<li><a class="reference internal" href="#clientconnector-class">ClientConnector class</a><ul>
 </ul>
 </li>
-<li><a class="reference internal" href="#advanced">Advanced</a><ul>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-quartjes.connector.connector_test"><tt class="docutils literal"><span class="pre">connector_test</span></tt> Module</a><ul>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-quartjes.connector.exceptions"><tt class="docutils literal"><span class="pre">exceptions</span></tt> Module</a></li>

@@ -17,14 +17,6 @@ connector Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`connector_test` Module
-----------------------------
-
-.. automodule:: quartjes.connector.connector_test
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`exceptions` Module
 ------------------------
 
