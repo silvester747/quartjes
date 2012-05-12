@@ -62,7 +62,7 @@ class ServerConnector(object):
 
         def run(self):
             #print("Starting reactor")
-            reactor.run()
+            reactor.run(installSignalHandlers=0)
             #print("Reactor stopped")
 
 if __name__ == "__main__":

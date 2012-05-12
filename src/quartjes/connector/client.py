@@ -215,7 +215,7 @@ class ClientConnector(object):
             self.daemon = True
 
         def run(self):
-            reactor.run()       #@UndefinedVariable
+            reactor.run(installSignalHandlers=0)       #@UndefinedVariable
         
 def self_test():
     """
