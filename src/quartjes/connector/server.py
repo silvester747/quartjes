@@ -1,8 +1,8 @@
 """
 Connector components used to run a Quartjes server.
 """
-__author__="Rob van der Most"
-__date__ ="$May 27, 2011 9:24:25 PM$"
+__author__ = "Rob van der Most"
+__docformat__ = "restructuredtext en"
 
 from twisted.internet import reactor, threads
 from twisted.internet.endpoints import TCP4ServerEndpoint

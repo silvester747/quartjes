@@ -5,6 +5,9 @@ This file ends with tests instead of test to make sure NetBeans does not use its
 test runner which does not support the new load_tests protocol.
 """
 
+__author__ = "Rob van der Most"
+__docformat__ = "restructuredtext en"
+
 import unittest
 import quartjes.connector.serializer as serializer
 from quartjes.connector.serializer import *

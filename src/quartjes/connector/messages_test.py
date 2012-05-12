@@ -3,6 +3,7 @@ Set of test cases for quartjes.connector.messages
 """
 
 __author__ = "Rob van der Most"
+__docformat__ = "restructuredtext en"
 
 import unittest
 

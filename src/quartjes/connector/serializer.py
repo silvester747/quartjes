@@ -3,6 +3,7 @@ Methods for serializing Quartjes messages and objects to XML for transmitting
 over the network or maybe even storing in files or other locations.
 
 Several types of objects are supported for serialization:
+
 * objects implementing a __serialize__ class variable and a constructor allowing
   zero arguments
 * objects with a __dict__ variable and a constructor allowing zero arguments
@@ -10,8 +11,9 @@ Several types of objects are supported for serialization:
 * tuples, lists and dictionaries of supported types
 * custom types that are registered with this module
 """
-__author__="Rob van der Most"
-__date__ ="$Jun 8, 2011 7:32:02 PM$"
+
+__author__ = "Rob van der Most"
+__docformat__ = "restructuredtext en"
 
 # In other modules using ElementTree always import the version from this file.
 # That makes it easy to switch between py and c version.

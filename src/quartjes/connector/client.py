@@ -40,6 +40,9 @@ ClientConnector class
 ---------------------
 
 """
+__author__ = "Rob van der Most"
+__docformat__ = "restructuredtext en"
+
 from quartjes.connector.protocol import QuartjesClientFactory
 from twisted.internet import reactor, threads
 from threading import Thread

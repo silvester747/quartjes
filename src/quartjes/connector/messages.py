@@ -3,7 +3,8 @@ Definition of messages used to communicate between the Quartjes server and its
 clients.
 """
 
-__author__= " Rob van der Most"
+__author__ = "Rob van der Most"
+__docformat__ = "restructuredtext en"
 
 from quartjes.util.classtools import QuartjesBaseClass
 import quartjes.connector.serializer as serializer

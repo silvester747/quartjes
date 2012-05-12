@@ -14,6 +14,7 @@ thread are prefixed with "r_". Do not call these method from any other thread.
 """
 
 __author__ = "Rob van der Most"
+__docformat__ = "restructuredtext en"
 
 from twisted.internet.protocol import ReconnectingClientFactory
 from twisted.internet.protocol import ServerFactory
