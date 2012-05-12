@@ -46,6 +46,7 @@ from threading import Thread
 from quartjes.connector.services import ServiceInterface
 import quartjes.controllers.database
 import quartjes.controllers.stock_exchange
+from quartjes.connector.exceptions import TimeoutError
 
 class ClientConnector(object):
     """
@@ -247,6 +248,15 @@ def self_test():
     print("Trigger topic")
     testService.trigger(text="Eggs")
     testService.trigger2("Ham")
+    
+    print("Trigger timeout")
+    try:
+        testService.test_timeout(10)
+    except TimeoutError:
+        print("Timeout OK")
+    else:
+        assert False, "This should have triggered a timeout!"
+        
 
     time.sleep(10)
     print("Stopping client")

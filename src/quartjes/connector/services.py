@@ -256,6 +256,11 @@ class TestRemoteService(object):
         return text
     
     @remote_method
+    def test_timeout(self, timeout):
+        import time
+        time.sleep(timeout)
+
+    @remote_method
     def trigger(self, text):
         self.on_trigger(text="Callback: %s" % text)
         return text

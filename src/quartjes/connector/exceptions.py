@@ -20,7 +20,7 @@ class MessageHandleError(ProtocolError):
     ----------
     error_code : int
         An error code stating what went wrong handling the message. Should be one of the
-        codes in this class.
+        result codes in this class.
     original_message : quartjes.connector.messages.Message
         The original message that could not be handled.
     error_details : string
