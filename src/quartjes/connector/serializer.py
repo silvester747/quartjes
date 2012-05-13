@@ -173,7 +173,7 @@ def serialize_list_or_tuple(values, parent=None, tag_name="list", cache=None):
     if isinstance(values, tuple):
         type_name = "tuple"
 
-    node = add_element(tag_name, parent=parent, type=type_name)
+    node = add_element(tag_name, parent=parent, type_name=type_name)
     for value in values:
         add_value_element(value, parent=node, tag_name="value", cache=cache)
 
@@ -228,7 +228,7 @@ def serialize_instance(obj=None, parent=None, tag_name="object", cache=None):
     """
     #print("serializeInstance %s" % obj)
 
-    obj_node = add_element(tag_name, parent=parent, type="instance")
+    obj_node = add_element(tag_name, parent=parent, type_name="instance")
 
     class_name = "%s.%s" % (obj.__class__.__module__, obj.__class__.__name__)
 
@@ -430,7 +430,7 @@ def parse_value_element(node, cache=None):
     if type_name == "dict":
         return deserialize_dict(node, cache=cache)
 
-    if type_name == "list" or type == "tuple":
+    if type_name == "list" or type_name == "tuple":
         return deserialize_list_or_tuple(node, cache=cache)
 
     if not type_name in value_serializers_by_klass_name:
