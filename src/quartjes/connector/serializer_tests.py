@@ -10,17 +10,27 @@ __docformat__ = "restructuredtext en"
 
 import unittest
 import quartjes.connector.serializer as serializer
-from quartjes.connector.serializer import *
+from quartjes.connector.serializer import get_serialized_value, serialize, deserialize
 import uuid
 from quartjes.util.classtools import QuartjesBaseClass
 
 class ValueSerializerTestCase(unittest.TestCase):
     """
     Test the value serializer system part of the serializer.
+    
+    Methods
+    -------
+    setUp
+    test_serializing
+    test_deserializing
+    test_none
+    test_unknown
     """
 
     def setUp(self):
-
+        """
+        Prepare some test cases.
+        """
         u = uuid.uuid4()
 
         self.test_cases = [("int", 12, "12"),
@@ -29,11 +39,17 @@ class ValueSerializerTestCase(unittest.TestCase):
                            ("uuid", u, u.urn)]
 
     def test_serializing(self):
+        """
+        Test serializing each value type.
+        """
         for (type, input, output) in self.test_cases:
             result = get_serialized_value(input)
             self.assertEqual(result, (output, type), "Type %s failed serializing." % type)
 
     def test_deserializing(self):
+        """
+        Test deserializing each value type.
+        """
         for (type, input, output) in self.test_cases:
             (string, t) = get_serialized_value(input)
             ser = serializer.value_serializers_by_klass_name[type]
@@ -41,11 +57,17 @@ class ValueSerializerTestCase(unittest.TestCase):
             self.assertEqual(input, result, "Type %s failed deserializing." % type)
 
     def test_none(self):
+        """
+        Test None
+        """
         (value, type) = get_serialized_value(None)
         self.assertEqual(value, None)
         self.assertEqual(type, None)
 
     def test_unknown(self):
+        """
+        Test handling an unknown type.
+        """
 
         class Unknown:
             pass
@@ -57,7 +79,24 @@ class ValueSerializerTestCase(unittest.TestCase):
         self.assertEqual(type, None)
 
 class SerializerTestCase(unittest.TestCase):
-
+    """
+    Generic fixture for serializer test cases.
+    
+    Parameters
+    ----------
+    name : string
+        Name of the test case.
+    input
+        Input object to test.
+    output : string
+        Expected serialized output.
+        
+    Methods
+    -------
+    run_test
+    shortDescription
+    """
+    
     def __init__(self, name, input, output,):
         super(SerializerTestCase, self).__init__(methodName="run_test")
         self.input = input
@@ -65,6 +104,12 @@ class SerializerTestCase(unittest.TestCase):
         self.name = name
 
     def run_test(self):
+        """
+        Perform the test.
+        
+        Serializes the the object, checks whether the expected output matches.
+        Then deserializes it again and checks it against the input object.
+        """
         node = serialize(self.input, tag_name="test")
         self.assertIsNotNone(node, "Output should contain an object")
 
@@ -73,12 +118,20 @@ class SerializerTestCase(unittest.TestCase):
 
         node = serializer.et.fromstring(string)
         val = deserialize(node)
+        #print(val)
+        #print(self.input)
         self.assertEquals(val, self.input, "Deserialized value should equal original object.")
 
     def shortDescription(self):
+        """
+        Description used for the test framework.
+        """
         return self.name
 
 class TestKlassOld():
+    """
+    Test class for old style classes.
+    """
     def __init__(self):
         self.i = 43432
         self.f = 454343.1233
@@ -91,6 +144,9 @@ class TestKlassOld():
                 and self.l == other.l and self.t == other.t)
 
 class TestKlassNew(object):
+    """
+    Test class for new style classes.
+    """
     def __init__(self):
         self.i = 43432
         self.f = 454343.1233
@@ -103,6 +159,9 @@ class TestKlassNew(object):
                 and self.l == other.l and self.t == other.t)
 
 class TestQuartjesKlass(QuartjesBaseClass):
+    """
+    Test class for classes based on the base class for Quartjes objects.
+    """
     def __init__(self):
         super(TestQuartjesKlass, self).__init__()
         self.i = 43432
@@ -112,6 +171,9 @@ class TestQuartjesKlass(QuartjesBaseClass):
         self.t = (23, 543, "sds")
 
 class TestKlassOverride(object):
+    """
+    Test class for classes overriding using the __serialize__ attribute.
+    """
 
     __serialize__ = ["i", "l"]
     
@@ -158,22 +220,22 @@ serializer_test_cases = [SerializerTestCase(
                          SerializerTestCase(
                              name="old style class",
                              input=TestKlassOld(),
-                             output="<test class=\"__main__.TestKlassOld\" id=\"urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\" type=\"instance\"><f type=\"float\">454343.1233</f><i type=\"int\">43432</i><l type=\"list\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></l><s type=\"str\">teststring</s><t type=\"tuple\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></t></test>"
+                             output="<test class=\"quartjes.connector.serializer_tests.TestKlassOld\" id=\"urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\" type=\"instance\"><f type=\"float\">454343.1233</f><i type=\"int\">43432</i><l type=\"list\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></l><s type=\"str\">teststring</s><t type=\"tuple\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></t></test>"
                              ),
                          SerializerTestCase(
                              name="new style class",
                              input=TestKlassNew(),
-                             output="<test class=\"__main__.TestKlassNew\" id=\"urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\" type=\"instance\"><f type=\"float\">454343.1233</f><i type=\"int\">43432</i><l type=\"list\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></l><s type=\"str\">teststring</s><t type=\"tuple\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></t></test>"
+                             output="<test class=\"quartjes.connector.serializer_tests.TestKlassNew\" id=\"urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\" type=\"instance\"><f type=\"float\">454343.1233</f><i type=\"int\">43432</i><l type=\"list\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></l><s type=\"str\">teststring</s><t type=\"tuple\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></t></test>"
                              ),
                          SerializerTestCase(
                              name="quartjes class",
                              input=TestQuartjesKlass(),
-                             output="<test class=\"__main__.TestQuartjesKlass\" id=\"urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\" type=\"instance\"><f type=\"float\">454343.1233</f><i type=\"int\">43432</i><l type=\"list\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></l><s type=\"str\">teststring</s><t type=\"tuple\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></t></test>"
+                             output="<test class=\"quartjes.connector.serializer_tests.TestQuartjesKlass\" id=\"urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\" type=\"instance\"><f type=\"float\">454343.1233</f><i type=\"int\">43432</i><l type=\"list\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></l><s type=\"str\">teststring</s><t type=\"tuple\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></t></test>"
                              ),
                          SerializerTestCase(
                              name="class with override",
                              input=TestKlassOverride(),
-                             output="<test class=\"__main__.TestKlassOverride\" id=\"urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\" type=\"instance\"><i type=\"int\">43432</i><l type=\"list\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></l></test>"
+                             output="<test class=\"quartjes.connector.serializer_tests.TestKlassOverride\" id=\"urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\" type=\"instance\"><i type=\"int\">43432</i><l type=\"list\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></l></test>"
                              ),
                          SerializerTestCase(
                              name="None",
@@ -193,7 +255,4 @@ def load_tests(loader, tests, pattern):
     suite.addTests(loader.loadTestsFromTestCase(ValueSerializerTestCase))
     suite.addTests(serializer_test_cases)
     return suite
-
-if __name__ == '__main__':
-    unittest.main(verbosity=2)
 

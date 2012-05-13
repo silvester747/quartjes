@@ -1869,13 +1869,13 @@ parameter list.</p>
 
 <dl class="data">
 <dt id="quartjes.connector.serializer.value_serializers_by_klass">
-<tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">value_serializers_by_klass</tt><em class="property"> = {&lt;type 'float'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x32bd150&gt;, &lt;class 'uuid.UUID'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x32bd190&gt;, &lt;type 'int'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x32bd0d0&gt;, &lt;type 'str'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x32bd110&gt;}</em><a class="headerlink" href="#quartjes.connector.serializer.value_serializers_by_klass" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">value_serializers_by_klass</tt><em class="property"> = {&lt;type 'float'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x35cea50&gt;, &lt;type 'int'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x35ce9d0&gt;, &lt;type 'str'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x35cea10&gt;, &lt;class 'uuid.UUID'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x35cea90&gt;}</em><a class="headerlink" href="#quartjes.connector.serializer.value_serializers_by_klass" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dictionary of registered value serializers by class. Key is the corresponding class object.</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="quartjes.connector.serializer.value_serializers_by_klass_name">
-<tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">value_serializers_by_klass_name</tt><em class="property"> = {'int': &lt;quartjes.connector.serializer.ValueSerializer object at 0x32bd0d0&gt;, 'float': &lt;quartjes.connector.serializer.ValueSerializer object at 0x32bd150&gt;, 'uuid': &lt;quartjes.connector.serializer.ValueSerializer object at 0x32bd190&gt;, 'str': &lt;quartjes.connector.serializer.ValueSerializer object at 0x32bd110&gt;}</em><a class="headerlink" href="#quartjes.connector.serializer.value_serializers_by_klass_name" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">value_serializers_by_klass_name</tt><em class="property"> = {'int': &lt;quartjes.connector.serializer.ValueSerializer object at 0x35ce9d0&gt;, 'float': &lt;quartjes.connector.serializer.ValueSerializer object at 0x35cea50&gt;, 'uuid': &lt;quartjes.connector.serializer.ValueSerializer object at 0x35cea90&gt;, 'str': &lt;quartjes.connector.serializer.ValueSerializer object at 0x35cea10&gt;}</em><a class="headerlink" href="#quartjes.connector.serializer.value_serializers_by_klass_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dictionary of registered value serializers by class name.</p>
 </dd></dl>
 
@@ -1890,6 +1890,27 @@ test runner which does not support the new load_tests protocol.</p>
 <dt id="quartjes.connector.serializer_tests.SerializerTestCase">
 <em class="property">class </em><tt class="descclassname">quartjes.connector.serializer_tests.</tt><tt class="descname">SerializerTestCase</tt><big>(</big><em>name</em>, <em>input</em>, <em>output</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer_tests.html#SerializerTestCase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer_tests.SerializerTestCase" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">unittest.case.TestCase</span></tt></p>
+<p>Generic fixture for serializer test cases.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>name</strong> : string</p>
+<blockquote>
+<div><p>Name of the test case.</p>
+</div></blockquote>
+<p><strong>input</strong> :</p>
+<blockquote>
+<div><p>Input object to test.</p>
+</div></blockquote>
+<p><strong>output</strong> : string</p>
+<blockquote class="last">
+<div><p>Expected serialized output.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 <p class="rubric">Methods</p>
 <table border="1" class="longtable docutils">
 <colgroup>
@@ -1897,194 +1918,27 @@ test runner which does not support the new load_tests protocol.</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">addCleanup</span></tt>(function,&nbsp;*args,&nbsp;**kwargs)</td>
-<td>Add a function, with arguments, to be called when the test is completed.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">addTypeEqualityFunc</span></tt>(typeobj,&nbsp;function)</td>
-<td>Add a type specific assertEqual style function to compare a type.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertAlmostEqual</span></tt>(first,&nbsp;second[,&nbsp;places,&nbsp;...])</td>
-<td>Fail if the two objects are unequal as determined by their difference rounded to the given number of decimal places (default 7) and comparing to zero, or by comparing that the between the two objects is more than the given delta.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertAlmostEquals</span></tt>(first,&nbsp;second[,&nbsp;places,&nbsp;...])</td>
-<td>Fail if the two objects are unequal as determined by their difference rounded to the given number of decimal places (default 7) and comparing to zero, or by comparing that the between the two objects is more than the given delta.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertDictContainsSubset</span></tt>(expected,&nbsp;actual[,&nbsp;msg])</td>
-<td>Checks whether actual is a superset of expected.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertDictEqual</span></tt>(d1,&nbsp;d2[,&nbsp;msg])</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertEqual</span></tt>(first,&nbsp;second[,&nbsp;msg])</td>
-<td>Fail if the two objects are unequal as determined by the &#8216;==&#8217;</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertEquals</span></tt>(first,&nbsp;second[,&nbsp;msg])</td>
-<td>Fail if the two objects are unequal as determined by the &#8216;==&#8217;</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertFalse</span></tt>(expr[,&nbsp;msg])</td>
-<td>Check that the expression is false.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertGreater</span></tt>(a,&nbsp;b[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a &gt; b), but with a nicer default message.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertGreaterEqual</span></tt>(a,&nbsp;b[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a &gt;= b), but with a nicer default message.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertIn</span></tt>(member,&nbsp;container[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a in b), but with a nicer default message.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertIs</span></tt>(expr1,&nbsp;expr2[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a is b), but with a nicer default message.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertIsInstance</span></tt>(obj,&nbsp;cls[,&nbsp;msg])</td>
-<td>Same as self.assertTrue(isinstance(obj, cls)), with a nicer</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertIsNone</span></tt>(obj[,&nbsp;msg])</td>
-<td>Same as self.assertTrue(obj is None), with a nicer default message.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertIsNot</span></tt>(expr1,&nbsp;expr2[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a is not b), but with a nicer default message.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertIsNotNone</span></tt>(obj[,&nbsp;msg])</td>
-<td>Included for symmetry with assertIsNone.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertItemsEqual</span></tt>(expected_seq,&nbsp;actual_seq[,&nbsp;msg])</td>
-<td>An unordered sequence specific comparison.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertLess</span></tt>(a,&nbsp;b[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a &lt; b), but with a nicer default message.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertLessEqual</span></tt>(a,&nbsp;b[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a &lt;= b), but with a nicer default message.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertListEqual</span></tt>(list1,&nbsp;list2[,&nbsp;msg])</td>
-<td>A list-specific equality assertion.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertMultiLineEqual</span></tt>(first,&nbsp;second[,&nbsp;msg])</td>
-<td>Assert that two multi-line strings are equal.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotAlmostEqual</span></tt>(first,&nbsp;second[,&nbsp;...])</td>
-<td>Fail if the two objects are equal as determined by their difference rounded to the given number of decimal places (default 7) and comparing to zero, or by comparing that the between the two objects is less than the given delta.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotAlmostEquals</span></tt>(first,&nbsp;second[,&nbsp;...])</td>
-<td>Fail if the two objects are equal as determined by their difference rounded to the given number of decimal places (default 7) and comparing to zero, or by comparing that the between the two objects is less than the given delta.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotEqual</span></tt>(first,&nbsp;second[,&nbsp;msg])</td>
-<td>Fail if the two objects are equal as determined by the &#8216;==&#8217;</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotEquals</span></tt>(first,&nbsp;second[,&nbsp;msg])</td>
-<td>Fail if the two objects are equal as determined by the &#8216;==&#8217;</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotIn</span></tt>(member,&nbsp;container[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a not in b), but with a nicer default message.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotIsInstance</span></tt>(obj,&nbsp;cls[,&nbsp;msg])</td>
-<td>Included for symmetry with assertIsInstance.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotRegexpMatches</span></tt>(text,&nbsp;unexpected_regexp)</td>
-<td>Fail the test if the text matches the regular expression.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertRaises</span></tt>(excClass[,&nbsp;callableObj])</td>
-<td>Fail unless an exception of class excClass is thrown</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertRaisesRegexp</span></tt>(expected_exception,&nbsp;...)</td>
-<td>Asserts that the message in a raised exception matches a regexp.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertRegexpMatches</span></tt>(text,&nbsp;expected_regexp[,&nbsp;msg])</td>
-<td>Fail the test unless the text matches the regular expression.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertSequenceEqual</span></tt>(seq1,&nbsp;seq2[,&nbsp;msg,&nbsp;seq_type])</td>
-<td>An equality assertion for ordered sequences (like lists and tuples).</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertSetEqual</span></tt>(set1,&nbsp;set2[,&nbsp;msg])</td>
-<td>A set-specific equality assertion.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertTrue</span></tt>(expr[,&nbsp;msg])</td>
-<td>Check that the expression is true.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertTupleEqual</span></tt>(tuple1,&nbsp;tuple2[,&nbsp;msg])</td>
-<td>A tuple-specific equality assertion.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assert_</span></tt>(expr[,&nbsp;msg])</td>
-<td>Check that the expression is true.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">countTestCases</span></tt>()</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">debug</span></tt>()</td>
-<td>Run the test without collecting errors in a TestResult</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">defaultTestResult</span></tt>()</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">doCleanups</span></tt>()</td>
-<td>Execute all cleanup functions.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">fail</span></tt>([msg])</td>
-<td>Fail immediately, with the given message.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">failIf</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">failIfAlmostEqual</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">failIfEqual</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">failUnless</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">failUnlessAlmostEqual</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">failUnlessEqual</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">failUnlessRaises</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">failureException</span></tt></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">id</span></tt>()</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">run</span></tt>([result])</td>
-<td></td>
-</tr>
 <tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.serializer_tests.SerializerTestCase.run_test" title="quartjes.connector.serializer_tests.SerializerTestCase.run_test"><tt class="xref py py-obj docutils literal"><span class="pre">run_test</span></tt></a>()</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">setUp</span></tt>()</td>
-<td>Hook method for setting up the test fixture before exercising it.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">setUpClass</span></tt>()</td>
-<td>Hook method for setting up class fixture before running tests in the class.</td>
+<td>Perform the test.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#quartjes.connector.serializer_tests.SerializerTestCase.shortDescription" title="quartjes.connector.serializer_tests.SerializerTestCase.shortDescription"><tt class="xref py py-obj docutils literal"><span class="pre">shortDescription</span></tt></a>()</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">skipTest</span></tt>(reason)</td>
-<td>Skip this test.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">tearDown</span></tt>()</td>
-<td>Hook method for deconstructing the test fixture after testing it.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">tearDownClass</span></tt>()</td>
-<td>Hook method for deconstructing the class fixture after running all tests in the class.</td>
+<td>Description used for the test framework.</td>
 </tr>
 </tbody>
 </table>
 <dl class="method">
 <dt id="quartjes.connector.serializer_tests.SerializerTestCase.run_test">
 <tt class="descname">run_test</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer_tests.html#SerializerTestCase.run_test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer_tests.SerializerTestCase.run_test" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Perform the test.</p>
+<p>Serializes the the object, checks whether the expected output matches.
+Then deserializes it again and checks it against the input object.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="quartjes.connector.serializer_tests.SerializerTestCase.shortDescription">
 <tt class="descname">shortDescription</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer_tests.html#SerializerTestCase.shortDescription"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer_tests.SerializerTestCase.shortDescription" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Description used for the test framework.</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -2092,23 +1946,27 @@ test runner which does not support the new load_tests protocol.</p>
 <dt id="quartjes.connector.serializer_tests.TestKlassNew">
 <em class="property">class </em><tt class="descclassname">quartjes.connector.serializer_tests.</tt><tt class="descname">TestKlassNew</tt><a class="reference internal" href="_modules/quartjes/connector/serializer_tests.html#TestKlassNew"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer_tests.TestKlassNew" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Test class for new style classes.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="quartjes.connector.serializer_tests.TestKlassOld">
 <em class="property">class </em><tt class="descclassname">quartjes.connector.serializer_tests.</tt><tt class="descname">TestKlassOld</tt><a class="reference internal" href="_modules/quartjes/connector/serializer_tests.html#TestKlassOld"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer_tests.TestKlassOld" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Test class for old style classes.</p>
+</dd></dl>
 
 <dl class="class">
 <dt id="quartjes.connector.serializer_tests.TestKlassOverride">
 <em class="property">class </em><tt class="descclassname">quartjes.connector.serializer_tests.</tt><tt class="descname">TestKlassOverride</tt><a class="reference internal" href="_modules/quartjes/connector/serializer_tests.html#TestKlassOverride"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer_tests.TestKlassOverride" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Test class for classes overriding using the __serialize__ attribute.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="quartjes.connector.serializer_tests.TestQuartjesKlass">
 <em class="property">class </em><tt class="descclassname">quartjes.connector.serializer_tests.</tt><tt class="descname">TestQuartjesKlass</tt><a class="reference internal" href="_modules/quartjes/connector/serializer_tests.html#TestQuartjesKlass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer_tests.TestQuartjesKlass" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="quartjes.util.html#quartjes.util.classtools.QuartjesBaseClass" title="quartjes.util.classtools.QuartjesBaseClass"><tt class="xref py py-class docutils literal"><span class="pre">quartjes.util.classtools.QuartjesBaseClass</span></tt></a></p>
+<p>Test class for classes based on the base class for Quartjes objects.</p>
 </dd></dl>
 
 <dl class="class">
@@ -2123,218 +1981,52 @@ test runner which does not support the new load_tests protocol.</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">addCleanup</span></tt>(function,&nbsp;*args,&nbsp;**kwargs)</td>
-<td>Add a function, with arguments, to be called when the test is completed.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">addTypeEqualityFunc</span></tt>(typeobj,&nbsp;function)</td>
-<td>Add a type specific assertEqual style function to compare a type.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertAlmostEqual</span></tt>(first,&nbsp;second[,&nbsp;places,&nbsp;...])</td>
-<td>Fail if the two objects are unequal as determined by their difference rounded to the given number of decimal places (default 7) and comparing to zero, or by comparing that the between the two objects is more than the given delta.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertAlmostEquals</span></tt>(first,&nbsp;second[,&nbsp;places,&nbsp;...])</td>
-<td>Fail if the two objects are unequal as determined by their difference rounded to the given number of decimal places (default 7) and comparing to zero, or by comparing that the between the two objects is more than the given delta.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertDictContainsSubset</span></tt>(expected,&nbsp;actual[,&nbsp;msg])</td>
-<td>Checks whether actual is a superset of expected.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertDictEqual</span></tt>(d1,&nbsp;d2[,&nbsp;msg])</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertEqual</span></tt>(first,&nbsp;second[,&nbsp;msg])</td>
-<td>Fail if the two objects are unequal as determined by the &#8216;==&#8217;</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertEquals</span></tt>(first,&nbsp;second[,&nbsp;msg])</td>
-<td>Fail if the two objects are unequal as determined by the &#8216;==&#8217;</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertFalse</span></tt>(expr[,&nbsp;msg])</td>
-<td>Check that the expression is false.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertGreater</span></tt>(a,&nbsp;b[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a &gt; b), but with a nicer default message.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertGreaterEqual</span></tt>(a,&nbsp;b[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a &gt;= b), but with a nicer default message.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertIn</span></tt>(member,&nbsp;container[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a in b), but with a nicer default message.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertIs</span></tt>(expr1,&nbsp;expr2[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a is b), but with a nicer default message.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertIsInstance</span></tt>(obj,&nbsp;cls[,&nbsp;msg])</td>
-<td>Same as self.assertTrue(isinstance(obj, cls)), with a nicer</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertIsNone</span></tt>(obj[,&nbsp;msg])</td>
-<td>Same as self.assertTrue(obj is None), with a nicer default message.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertIsNot</span></tt>(expr1,&nbsp;expr2[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a is not b), but with a nicer default message.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertIsNotNone</span></tt>(obj[,&nbsp;msg])</td>
-<td>Included for symmetry with assertIsNone.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertItemsEqual</span></tt>(expected_seq,&nbsp;actual_seq[,&nbsp;msg])</td>
-<td>An unordered sequence specific comparison.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertLess</span></tt>(a,&nbsp;b[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a &lt; b), but with a nicer default message.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertLessEqual</span></tt>(a,&nbsp;b[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a &lt;= b), but with a nicer default message.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertListEqual</span></tt>(list1,&nbsp;list2[,&nbsp;msg])</td>
-<td>A list-specific equality assertion.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertMultiLineEqual</span></tt>(first,&nbsp;second[,&nbsp;msg])</td>
-<td>Assert that two multi-line strings are equal.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotAlmostEqual</span></tt>(first,&nbsp;second[,&nbsp;...])</td>
-<td>Fail if the two objects are equal as determined by their difference rounded to the given number of decimal places (default 7) and comparing to zero, or by comparing that the between the two objects is less than the given delta.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotAlmostEquals</span></tt>(first,&nbsp;second[,&nbsp;...])</td>
-<td>Fail if the two objects are equal as determined by their difference rounded to the given number of decimal places (default 7) and comparing to zero, or by comparing that the between the two objects is less than the given delta.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotEqual</span></tt>(first,&nbsp;second[,&nbsp;msg])</td>
-<td>Fail if the two objects are equal as determined by the &#8216;==&#8217;</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotEquals</span></tt>(first,&nbsp;second[,&nbsp;msg])</td>
-<td>Fail if the two objects are equal as determined by the &#8216;==&#8217;</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotIn</span></tt>(member,&nbsp;container[,&nbsp;msg])</td>
-<td>Just like self.assertTrue(a not in b), but with a nicer default message.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotIsInstance</span></tt>(obj,&nbsp;cls[,&nbsp;msg])</td>
-<td>Included for symmetry with assertIsInstance.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertNotRegexpMatches</span></tt>(text,&nbsp;unexpected_regexp)</td>
-<td>Fail the test if the text matches the regular expression.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertRaises</span></tt>(excClass[,&nbsp;callableObj])</td>
-<td>Fail unless an exception of class excClass is thrown</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertRaisesRegexp</span></tt>(expected_exception,&nbsp;...)</td>
-<td>Asserts that the message in a raised exception matches a regexp.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertRegexpMatches</span></tt>(text,&nbsp;expected_regexp[,&nbsp;msg])</td>
-<td>Fail the test unless the text matches the regular expression.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertSequenceEqual</span></tt>(seq1,&nbsp;seq2[,&nbsp;msg,&nbsp;seq_type])</td>
-<td>An equality assertion for ordered sequences (like lists and tuples).</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertSetEqual</span></tt>(set1,&nbsp;set2[,&nbsp;msg])</td>
-<td>A set-specific equality assertion.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertTrue</span></tt>(expr[,&nbsp;msg])</td>
-<td>Check that the expression is true.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">assertTupleEqual</span></tt>(tuple1,&nbsp;tuple2[,&nbsp;msg])</td>
-<td>A tuple-specific equality assertion.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">assert_</span></tt>(expr[,&nbsp;msg])</td>
-<td>Check that the expression is true.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">countTestCases</span></tt>()</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">debug</span></tt>()</td>
-<td>Run the test without collecting errors in a TestResult</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">defaultTestResult</span></tt>()</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">doCleanups</span></tt>()</td>
-<td>Execute all cleanup functions.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">fail</span></tt>([msg])</td>
-<td>Fail immediately, with the given message.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">failIf</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">failIfAlmostEqual</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">failIfEqual</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">failUnless</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">failUnlessAlmostEqual</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">failUnlessEqual</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">failUnlessRaises</span></tt>(*args,&nbsp;**kwargs)</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">failureException</span></tt></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">id</span></tt>()</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">run</span></tt>([result])</td>
-<td></td>
-</tr>
 <tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.serializer_tests.ValueSerializerTestCase.setUp" title="quartjes.connector.serializer_tests.ValueSerializerTestCase.setUp"><tt class="xref py py-obj docutils literal"><span class="pre">setUp</span></tt></a>()</td>
-<td></td>
+<td>Prepare some test cases.</td>
 </tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">setUpClass</span></tt>()</td>
-<td>Hook method for setting up class fixture before running tests in the class.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">shortDescription</span></tt>()</td>
-<td>Returns a one-line description of the test, or None if no</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">skipTest</span></tt>(reason)</td>
-<td>Skip this test.</td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">tearDown</span></tt>()</td>
-<td>Hook method for deconstructing the test fixture after testing it.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">tearDownClass</span></tt>()</td>
-<td>Hook method for deconstructing the class fixture after running all tests in the class.</td>
+<tr class="row-even"><td><a class="reference internal" href="#quartjes.connector.serializer_tests.ValueSerializerTestCase.test_serializing" title="quartjes.connector.serializer_tests.ValueSerializerTestCase.test_serializing"><tt class="xref py py-obj docutils literal"><span class="pre">test_serializing</span></tt></a>()</td>
+<td>Test serializing each value type.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.serializer_tests.ValueSerializerTestCase.test_deserializing" title="quartjes.connector.serializer_tests.ValueSerializerTestCase.test_deserializing"><tt class="xref py py-obj docutils literal"><span class="pre">test_deserializing</span></tt></a>()</td>
-<td></td>
+<td>Test deserializing each value type.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#quartjes.connector.serializer_tests.ValueSerializerTestCase.test_none" title="quartjes.connector.serializer_tests.ValueSerializerTestCase.test_none"><tt class="xref py py-obj docutils literal"><span class="pre">test_none</span></tt></a>()</td>
-<td></td>
+<td>Test None</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.serializer_tests.ValueSerializerTestCase.test_serializing" title="quartjes.connector.serializer_tests.ValueSerializerTestCase.test_serializing"><tt class="xref py py-obj docutils literal"><span class="pre">test_serializing</span></tt></a>()</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#quartjes.connector.serializer_tests.ValueSerializerTestCase.test_unknown" title="quartjes.connector.serializer_tests.ValueSerializerTestCase.test_unknown"><tt class="xref py py-obj docutils literal"><span class="pre">test_unknown</span></tt></a>()</td>
-<td></td>
+<tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.serializer_tests.ValueSerializerTestCase.test_unknown" title="quartjes.connector.serializer_tests.ValueSerializerTestCase.test_unknown"><tt class="xref py py-obj docutils literal"><span class="pre">test_unknown</span></tt></a>()</td>
+<td>Test handling an unknown type.</td>
 </tr>
 </tbody>
 </table>
 <dl class="method">
 <dt id="quartjes.connector.serializer_tests.ValueSerializerTestCase.setUp">
 <tt class="descname">setUp</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer_tests.html#ValueSerializerTestCase.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer_tests.ValueSerializerTestCase.setUp" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Prepare some test cases.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="quartjes.connector.serializer_tests.ValueSerializerTestCase.test_deserializing">
 <tt class="descname">test_deserializing</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer_tests.html#ValueSerializerTestCase.test_deserializing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer_tests.ValueSerializerTestCase.test_deserializing" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Test deserializing each value type.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="quartjes.connector.serializer_tests.ValueSerializerTestCase.test_none">
 <tt class="descname">test_none</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer_tests.html#ValueSerializerTestCase.test_none"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer_tests.ValueSerializerTestCase.test_none" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Test None</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="quartjes.connector.serializer_tests.ValueSerializerTestCase.test_serializing">
 <tt class="descname">test_serializing</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer_tests.html#ValueSerializerTestCase.test_serializing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer_tests.ValueSerializerTestCase.test_serializing" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Test serializing each value type.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="quartjes.connector.serializer_tests.ValueSerializerTestCase.test_unknown">
 <tt class="descname">test_unknown</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/quartjes/connector/serializer_tests.html#ValueSerializerTestCase.test_unknown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.serializer_tests.ValueSerializerTestCase.test_unknown" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Test handling an unknown type.</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -2584,7 +2276,7 @@ being (un)registered to the server event.</p>
 
 <dl class="attribute">
 <dt id="quartjes.connector.services.TestRemoteService.on_trigger">
-<tt class="descname">on_trigger</tt><em class="property"> = &lt;axel.axel.Event object at 0x32c2550&gt;</em><a class="headerlink" href="#quartjes.connector.services.TestRemoteService.on_trigger" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">on_trigger</tt><em class="property"> = &lt;axel.axel.Event object at 0x35d2e50&gt;</em><a class="headerlink" href="#quartjes.connector.services.TestRemoteService.on_trigger" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">

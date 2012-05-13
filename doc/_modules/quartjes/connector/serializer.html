@@ -227,7 +227,7 @@
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
         <span class="n">type_name</span> <span class="o">=</span> <span class="s">&quot;tuple&quot;</span>
 
-    <span class="n">node</span> <span class="o">=</span> <span class="n">add_element</span><span class="p">(</span><span class="n">tag_name</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">type_name</span><span class="p">)</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">add_element</span><span class="p">(</span><span class="n">tag_name</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">,</span> <span class="n">type_name</span><span class="o">=</span><span class="n">type_name</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
         <span class="n">add_value_element</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">node</span><span class="p">,</span> <span class="n">tag_name</span><span class="o">=</span><span class="s">&quot;value&quot;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">)</span>
 
@@ -282,7 +282,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c">#print(&quot;serializeInstance %s&quot; % obj)</span>
 
-    <span class="n">obj_node</span> <span class="o">=</span> <span class="n">add_element</span><span class="p">(</span><span class="n">tag_name</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s">&quot;instance&quot;</span><span class="p">)</span>
+    <span class="n">obj_node</span> <span class="o">=</span> <span class="n">add_element</span><span class="p">(</span><span class="n">tag_name</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">,</span> <span class="n">type_name</span><span class="o">=</span><span class="s">&quot;instance&quot;</span><span class="p">)</span>
 
     <span class="n">class_name</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__module__</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
 
@@ -484,7 +484,7 @@
     <span class="k">if</span> <span class="n">type_name</span> <span class="o">==</span> <span class="s">&quot;dict&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">deserialize_dict</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">type_name</span> <span class="o">==</span> <span class="s">&quot;list&quot;</span> <span class="ow">or</span> <span class="nb">type</span> <span class="o">==</span> <span class="s">&quot;tuple&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">type_name</span> <span class="o">==</span> <span class="s">&quot;list&quot;</span> <span class="ow">or</span> <span class="n">type_name</span> <span class="o">==</span> <span class="s">&quot;tuple&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">deserialize_list_or_tuple</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">type_name</span> <span class="ow">in</span> <span class="n">value_serializers_by_klass_name</span><span class="p">:</span>
