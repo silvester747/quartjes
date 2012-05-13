@@ -1869,13 +1869,13 @@ parameter list.</p>
 
 <dl class="data">
 <dt id="quartjes.connector.serializer.value_serializers_by_klass">
-<tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">value_serializers_by_klass</tt><em class="property"> = {&lt;type 'float'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x2916a50&gt;, &lt;type 'int'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x29169d0&gt;, &lt;type 'str'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x2916a10&gt;, &lt;class 'uuid.UUID'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x2916a90&gt;}</em><a class="headerlink" href="#quartjes.connector.serializer.value_serializers_by_klass" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">value_serializers_by_klass</tt><em class="property"> = {&lt;type 'float'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x393fa50&gt;, &lt;type 'int'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x393f9d0&gt;, &lt;type 'str'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x393fa10&gt;, &lt;class 'uuid.UUID'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x393fa90&gt;}</em><a class="headerlink" href="#quartjes.connector.serializer.value_serializers_by_klass" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dictionary of registered value serializers by class. Key is the corresponding class object.</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="quartjes.connector.serializer.value_serializers_by_klass_name">
-<tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">value_serializers_by_klass_name</tt><em class="property"> = {'int': &lt;quartjes.connector.serializer.ValueSerializer object at 0x29169d0&gt;, 'float': &lt;quartjes.connector.serializer.ValueSerializer object at 0x2916a50&gt;, 'uuid': &lt;quartjes.connector.serializer.ValueSerializer object at 0x2916a90&gt;, 'str': &lt;quartjes.connector.serializer.ValueSerializer object at 0x2916a10&gt;}</em><a class="headerlink" href="#quartjes.connector.serializer.value_serializers_by_klass_name" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">value_serializers_by_klass_name</tt><em class="property"> = {'int': &lt;quartjes.connector.serializer.ValueSerializer object at 0x393f9d0&gt;, 'float': &lt;quartjes.connector.serializer.ValueSerializer object at 0x393fa50&gt;, 'uuid': &lt;quartjes.connector.serializer.ValueSerializer object at 0x393fa90&gt;, 'str': &lt;quartjes.connector.serializer.ValueSerializer object at 0x393fa10&gt;}</em><a class="headerlink" href="#quartjes.connector.serializer.value_serializers_by_klass_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dictionary of registered value serializers by class name.</p>
 </dd></dl>
 
@@ -2041,6 +2041,9 @@ Some test cases are added a little different than usual.</p>
 <div class="section" id="module-quartjes.connector.server">
 <span id="server-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">server</span></tt> Module<a class="headerlink" href="#module-quartjes.connector.server" title="Permalink to this headline">¶</a></h2>
 <p>Connector components used to run a Quartjes server.</p>
+<p>To run a Quartjes server, create an instance of <a class="reference internal" href="#quartjes.connector.server.ServerConnector" title="quartjes.connector.server.ServerConnector"><tt class="xref py py-class docutils literal"><span class="pre">ServerConnector</span></tt></a>. Then
+register services to expose to the clients using <a class="reference internal" href="#quartjes.connector.server.ServerConnector.register_service" title="quartjes.connector.server.ServerConnector.register_service"><tt class="xref py py-meth docutils literal"><span class="pre">ServerConnector.register_service()</span></tt></a>.
+For defining services see <a class="reference internal" href="#module-quartjes.connector.services" title="quartjes.connector.services"><tt class="xref py py-mod docutils literal"><span class="pre">quartjes.connector.services</span></tt></a>.</p>
 <dl class="class">
 <dt id="quartjes.connector.server.ServerConnector">
 <em class="property">class </em><tt class="descclassname">quartjes.connector.server.</tt><tt class="descname">ServerConnector</tt><big>(</big><em>port=1234</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/server.html#ServerConnector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.server.ServerConnector" title="Permalink to this definition">¶</a></dt>
@@ -2191,6 +2194,18 @@ the service.</p>
 <em class="property">class </em><tt class="descclassname">quartjes.connector.services.</tt><tt class="descname">RemoteEventRegistry</tt><big>(</big><em>service</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/services.html#RemoteEventRegistry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.services.RemoteEventRegistry" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>Registry for keeping track of remote subscribers to an event.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>service</strong> : class decorated as remote service</p>
+<blockquote class="last">
+<div><p>Service this registry tracks the events for.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 <p class="rubric">Methods</p>
 <table border="1" class="longtable docutils">
 <colgroup>
@@ -2210,12 +2225,60 @@ the service.</p>
 <dt id="quartjes.connector.services.RemoteEventRegistry.subscribe">
 <tt class="descname">subscribe</tt><big>(</big><em>service_name</em>, <em>event_name</em>, <em>listener</em>, <em>factory</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/services.html#RemoteEventRegistry.subscribe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.services.RemoteEventRegistry.subscribe" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subscribe the listener to an event.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>service_name</strong> : string</p>
+<blockquote>
+<div><p>Name the service is registered under.</p>
+</div></blockquote>
+<p><strong>event_name</strong> : string</p>
+<blockquote>
+<div><p>Name of the event.</p>
+</div></blockquote>
+<p><strong>listener</strong> : <a class="reference internal" href="#quartjes.connector.protocol.QuartjesProtocol" title="quartjes.connector.protocol.QuartjesProtocol"><tt class="xref py py-class docutils literal"><span class="pre">quartjes.connector.protocol.QuartjesProtocol</span></tt></a></p>
+<blockquote>
+<div><p>Client subscribing to the event.</p>
+</div></blockquote>
+<p><strong>factory</strong> : <a class="reference internal" href="#quartjes.connector.protocol.QuartjesServerFactory" title="quartjes.connector.protocol.QuartjesServerFactory"><tt class="xref py py-class docutils literal"><span class="pre">quartjes.connector.protocol.QuartjesServerFactory</span></tt></a></p>
+<blockquote class="last">
+<div><p>Factory handling client requests.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="quartjes.connector.services.RemoteEventRegistry.unsubscribe">
 <tt class="descname">unsubscribe</tt><big>(</big><em>service_name</em>, <em>event_name</em>, <em>listener</em>, <em>factory</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/services.html#RemoteEventRegistry.unsubscribe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.services.RemoteEventRegistry.unsubscribe" title="Permalink to this definition">¶</a></dt>
 <dd><p>Unsubscribe the listener from an event.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>service_name</strong> : string</p>
+<blockquote>
+<div><p>Name the service is registered under.</p>
+</div></blockquote>
+<p><strong>event_name</strong> : string</p>
+<blockquote>
+<div><p>Name of the event.</p>
+</div></blockquote>
+<p><strong>listener</strong> : <a class="reference internal" href="#quartjes.connector.protocol.QuartjesProtocol" title="quartjes.connector.protocol.QuartjesProtocol"><tt class="xref py py-class docutils literal"><span class="pre">quartjes.connector.protocol.QuartjesProtocol</span></tt></a></p>
+<blockquote>
+<div><p>Client subscribing to the event.</p>
+</div></blockquote>
+<p><strong>factory</strong> : <a class="reference internal" href="#quartjes.connector.protocol.QuartjesServerFactory" title="quartjes.connector.protocol.QuartjesServerFactory"><tt class="xref py py-class docutils literal"><span class="pre">quartjes.connector.protocol.QuartjesServerFactory</span></tt></a></p>
+<blockquote class="last">
+<div><p>Factory handling client requests.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -2226,34 +2289,27 @@ the service.</p>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>Client side interface to interact with services defined as Service objects
 at the server side.</p>
-<p>Returns undefined attributes as methods that will send a request to the service
-using the attribute name as action and keyword arguments as parameters.
-Override this class and add your own methods to allow positional arguments
-and different names.</p>
-<p>The subscribe method is used to register a callback method that is called when
-the service publishes an update on the selected topic.</p>
+<p>For each attribute a special proxy object is returned that will act as both
+a callable method and an event. Based on the way it is used, the correct
+actions are triggered on the server.</p>
 <p>Always be ready to receive a MessageHandleError or ConnectionError when calling
 methods on a ServiceInterface.</p>
-<p class="rubric">Methods</p>
-<table border="1" class="longtable docutils">
-<colgroup>
-<col width="10%" />
-<col width="90%" />
-</colgroup>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.services.ServiceInterface.subscribe" title="quartjes.connector.services.ServiceInterface.subscribe"><tt class="xref py py-obj docutils literal"><span class="pre">subscribe</span></tt></a>(event_name,&nbsp;callback)</td>
-<td>Subscribe to receive updates on the given event_name.</td>
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>client_factory</strong> : <a class="reference internal" href="#quartjes.connector.protocol.QuartjesClientFactory" title="quartjes.connector.protocol.QuartjesClientFactory"><tt class="xref py py-class docutils literal"><span class="pre">quartjes.connector.protocol.QuartjesClientFactory</span></tt></a></p>
+<blockquote>
+<div><p>Factory handling connections to the server.</p>
+</div></blockquote>
+<p><strong>service_name</strong> : string</p>
+<blockquote class="last">
+<div><p>Name of the service to provide an interface to.</p>
+</div></blockquote>
+</td>
 </tr>
 </tbody>
 </table>
-<dl class="method">
-<dt id="quartjes.connector.services.ServiceInterface.subscribe">
-<tt class="descname">subscribe</tt><big>(</big><em>event_name</em>, <em>callback</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/services.html#ServiceInterface.subscribe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.services.ServiceInterface.subscribe" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subscribe to receive updates on the given event_name. The callback is called
-each time an update is received. The callback should only accept keyword
-arguments matching the keywords send by the service.</p>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="class">
@@ -2264,6 +2320,26 @@ arguments matching the keywords send by the service.</p>
 Calling this object will result in the corresponding server side method
 to be called. Adding or removing a callback results in the callback
 being (un)registered to the server event.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>client_factory</strong> : <a class="reference internal" href="#quartjes.connector.protocol.QuartjesClientFactory" title="quartjes.connector.protocol.QuartjesClientFactory"><tt class="xref py py-class docutils literal"><span class="pre">quartjes.connector.protocol.QuartjesClientFactory</span></tt></a></p>
+<blockquote>
+<div><p>Factory handling connections to the server.</p>
+</div></blockquote>
+<p><strong>service_name</strong> : string</p>
+<blockquote>
+<div><p>Name of the service to communicate with.</p>
+</div></blockquote>
+<p><strong>name</strong> : string</p>
+<blockquote class="last">
+<div><p>Name of the event or method.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="class">
@@ -2305,7 +2381,7 @@ being (un)registered to the server event.</p>
 
 <dl class="attribute">
 <dt id="quartjes.connector.services.TestRemoteService.on_trigger">
-<tt class="descname">on_trigger</tt><em class="property"> = &lt;axel.axel.Event object at 0x291ae50&gt;</em><a class="headerlink" href="#quartjes.connector.services.TestRemoteService.on_trigger" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">on_trigger</tt><em class="property"> = &lt;axel.axel.Event object at 0x3943cd0&gt;</em><a class="headerlink" href="#quartjes.connector.services.TestRemoteService.on_trigger" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -2334,41 +2410,177 @@ being (un)registered to the server event.</p>
 <dt id="quartjes.connector.services.execute_remote_method_call">
 <tt class="descclassname">quartjes.connector.services.</tt><tt class="descname">execute_remote_method_call</tt><big>(</big><em>service</em>, <em>method_name</em>, <em>*pargs</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/services.html#execute_remote_method_call"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.services.execute_remote_method_call" title="Permalink to this definition">¶</a></dt>
 <dd><p>Call a method on a class allowing remote service calls.
-Checks whether the method can be called and then performs the call.
-The result of the method call is returned.</p>
+Checks whether the method can be called and then performs the call.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>service</strong> : class decorated as remote service</p>
+<blockquote>
+<div><p>Service to call a method on.</p>
+</div></blockquote>
+<p><strong>method_name</strong> : string</p>
+<blockquote>
+<div><p>Name of the method to call.</p>
+</div></blockquote>
+<p><strong>*pargs</strong> :</p>
+<blockquote>
+<div><p>Positional arguments to pass to the method.</p>
+</div></blockquote>
+<p><strong>**kwargs</strong> :</p>
+<blockquote>
+<div><p>Keyword arguments to pass to the method.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> :</p>
+<blockquote>
+<div><p>Result returned by the method call.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises :</th><td class="field-body"><p class="first"><strong>MessageHandleError</strong> :</p>
+<blockquote class="last">
+<div><p>An error occurred trying to handle the message.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="quartjes.connector.services.prepare_remote_service">
 <tt class="descclassname">quartjes.connector.services.</tt><tt class="descname">prepare_remote_service</tt><big>(</big><em>service</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/services.html#prepare_remote_service"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.services.prepare_remote_service" title="Permalink to this definition">¶</a></dt>
 <dd><p>Prepare a remote service class to be used as a remote service.</p>
+<p>Adds the remote event registry required to allow remote clients to receive
+event notifications.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>service</strong> : class decorated as remote_service</p>
+<blockquote class="last">
+<div><p>The service to prepare for remote access.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="quartjes.connector.services.remote_event">
 <tt class="descclassname">quartjes.connector.services.</tt><tt class="descname">remote_event</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/services.html#remote_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.services.remote_event" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate an event that should be exposed through a remote service.
-Also requires the class to be decorated as &#8216;remote_service&#8217;.
+Also requires the class to be decorated as <a class="reference internal" href="#quartjes.connector.services.remote_service" title="quartjes.connector.services.remote_service"><tt class="xref py py-func docutils literal"><span class="pre">remote_service()</span></tt></a>.
 Warning: this is _not_ a decorator.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>*args</strong> :</p>
+<blockquote>
+<div><p>Positional arguments to pass to the Event constructor.</p>
+</div></blockquote>
+<p><strong>**kwargs</strong> :</p>
+<blockquote>
+<div><p>Keyword arguments to pass to the Event constructor.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>E</strong> : Event</p>
+<blockquote class="last">
+<div><p>Event with remote access enabled.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="quartjes.connector.services.remote_method">
 <tt class="descclassname">quartjes.connector.services.</tt><tt class="descname">remote_method</tt><big>(</big><em>F</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/services.html#remote_method"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.services.remote_method" title="Permalink to this definition">¶</a></dt>
 <dd><p>Decorator for methods that should expose them selves through a remote service.
-Also requires the class to be decorated as &#8216;remote_service&#8217;.</p>
+Also requires the class to be decorated as <a class="reference internal" href="#quartjes.connector.services.remote_service" title="quartjes.connector.services.remote_service"><tt class="xref py py-func docutils literal"><span class="pre">remote_service()</span></tt></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>F</strong> : method</p>
+<blockquote>
+<div><p>Method to decorate as a remote method.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>F</strong> : method</p>
+<blockquote class="last">
+<div><p>The decorated method.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="quartjes.connector.services.remote_service">
 <tt class="descclassname">quartjes.connector.services.</tt><tt class="descname">remote_service</tt><big>(</big><em>C</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/services.html#remote_service"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.services.remote_service" title="Permalink to this definition">¶</a></dt>
 <dd><p>Decorator for classes that should expose methods as a remote service.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>C</strong> : class</p>
+<blockquote>
+<div><p>The class to decorate as a remote service.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>C</strong> : class</p>
+<blockquote class="last">
+<div><p>The decorated class.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="quartjes.connector.services.subscribe_to_remote_event">
 <tt class="descclassname">quartjes.connector.services.</tt><tt class="descname">subscribe_to_remote_event</tt><big>(</big><em>service</em>, <em>service_name</em>, <em>event_name</em>, <em>listener</em>, <em>factory</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/services.html#subscribe_to_remote_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.services.subscribe_to_remote_event" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Subscribe a client to an event on a service.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>service</strong> : class decorated as remote service</p>
+<blockquote>
+<div><p>Service containing the event to subscribe to.</p>
+</div></blockquote>
+<p><strong>service_name</strong> : string</p>
+<blockquote>
+<div><p>Name the service is registered under.</p>
+</div></blockquote>
+<p><strong>event_name</strong> : string</p>
+<blockquote>
+<div><p>Name of the event to subscribe to.</p>
+</div></blockquote>
+<p><strong>listener</strong> : <a class="reference internal" href="#quartjes.connector.protocol.QuartjesProtocol" title="quartjes.connector.protocol.QuartjesProtocol"><tt class="xref py py-class docutils literal"><span class="pre">quartjes.connector.protocol.QuartjesProtocol</span></tt></a></p>
+<blockquote>
+<div><p>Client requesting the subscription.</p>
+</div></blockquote>
+<p><strong>factory</strong> : <a class="reference internal" href="#quartjes.connector.protocol.QuartjesServerFactory" title="quartjes.connector.protocol.QuartjesServerFactory"><tt class="xref py py-class docutils literal"><span class="pre">quartjes.connector.protocol.QuartjesServerFactory</span></tt></a></p>
+<blockquote class="last">
+<div><p>Factory handling the connections.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </div>
 </div>

@@ -29,6 +29,16 @@ from axel import Event
 def remote_service(C):
     """
     Decorator for classes that should expose methods as a remote service.
+    
+    Parameters
+    ----------
+    C : class
+        The class to decorate as a remote service.
+    
+    Returns
+    -------
+    C : class
+        The decorated class.
     """
     C._remote_service = True
     
@@ -50,7 +60,17 @@ def remote_service(C):
 def remote_method(F):
     """
     Decorator for methods that should expose them selves through a remote service.
-    Also requires the class to be decorated as 'remote_service'.
+    Also requires the class to be decorated as :func:`remote_service`.
+    
+    Parameters
+    ----------
+    F : method
+        Method to decorate as a remote method.
+    
+    Returns
+    -------
+    F : method
+        The decorated method.
     """
     F._remote_method = True
     return F
@@ -58,8 +78,20 @@ def remote_method(F):
 def remote_event(*args, **kwargs):
     """
     Generate an event that should be exposed through a remote service.
-    Also requires the class to be decorated as 'remote_service'.
+    Also requires the class to be decorated as :func:`remote_service`.
     Warning: this is _not_ a decorator.
+    
+    Parameters
+    ----------
+    *args
+        Positional arguments to pass to the Event constructor.
+    **kwargs
+        Keyword arguments to pass to the Event constructor.
+        
+    Returns
+    -------
+    E : Event
+        Event with remote access enabled.
     """
     E = Event(*args, **kwargs)
     E._remote_event = True
@@ -68,6 +100,14 @@ def remote_event(*args, **kwargs):
 def prepare_remote_service(service):
     """
     Prepare a remote service class to be used as a remote service.
+    
+    Adds the remote event registry required to allow remote clients to receive
+    event notifications.
+    
+    Parameters
+    ----------
+    service : class decorated as remote_service
+        The service to prepare for remote access.
     """
     if not hasattr(service, "_remote_event_registry"):
         service._remote_event_registry = RemoteEventRegistry(service)
@@ -76,7 +116,27 @@ def execute_remote_method_call(service, method_name, *pargs, **kwargs):
     """
     Call a method on a class allowing remote service calls.
     Checks whether the method can be called and then performs the call.
-    The result of the method call is returned.
+    
+    Parameters
+    ----------
+    service : class decorated as remote service
+        Service to call a method on.
+    method_name : string
+        Name of the method to call.
+    *pargs
+        Positional arguments to pass to the method.
+    **kwargs
+        Keyword arguments to pass to the method.
+    
+    Returns
+    -------
+    result
+        Result returned by the method call.
+    
+    Raises
+    ------
+    MessageHandleError
+        An error occurred trying to handle the message.
     """
     
     assert service._remote_service, "Services must be decorated as remote_service"
@@ -97,13 +157,32 @@ def execute_remote_method_call(service, method_name, *pargs, **kwargs):
         raise MessageHandleError(MessageHandleError.RESULT_EXCEPTION_RAISED, error_details=str(err))
 
 def subscribe_to_remote_event(service, service_name, event_name, listener, factory):
-    print("subscribing to event")
+    """
+    Subscribe a client to an event on a service.
+    
+    Parameters
+    ----------
+    service : class decorated as remote service
+        Service containing the event to subscribe to.
+    service_name : string
+        Name the service is registered under.
+    event_name : string
+        Name of the event to subscribe to.
+    listener : :class:`quartjes.connector.protocol.QuartjesProtocol`
+        Client requesting the subscription.
+    factory : :class:`quartjes.connector.protocol.QuartjesServerFactory`
+        Factory handling the connections.
+    """
     service._remote_event_registry.subscribe(service_name, event_name, listener, factory)
-    print("subscribing to event done")
 
 class RemoteEventRegistry(object):
     """
     Registry for keeping track of remote subscribers to an event.
+    
+    Parameters
+    ----------
+    service : class decorated as remote service
+        Service this registry tracks the events for.
     """
     
     def __init__(self, service):
@@ -113,6 +192,17 @@ class RemoteEventRegistry(object):
     def subscribe(self, service_name, event_name, listener, factory):
         """
         Subscribe the listener to an event.
+        
+        Parameters
+        ----------
+        service_name : string
+            Name the service is registered under.
+        event_name : string
+            Name of the event.
+        listener : :class:`quartjes.connector.protocol.QuartjesProtocol`
+            Client subscribing to the event.
+        factory : :class:`quartjes.connector.protocol.QuartjesServerFactory`
+            Factory handling client requests.
         """
         if not event_name in self._events:
             self._add_event(event_name)
@@ -123,32 +213,53 @@ class RemoteEventRegistry(object):
     def unsubscribe(self, service_name, event_name, listener, factory):
         """
         Unsubscribe the listener from an event.
+        
+        Parameters
+        ----------
+        service_name : string
+            Name the service is registered under.
+        event_name : string
+            Name of the event.
+        listener : :class:`quartjes.connector.protocol.QuartjesProtocol`
+            Client subscribing to the event.
+        factory : :class:`quartjes.connector.protocol.QuartjesServerFactory`
+            Factory handling client requests.
         """
         
     def _add_event(self, event_name):
         """
         Add an event to the list of registered events and make sure it is being
         listened to.
+        
+        Parameters
+        ----------
+        event_name : string
+            Name of the event.
         """
-        print("adding event: %s" % event_name)
         if not event_name in self._service._remote_events:
-            print("error 1")
             raise MessageHandleError(MessageHandleError.RESULT_UNKNOWN_EVENT)    
         
         self._events[event_name] = []
         
         event = getattr(self._service, event_name, None)
         if event == None:
-            print("error 2")
             raise MessageHandleError(MessageHandleError.RESULT_UNKNOWN_EVENT)    
 
-        print("registering event listener")
         event += self._create_event_listener(event_name)
-        print("adding event done")
         
     def _event_triggered(self, event_name, *pargs, **kwargs):
         """
-        Catch a triggered event.
+        Catch a triggered event. This method is assigned to events to catch
+        the subscribed events.
+        
+        Parameters
+        ----------
+        event_name : string
+            Name of the event that has been triggered.
+        *pargs
+            Positional arguments for the event.
+        **kwargs
+            Keyword arguments for the event.
         """
         for (service_name, listener, factory) in self._events[event_name]:
             factory.send_event(service_name, event_name, listener, *pargs, **kwargs)
@@ -157,6 +268,16 @@ class RemoteEventRegistry(object):
         """
         Create a special method for listening to an event and then forwarding it
         to the clients.
+        
+        Parameters
+        ----------
+        event_name : string
+            Name of the event.
+        
+        Returns
+        -------
+        listener : method
+            The listener that can be assigned to the event.
         """
         def listener(*pargs, **kwargs):
             self._event_triggered(event_name, *pargs, **kwargs)
@@ -167,17 +288,21 @@ class ServiceInterface(object):
     """
     Client side interface to interact with services defined as Service objects
     at the server side.
-
-    Returns undefined attributes as methods that will send a request to the service
-    using the attribute name as action and keyword arguments as parameters.
-    Override this class and add your own methods to allow positional arguments
-    and different names.
-
-    The subscribe method is used to register a callback method that is called when
-    the service publishes an update on the selected topic.
+    
+    For each attribute a special proxy object is returned that will act as both
+    a callable method and an event. Based on the way it is used, the correct
+    actions are triggered on the server.
 
     Always be ready to receive a MessageHandleError or ConnectionError when calling
     methods on a ServiceInterface.
+
+    Parameters
+    ----------
+    client_factory : :class:`quartjes.connector.protocol.QuartjesClientFactory`
+        Factory handling connections to the server.
+    service_name : string
+        Name of the service to provide an interface to.
+    
     """
     def __init__(self, client_factory, service_name):
         """
@@ -196,13 +321,6 @@ class ServiceInterface(object):
         """
         return ServiceInterfaceAttribute(self._client_factory, self._service_name, name)
 
-    def subscribe(self, event_name, callback):
-        """
-        Subscribe to receive updates on the given event_name. The callback is called
-        each time an update is received. The callback should only accept keyword
-        arguments matching the keywords send by the service.
-        """
-        self._client_factory.subscribe(self._service_name, event_name, callback)
 
 class ServiceInterfaceAttribute(object):
     """
@@ -210,6 +328,15 @@ class ServiceInterfaceAttribute(object):
     Calling this object will result in the corresponding server side method
     to be called. Adding or removing a callback results in the callback
     being (un)registered to the server event.
+    
+    Parameters
+    ----------
+    client_factory : :class:`quartjes.connector.protocol.QuartjesClientFactory`
+        Factory handling connections to the server.
+    service_name : string
+        Name of the service to communicate with.
+    name : string
+        Name of the event or method.
     """
     def __init__(self, client_factory, service_name, name):
         """
@@ -222,6 +349,31 @@ class ServiceInterfaceAttribute(object):
     def __call__(self, *pargs, **kwargs):
         """
         Act as a proxy to a server method.
+        
+        Parameters
+        ----------
+        *pargs
+            Positional arguments for the method.
+        **kwargs
+            Keyword arguments for the method.
+        
+        Returns
+        -------
+        result
+            Result returned from the server method.
+            
+        Raises
+        ------
+        AttributeError
+            The method does not exist on the server.
+        TypeError
+            The method on the server expects different arguments.
+        MessageHandleError
+            An error occurred handling the message.
+        ConnectionError
+            An error occurred in the connection to the server.
+        TimeoutError
+            A timeout occurred in the request to the server.
         """
         try:
             return self._client_factory.send_method_call(self._service_name, self._name, *pargs, **kwargs)
@@ -236,12 +388,31 @@ class ServiceInterfaceAttribute(object):
     def __iadd__(self, handler):
         """
         Act as a server side event. Add the handler to the list of callbacks.
+        
+        Parameters
+        ----------
+        handler : method
+            Method that handles event notifications.
+
+        Raises
+        ------
+        MessageHandleError
+            An error occurred handling the message.
+        ConnectionError
+            An error occurred in the connection to the server.
+        TimeoutError
+            A timeout occurred in the request to the server.
         """
         self._client_factory.subscribe(self._service_name, self._name, handler)
     
     def __isub__(self, handler):
         """
         Act as a server side event. Remove the handler from the list of callbacks.
+
+        Parameters
+        ----------
+        handler : method
+            Method that handles event notifications.
         """
         # Not supported yet
 

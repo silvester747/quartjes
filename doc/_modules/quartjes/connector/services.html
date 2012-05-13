@@ -83,6 +83,16 @@
 <div class="viewcode-block" id="remote_service"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.remote_service">[docs]</a><span class="k">def</span> <span class="nf">remote_service</span><span class="p">(</span><span class="n">C</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Decorator for classes that should expose methods as a remote service.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    C : class</span>
+<span class="sd">        The class to decorate as a remote service.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    C : class</span>
+<span class="sd">        The decorated class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">C</span><span class="o">.</span><span class="n">_remote_service</span> <span class="o">=</span> <span class="bp">True</span>
     
@@ -104,7 +114,17 @@
 <div class="viewcode-block" id="remote_method"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.remote_method">[docs]</a><span class="k">def</span> <span class="nf">remote_method</span><span class="p">(</span><span class="n">F</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Decorator for methods that should expose them selves through a remote service.</span>
-<span class="sd">    Also requires the class to be decorated as &#39;remote_service&#39;.</span>
+<span class="sd">    Also requires the class to be decorated as :func:`remote_service`.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    F : method</span>
+<span class="sd">        Method to decorate as a remote method.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    F : method</span>
+<span class="sd">        The decorated method.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">F</span><span class="o">.</span><span class="n">_remote_method</span> <span class="o">=</span> <span class="bp">True</span>
     <span class="k">return</span> <span class="n">F</span>
@@ -112,8 +132,20 @@
 <div class="viewcode-block" id="remote_event"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.remote_event">[docs]</a><span class="k">def</span> <span class="nf">remote_event</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generate an event that should be exposed through a remote service.</span>
-<span class="sd">    Also requires the class to be decorated as &#39;remote_service&#39;.</span>
+<span class="sd">    Also requires the class to be decorated as :func:`remote_service`.</span>
 <span class="sd">    Warning: this is _not_ a decorator.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    *args</span>
+<span class="sd">        Positional arguments to pass to the Event constructor.</span>
+<span class="sd">    **kwargs</span>
+<span class="sd">        Keyword arguments to pass to the Event constructor.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    E : Event</span>
+<span class="sd">        Event with remote access enabled.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">E</span> <span class="o">=</span> <span class="n">Event</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="n">E</span><span class="o">.</span><span class="n">_remote_event</span> <span class="o">=</span> <span class="bp">True</span>
@@ -122,6 +154,14 @@
 <div class="viewcode-block" id="prepare_remote_service"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.prepare_remote_service">[docs]</a><span class="k">def</span> <span class="nf">prepare_remote_service</span><span class="p">(</span><span class="n">service</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Prepare a remote service class to be used as a remote service.</span>
+<span class="sd">    </span>
+<span class="sd">    Adds the remote event registry required to allow remote clients to receive</span>
+<span class="sd">    event notifications.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    service : class decorated as remote_service</span>
+<span class="sd">        The service to prepare for remote access.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="s">&quot;_remote_event_registry&quot;</span><span class="p">):</span>
         <span class="n">service</span><span class="o">.</span><span class="n">_remote_event_registry</span> <span class="o">=</span> <span class="n">RemoteEventRegistry</span><span class="p">(</span><span class="n">service</span><span class="p">)</span>
@@ -130,7 +170,27 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Call a method on a class allowing remote service calls.</span>
 <span class="sd">    Checks whether the method can be called and then performs the call.</span>
-<span class="sd">    The result of the method call is returned.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    service : class decorated as remote service</span>
+<span class="sd">        Service to call a method on.</span>
+<span class="sd">    method_name : string</span>
+<span class="sd">        Name of the method to call.</span>
+<span class="sd">    *pargs</span>
+<span class="sd">        Positional arguments to pass to the method.</span>
+<span class="sd">    **kwargs</span>
+<span class="sd">        Keyword arguments to pass to the method.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    result</span>
+<span class="sd">        Result returned by the method call.</span>
+<span class="sd">    </span>
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    MessageHandleError</span>
+<span class="sd">        An error occurred trying to handle the message.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="k">assert</span> <span class="n">service</span><span class="o">.</span><span class="n">_remote_service</span><span class="p">,</span> <span class="s">&quot;Services must be decorated as remote_service&quot;</span>
@@ -151,13 +211,32 @@
         <span class="k">raise</span> <span class="n">MessageHandleError</span><span class="p">(</span><span class="n">MessageHandleError</span><span class="o">.</span><span class="n">RESULT_EXCEPTION_RAISED</span><span class="p">,</span> <span class="n">error_details</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
 </div>
 <div class="viewcode-block" id="subscribe_to_remote_event"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.subscribe_to_remote_event">[docs]</a><span class="k">def</span> <span class="nf">subscribe_to_remote_event</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="n">service_name</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="n">listener</span><span class="p">,</span> <span class="n">factory</span><span class="p">):</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">&quot;subscribing to event&quot;</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Subscribe a client to an event on a service.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    service : class decorated as remote service</span>
+<span class="sd">        Service containing the event to subscribe to.</span>
+<span class="sd">    service_name : string</span>
+<span class="sd">        Name the service is registered under.</span>
+<span class="sd">    event_name : string</span>
+<span class="sd">        Name of the event to subscribe to.</span>
+<span class="sd">    listener : :class:`quartjes.connector.protocol.QuartjesProtocol`</span>
+<span class="sd">        Client requesting the subscription.</span>
+<span class="sd">    factory : :class:`quartjes.connector.protocol.QuartjesServerFactory`</span>
+<span class="sd">        Factory handling the connections.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">service</span><span class="o">.</span><span class="n">_remote_event_registry</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="n">service_name</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="n">listener</span><span class="p">,</span> <span class="n">factory</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">&quot;subscribing to event done&quot;</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="RemoteEventRegistry"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.RemoteEventRegistry">[docs]</a><span class="k">class</span> <span class="nc">RemoteEventRegistry</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Registry for keeping track of remote subscribers to an event.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    service : class decorated as remote service</span>
+<span class="sd">        Service this registry tracks the events for.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service</span><span class="p">):</span>
@@ -167,6 +246,17 @@
 <div class="viewcode-block" id="RemoteEventRegistry.subscribe"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.RemoteEventRegistry.subscribe">[docs]</a>    <span class="k">def</span> <span class="nf">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service_name</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="n">listener</span><span class="p">,</span> <span class="n">factory</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Subscribe the listener to an event.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        service_name : string</span>
+<span class="sd">            Name the service is registered under.</span>
+<span class="sd">        event_name : string</span>
+<span class="sd">            Name of the event.</span>
+<span class="sd">        listener : :class:`quartjes.connector.protocol.QuartjesProtocol`</span>
+<span class="sd">            Client subscribing to the event.</span>
+<span class="sd">        factory : :class:`quartjes.connector.protocol.QuartjesServerFactory`</span>
+<span class="sd">            Factory handling client requests.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">event_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_add_event</span><span class="p">(</span><span class="n">event_name</span><span class="p">)</span>
@@ -177,32 +267,53 @@
 <div class="viewcode-block" id="RemoteEventRegistry.unsubscribe"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.RemoteEventRegistry.unsubscribe">[docs]</a>    <span class="k">def</span> <span class="nf">unsubscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service_name</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="n">listener</span><span class="p">,</span> <span class="n">factory</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Unsubscribe the listener from an event.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        service_name : string</span>
+<span class="sd">            Name the service is registered under.</span>
+<span class="sd">        event_name : string</span>
+<span class="sd">            Name of the event.</span>
+<span class="sd">        listener : :class:`quartjes.connector.protocol.QuartjesProtocol`</span>
+<span class="sd">            Client subscribing to the event.</span>
+<span class="sd">        factory : :class:`quartjes.connector.protocol.QuartjesServerFactory`</span>
+<span class="sd">            Factory handling client requests.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         </div>
     <span class="k">def</span> <span class="nf">_add_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add an event to the list of registered events and make sure it is being</span>
 <span class="sd">        listened to.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        event_name : string</span>
+<span class="sd">            Name of the event.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">print</span><span class="p">(</span><span class="s">&quot;adding event: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">event_name</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">event_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_service</span><span class="o">.</span><span class="n">_remote_events</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s">&quot;error 1&quot;</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">MessageHandleError</span><span class="p">(</span><span class="n">MessageHandleError</span><span class="o">.</span><span class="n">RESULT_UNKNOWN_EVENT</span><span class="p">)</span>    
         
         <span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">[</span><span class="n">event_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         
         <span class="n">event</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_service</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">event</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s">&quot;error 2&quot;</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">MessageHandleError</span><span class="p">(</span><span class="n">MessageHandleError</span><span class="o">.</span><span class="n">RESULT_UNKNOWN_EVENT</span><span class="p">)</span>    
 
-        <span class="k">print</span><span class="p">(</span><span class="s">&quot;registering event listener&quot;</span><span class="p">)</span>
         <span class="n">event</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_event_listener</span><span class="p">(</span><span class="n">event_name</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="s">&quot;adding event done&quot;</span><span class="p">)</span>
         
     <span class="k">def</span> <span class="nf">_event_triggered</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="o">*</span><span class="n">pargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Catch a triggered event.</span>
+<span class="sd">        Catch a triggered event. This method is assigned to events to catch</span>
+<span class="sd">        the subscribed events.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        event_name : string</span>
+<span class="sd">            Name of the event that has been triggered.</span>
+<span class="sd">        *pargs</span>
+<span class="sd">            Positional arguments for the event.</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Keyword arguments for the event.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="p">(</span><span class="n">service_name</span><span class="p">,</span> <span class="n">listener</span><span class="p">,</span> <span class="n">factory</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">[</span><span class="n">event_name</span><span class="p">]:</span>
             <span class="n">factory</span><span class="o">.</span><span class="n">send_event</span><span class="p">(</span><span class="n">service_name</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="n">listener</span><span class="p">,</span> <span class="o">*</span><span class="n">pargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -211,6 +322,16 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a special method for listening to an event and then forwarding it</span>
 <span class="sd">        to the clients.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        event_name : string</span>
+<span class="sd">            Name of the event.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        listener : method</span>
+<span class="sd">            The listener that can be assigned to the event.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">def</span> <span class="nf">listener</span><span class="p">(</span><span class="o">*</span><span class="n">pargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_event_triggered</span><span class="p">(</span><span class="n">event_name</span><span class="p">,</span> <span class="o">*</span><span class="n">pargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -221,17 +342,21 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Client side interface to interact with services defined as Service objects</span>
 <span class="sd">    at the server side.</span>
-
-<span class="sd">    Returns undefined attributes as methods that will send a request to the service</span>
-<span class="sd">    using the attribute name as action and keyword arguments as parameters.</span>
-<span class="sd">    Override this class and add your own methods to allow positional arguments</span>
-<span class="sd">    and different names.</span>
-
-<span class="sd">    The subscribe method is used to register a callback method that is called when</span>
-<span class="sd">    the service publishes an update on the selected topic.</span>
+<span class="sd">    </span>
+<span class="sd">    For each attribute a special proxy object is returned that will act as both</span>
+<span class="sd">    a callable method and an event. Based on the way it is used, the correct</span>
+<span class="sd">    actions are triggered on the server.</span>
 
 <span class="sd">    Always be ready to receive a MessageHandleError or ConnectionError when calling</span>
 <span class="sd">    methods on a ServiceInterface.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    client_factory : :class:`quartjes.connector.protocol.QuartjesClientFactory`</span>
+<span class="sd">        Factory handling connections to the server.</span>
+<span class="sd">    service_name : string</span>
+<span class="sd">        Name of the service to provide an interface to.</span>
+<span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client_factory</span><span class="p">,</span> <span class="n">service_name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -250,20 +375,22 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">ServiceInterfaceAttribute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_client_factory</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_service_name</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
 
-<div class="viewcode-block" id="ServiceInterface.subscribe"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.ServiceInterface.subscribe">[docs]</a>    <span class="k">def</span> <span class="nf">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="n">callback</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Subscribe to receive updates on the given event_name. The callback is called</span>
-<span class="sd">        each time an update is received. The callback should only accept keyword</span>
-<span class="sd">        arguments matching the keywords send by the service.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_client_factory</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_service_name</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="n">callback</span><span class="p">)</span>
-</div></div>
+</div>
 <div class="viewcode-block" id="ServiceInterfaceAttribute"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.services.ServiceInterfaceAttribute">[docs]</a><span class="k">class</span> <span class="nc">ServiceInterfaceAttribute</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Special proxy object that acts as either a callable method or an event.</span>
 <span class="sd">    Calling this object will result in the corresponding server side method</span>
 <span class="sd">    to be called. Adding or removing a callback results in the callback</span>
 <span class="sd">    being (un)registered to the server event.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    client_factory : :class:`quartjes.connector.protocol.QuartjesClientFactory`</span>
+<span class="sd">        Factory handling connections to the server.</span>
+<span class="sd">    service_name : string</span>
+<span class="sd">        Name of the service to communicate with.</span>
+<span class="sd">    name : string</span>
+<span class="sd">        Name of the event or method.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client_factory</span><span class="p">,</span> <span class="n">service_name</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -276,6 +403,31 @@
     <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">pargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Act as a proxy to a server method.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        *pargs</span>
+<span class="sd">            Positional arguments for the method.</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Keyword arguments for the method.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result</span>
+<span class="sd">            Result returned from the server method.</span>
+<span class="sd">            </span>
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AttributeError</span>
+<span class="sd">            The method does not exist on the server.</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            The method on the server expects different arguments.</span>
+<span class="sd">        MessageHandleError</span>
+<span class="sd">            An error occurred handling the message.</span>
+<span class="sd">        ConnectionError</span>
+<span class="sd">            An error occurred in the connection to the server.</span>
+<span class="sd">        TimeoutError</span>
+<span class="sd">            A timeout occurred in the request to the server.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client_factory</span><span class="o">.</span><span class="n">send_method_call</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_service_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span> <span class="o">*</span><span class="n">pargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -290,12 +442,31 @@
     <span class="k">def</span> <span class="nf">__iadd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">handler</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Act as a server side event. Add the handler to the list of callbacks.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        handler : method</span>
+<span class="sd">            Method that handles event notifications.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        MessageHandleError</span>
+<span class="sd">            An error occurred handling the message.</span>
+<span class="sd">        ConnectionError</span>
+<span class="sd">            An error occurred in the connection to the server.</span>
+<span class="sd">        TimeoutError</span>
+<span class="sd">            A timeout occurred in the request to the server.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_client_factory</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_service_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span> <span class="n">handler</span><span class="p">)</span>
     
     <span class="k">def</span> <span class="nf">__isub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">handler</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Act as a server side event. Remove the handler from the list of callbacks.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        handler : method</span>
+<span class="sd">            Method that handles event notifications.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c"># Not supported yet</span>
 

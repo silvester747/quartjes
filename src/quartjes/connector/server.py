@@ -1,5 +1,9 @@
 """
 Connector components used to run a Quartjes server.
+
+To run a Quartjes server, create an instance of :class:`ServerConnector`. Then
+register services to expose to the clients using :meth:`ServerConnector.register_service`.
+For defining services see :mod:`quartjes.connector.services`.
 """
 __author__ = "Rob van der Most"
 __docformat__ = "restructuredtext en"
