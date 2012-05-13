@@ -60,18 +60,65 @@
 <h1>connector Package<a class="headerlink" href="#connector-package" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="id1">
 <h2><tt class="xref py py-mod docutils literal"><span class="pre">connector</span></tt> Package<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
-<span class="target" id="module-quartjes.connector"></span><p>Quartjes Connector</p>
+<span class="target" id="module-quartjes.connector"></span><div class="section" id="quartjes-connector">
+<h3>Quartjes Connector<a class="headerlink" href="#quartjes-connector" title="Permalink to this headline">¶</a></h3>
 <p>Allows connections between the Quartjes server and its clients.</p>
-<p>Server components</p>
-<p>A server must start the ServerConnector in quartjes.connector.server
-For each component you want to be accessible through the connector implement
-a subclass of quartjes.connector.services.Service and register it with the
-ServerConnector</p>
-<p>Client components</p>
-<p>To connect to the server create a ClientConnector from quartjes.connector.client
-and start it. On the ClientConnector call get_service_interface to get an interface
-to call methods on a specific service on the server.</p>
-<p>For examples see the self tests in server.py and client.py</p>
+<div class="section" id="server-components">
+<h4>Server components<a class="headerlink" href="#server-components" title="Permalink to this headline">¶</a></h4>
+<p>To start a Quartjes server create a 
+<a class="reference internal" href="#quartjes.connector.server.ServerConnector" title="quartjes.connector.server.ServerConnector"><tt class="xref py py-class docutils literal"><span class="pre">ServerConnector</span></tt></a> and start
+it. Then register the services to expose to the client using the
+<a class="reference internal" href="#quartjes.connector.server.ServerConnector.register_service" title="quartjes.connector.server.ServerConnector.register_service"><tt class="xref py py-meth docutils literal"><span class="pre">register_service</span></tt></a>
+method.</p>
+<p>To create a service, see the <a class="reference internal" href="#module-quartjes.connector.services" title="quartjes.connector.services"><tt class="xref py py-mod docutils literal"><span class="pre">quartjes.connector.services</span></tt></a> module;. The service
+will be exposed to the clients using the name specified in the
+<a class="reference internal" href="#quartjes.connector.server.ServerConnector.register_service" title="quartjes.connector.server.ServerConnector.register_service"><tt class="xref py py-meth docutils literal"><span class="pre">register_service</span></tt></a>
+method.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">quartjes.connector.server</span> <span class="kn">import</span> <span class="n">ServerConnector</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">port</span> <span class="o">=</span> <span class="mi">1234</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">server</span> <span class="o">=</span> <span class="n">ServerConnector</span><span class="p">(</span><span class="n">port</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">server</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">service</span> <span class="o">=</span> <span class="n">MyService</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">server</span><span class="o">.</span><span class="n">register_service</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="s">&quot;my_service_name&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="client-components">
+<h4>Client components<a class="headerlink" href="#client-components" title="Permalink to this headline">¶</a></h4>
+<p>To connect to the server create a 
+<a class="reference internal" href="#quartjes.connector.client.ClientConnector" title="quartjes.connector.client.ClientConnector"><tt class="xref py py-class docutils literal"><span class="pre">ClientConnector</span></tt></a>
+and start it. Then use the 
+<a class="reference internal" href="#quartjes.connector.client.ClientConnector.get_service_interface" title="quartjes.connector.client.ClientConnector.get_service_interface"><tt class="xref py py-meth docutils literal"><span class="pre">get_service_interface</span></tt></a>
+method to get an interface to the service on the server.</p>
+<p>On the service interface the methods and events tagged using
+<a class="reference internal" href="#quartjes.connector.services.remote_method" title="quartjes.connector.services.remote_method"><tt class="xref py py-func docutils literal"><span class="pre">remote_method</span></tt></a> or
+<a class="reference internal" href="#quartjes.connector.services.remote_event" title="quartjes.connector.services.remote_event"><tt class="xref py py-func docutils literal"><span class="pre">remote_event</span></tt></a>
+in the service can
+be directly called as if it was a local method. However keep in mind that the
+following exceptions can be raised:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#quartjes.connector.exceptions.MessageHandleError" title="quartjes.connector.exceptions.MessageHandleError"><tt class="xref py py-class docutils literal"><span class="pre">MessageHandleError</span></tt></a></li>
+<li><a class="reference internal" href="#quartjes.connector.exceptions.TimeoutError" title="quartjes.connector.exceptions.TimeoutError"><tt class="xref py py-class docutils literal"><span class="pre">TimeoutError</span></tt></a></li>
+<li><a class="reference internal" href="#quartjes.connector.exceptions.ConnectionError" title="quartjes.connector.exceptions.ConnectionError"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionError</span></tt></a></li>
+</ul>
+<p>By default the following services are automatically added to the 
+<a class="reference internal" href="#quartjes.connector.client.ClientConnector" title="quartjes.connector.client.ClientConnector"><tt class="xref py py-class docutils literal"><span class="pre">ClientConnector</span></tt></a> upon connection:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#quartjes.connector.client.ClientConnector.database" title="quartjes.connector.client.ClientConnector.database"><tt class="xref py py-attr docutils literal"><span class="pre">database</span></tt></a></li>
+<li><a class="reference internal" href="#quartjes.connector.client.ClientConnector.stock_exchange" title="quartjes.connector.client.ClientConnector.stock_exchange"><tt class="xref py py-attr docutils literal"><span class="pre">stock_exchange</span></tt></a></li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">quartjes.connector.client</span> <span class="kn">import</span> <span class="n">ClientConnector</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">host</span> <span class="o">=</span> <span class="s">&quot;10.1.2.3&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">port</span> <span class="o">=</span> <span class="mi">1234</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">ClientConnector</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">service</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_service_interface</span><span class="p">(</span><span class="s">&quot;my_service_name&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">my_method</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">service</span><span class="o">.</span><span class="n">my_event</span> <span class="o">+=</span> <span class="n">my_callback</span>
+</pre></div>
+</div>
+</div>
+</div>
 </div>
 <div class="section" id="module-quartjes.connector.client">
 <span id="client-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">client</span></tt> Module<a class="headerlink" href="#module-quartjes.connector.client" title="Permalink to this headline">¶</a></h2>
@@ -150,10 +197,10 @@ lost connections using an exponential back-off.</p>
 <td>The protocol factory used by the client to connect to the server.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#quartjes.connector.client.ClientConnector.database" title="quartjes.connector.client.ClientConnector.database"><tt class="xref py py-obj docutils literal"><span class="pre">database</span></tt></a></td>
-<td>Reference to the currently running database.</td>
+<td>Reference to the currently running</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#quartjes.connector.client.ClientConnector.stock_exchange" title="quartjes.connector.client.ClientConnector.stock_exchange"><tt class="xref py py-obj docutils literal"><span class="pre">stock_exchange</span></tt></a></td>
-<td>Reference to the currently running stock exchange.</td>
+<td>Reference to the currently running</td>
 </tr>
 </tbody>
 </table>
@@ -181,8 +228,9 @@ lost connections using an exponential back-off.</p>
 <dl class="attribute">
 <dt id="quartjes.connector.client.ClientConnector.database">
 <tt class="descname">database</tt><a class="reference internal" href="_modules/quartjes/connector/client.html#ClientConnector.database"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.client.ClientConnector.database" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reference to the currently running database. This can be a proxy to the
-database on the server or a local database.</p>
+<dd><p>Reference to the currently running 
+<a class="reference internal" href="quartjes.controllers.html#quartjes.controllers.database.Database" title="quartjes.controllers.database.Database"><tt class="xref py py-class docutils literal"><span class="pre">Database</span></tt></a>. 
+This can be a proxy to the database on the server or a local database.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -264,8 +312,9 @@ reactor loop in a separate thread.</p>
 <dl class="attribute">
 <dt id="quartjes.connector.client.ClientConnector.stock_exchange">
 <tt class="descname">stock_exchange</tt><a class="reference internal" href="_modules/quartjes/connector/client.html#ClientConnector.stock_exchange"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.client.ClientConnector.stock_exchange" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reference to the currently running stock exchange. This can be a proxy
-to the stock exchange on the server or a local stock exchange.</p>
+<dd><p>Reference to the currently running 
+<a class="reference internal" href="quartjes.controllers.html#quartjes.controllers.stock_exchange.StockExchange" title="quartjes.controllers.stock_exchange.StockExchange"><tt class="xref py py-class docutils literal"><span class="pre">StockExchange</span></tt></a>. 
+This can be a proxy to the stock exchange on the server or a local stock exchange.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1869,13 +1918,13 @@ parameter list.</p>
 
 <dl class="data">
 <dt id="quartjes.connector.serializer.value_serializers_by_klass">
-<tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">value_serializers_by_klass</tt><em class="property"> = {&lt;type 'float'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x393fa50&gt;, &lt;type 'int'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x393f9d0&gt;, &lt;type 'str'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x393fa10&gt;, &lt;class 'uuid.UUID'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x393fa90&gt;}</em><a class="headerlink" href="#quartjes.connector.serializer.value_serializers_by_klass" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">value_serializers_by_klass</tt><em class="property"> = {&lt;type 'float'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x27287d0&gt;, &lt;type 'int'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x2728750&gt;, &lt;type 'str'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x2728790&gt;, &lt;class 'uuid.UUID'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x2728810&gt;}</em><a class="headerlink" href="#quartjes.connector.serializer.value_serializers_by_klass" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dictionary of registered value serializers by class. Key is the corresponding class object.</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="quartjes.connector.serializer.value_serializers_by_klass_name">
-<tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">value_serializers_by_klass_name</tt><em class="property"> = {'int': &lt;quartjes.connector.serializer.ValueSerializer object at 0x393f9d0&gt;, 'float': &lt;quartjes.connector.serializer.ValueSerializer object at 0x393fa50&gt;, 'uuid': &lt;quartjes.connector.serializer.ValueSerializer object at 0x393fa90&gt;, 'str': &lt;quartjes.connector.serializer.ValueSerializer object at 0x393fa10&gt;}</em><a class="headerlink" href="#quartjes.connector.serializer.value_serializers_by_klass_name" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">value_serializers_by_klass_name</tt><em class="property"> = {'int': &lt;quartjes.connector.serializer.ValueSerializer object at 0x2728750&gt;, 'float': &lt;quartjes.connector.serializer.ValueSerializer object at 0x27287d0&gt;, 'uuid': &lt;quartjes.connector.serializer.ValueSerializer object at 0x2728810&gt;, 'str': &lt;quartjes.connector.serializer.ValueSerializer object at 0x2728790&gt;}</em><a class="headerlink" href="#quartjes.connector.serializer.value_serializers_by_klass_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dictionary of registered value serializers by class name.</p>
 </dd></dl>
 
@@ -2381,7 +2430,7 @@ being (un)registered to the server event.</p>
 
 <dl class="attribute">
 <dt id="quartjes.connector.services.TestRemoteService.on_trigger">
-<tt class="descname">on_trigger</tt><em class="property"> = &lt;axel.axel.Event object at 0x3943cd0&gt;</em><a class="headerlink" href="#quartjes.connector.services.TestRemoteService.on_trigger" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">on_trigger</tt><em class="property"> = &lt;axel.axel.Event object at 0x272bad0&gt;</em><a class="headerlink" href="#quartjes.connector.services.TestRemoteService.on_trigger" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -2594,7 +2643,14 @@ Also requires the class to be decorated as <a class="reference internal" href="#
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">connector Package</a><ul>
-<li><a class="reference internal" href="#id1"><tt class="docutils literal"><span class="pre">connector</span></tt> Package</a></li>
+<li><a class="reference internal" href="#id1"><tt class="docutils literal"><span class="pre">connector</span></tt> Package</a><ul>
+<li><a class="reference internal" href="#quartjes-connector">Quartjes Connector</a><ul>
+<li><a class="reference internal" href="#server-components">Server components</a></li>
+<li><a class="reference internal" href="#client-components">Client components</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a class="reference internal" href="#module-quartjes.connector.client"><tt class="docutils literal"><span class="pre">client</span></tt> Module</a><ul>
 <li><a class="reference internal" href="#usage">Usage</a></li>
 <li><a class="reference internal" href="#example">Example</a></li>

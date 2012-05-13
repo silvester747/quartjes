@@ -117,16 +117,18 @@ class ClientConnector(object):
     @property
     def database(self):
         """
-        Reference to the currently running database. This can be a proxy to the
-        database on the server or a local database.
+        Reference to the currently running 
+        :class:`Database <quartjes.controllers.database.Database>`. 
+        This can be a proxy to the database on the server or a local database.
         """
         return self._database
     
     @property
     def stock_exchange(self):
         """
-        Reference to the currently running stock exchange. This can be a proxy
-        to the stock exchange on the server or a local stock exchange.
+        Reference to the currently running 
+        :class:`StockExchange <quartjes.controllers.stock_exchange.StockExchange>`. 
+        This can be a proxy to the stock exchange on the server or a local stock exchange.
         """
         return self._stock_exchange
     
