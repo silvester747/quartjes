@@ -1869,13 +1869,13 @@ parameter list.</p>
 
 <dl class="data">
 <dt id="quartjes.connector.serializer.value_serializers_by_klass">
-<tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">value_serializers_by_klass</tt><em class="property"> = {&lt;type 'float'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x35cea50&gt;, &lt;type 'int'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x35ce9d0&gt;, &lt;type 'str'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x35cea10&gt;, &lt;class 'uuid.UUID'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x35cea90&gt;}</em><a class="headerlink" href="#quartjes.connector.serializer.value_serializers_by_klass" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">value_serializers_by_klass</tt><em class="property"> = {&lt;type 'float'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x2916a50&gt;, &lt;type 'int'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x29169d0&gt;, &lt;type 'str'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x2916a10&gt;, &lt;class 'uuid.UUID'&gt;: &lt;quartjes.connector.serializer.ValueSerializer object at 0x2916a90&gt;}</em><a class="headerlink" href="#quartjes.connector.serializer.value_serializers_by_klass" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dictionary of registered value serializers by class. Key is the corresponding class object.</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="quartjes.connector.serializer.value_serializers_by_klass_name">
-<tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">value_serializers_by_klass_name</tt><em class="property"> = {'int': &lt;quartjes.connector.serializer.ValueSerializer object at 0x35ce9d0&gt;, 'float': &lt;quartjes.connector.serializer.ValueSerializer object at 0x35cea50&gt;, 'uuid': &lt;quartjes.connector.serializer.ValueSerializer object at 0x35cea90&gt;, 'str': &lt;quartjes.connector.serializer.ValueSerializer object at 0x35cea10&gt;}</em><a class="headerlink" href="#quartjes.connector.serializer.value_serializers_by_klass_name" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">quartjes.connector.serializer.</tt><tt class="descname">value_serializers_by_klass_name</tt><em class="property"> = {'int': &lt;quartjes.connector.serializer.ValueSerializer object at 0x29169d0&gt;, 'float': &lt;quartjes.connector.serializer.ValueSerializer object at 0x2916a50&gt;, 'uuid': &lt;quartjes.connector.serializer.ValueSerializer object at 0x2916a90&gt;, 'str': &lt;quartjes.connector.serializer.ValueSerializer object at 0x2916a10&gt;}</em><a class="headerlink" href="#quartjes.connector.serializer.value_serializers_by_klass_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dictionary of registered value serializers by class name.</p>
 </dd></dl>
 
@@ -2051,6 +2051,18 @@ connections. The reactor used by the ServerConnector runs in its own thread
 so you do not need to worry about blocking it.</p>
 <p>Register Service instances with the ServerConnector to allow clients to
 access the services.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>port</strong> : int</p>
+<blockquote class="last">
+<div><p>Port number to listen for connections on.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 <p class="rubric">Methods</p>
 <table border="1" class="longtable docutils">
 <colgroup>
@@ -2125,6 +2137,23 @@ need to manually stop it when closing the server application.</p>
 <dt id="quartjes.connector.server.ServerConnector.register_service">
 <tt class="descclassname">ServerConnector.</tt><tt class="descname">register_service</tt><big>(</big><em>service</em>, <em>name</em><big>)</big><a class="reference internal" href="_modules/quartjes/connector/server.html#ServerConnector.register_service"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quartjes.connector.server.ServerConnector.register_service" title="Permalink to this definition">¶</a></dt>
 <dd><p>Register a new Service instance to be accessible from clients.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>service</strong> :</p>
+<blockquote>
+<div><p>Service instance to register. It will be available for remote clients.</p>
+</div></blockquote>
+<p><strong>name</strong> : string</p>
+<blockquote class="last">
+<div><p>Name the service will be registered under. Clients must use this to 
+access the service.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -2276,7 +2305,7 @@ being (un)registered to the server event.</p>
 
 <dl class="attribute">
 <dt id="quartjes.connector.services.TestRemoteService.on_trigger">
-<tt class="descname">on_trigger</tt><em class="property"> = &lt;axel.axel.Event object at 0x35d2e50&gt;</em><a class="headerlink" href="#quartjes.connector.services.TestRemoteService.on_trigger" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">on_trigger</tt><em class="property"> = &lt;axel.axel.Event object at 0x291ae50&gt;</em><a class="headerlink" href="#quartjes.connector.services.TestRemoteService.on_trigger" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">

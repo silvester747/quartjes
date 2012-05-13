@@ -73,12 +73,13 @@
 
 <span class="sd">    Register Service instances with the ServerConnector to allow clients to</span>
 <span class="sd">    access the services.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    port : int</span>
+<span class="sd">        Port number to listen for connections on.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">1234</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Construct a new ServerConnector for the given port number. The new</span>
-<span class="sd">        connector is not running yet!</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">factory</span> <span class="o">=</span> <span class="n">QuartjesServerFactory</span><span class="p">()</span>
 
@@ -88,7 +89,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_endpoint</span> <span class="o">=</span> <span class="n">TCP4ServerEndpoint</span><span class="p">(</span><span class="n">reactor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_endpoint</span><span class="o">.</span><span class="n">listen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">factory</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">reactor</span><span class="o">.</span><span class="n">running</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">reactor</span><span class="o">.</span><span class="n">running</span><span class="p">:</span> <span class="c">#@UndefinedVariable</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_reactor_thread</span> <span class="o">=</span> <span class="n">ServerConnector</span><span class="o">.</span><span class="n">ReactorThread</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_reactor_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 </div>
@@ -96,11 +97,19 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Stop accepting incoming connections. Stops the reactor.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">threads</span><span class="o">.</span><span class="n">blockingCallFromThread</span><span class="p">(</span><span class="n">reactor</span><span class="p">,</span> <span class="n">reactor</span><span class="o">.</span><span class="n">stop</span><span class="p">)</span>
+        <span class="n">threads</span><span class="o">.</span><span class="n">blockingCallFromThread</span><span class="p">(</span><span class="n">reactor</span><span class="p">,</span> <span class="n">reactor</span><span class="o">.</span><span class="n">stop</span><span class="p">)</span> <span class="c">#@UndefinedVariable</span>
 </div>
 <div class="viewcode-block" id="ServerConnector.register_service"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.server.ServerConnector.register_service">[docs]</a>    <span class="k">def</span> <span class="nf">register_service</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Register a new Service instance to be accessible from clients.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        service</span>
+<span class="sd">            Service instance to register. It will be available for remote clients.</span>
+<span class="sd">        name : string</span>
+<span class="sd">            Name the service will be registered under. Clients must use this to </span>
+<span class="sd">            access the service.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">factory</span><span class="o">.</span><span class="n">register_service</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
 
@@ -116,7 +125,7 @@
 
 <div class="viewcode-block" id="ServerConnector.ReactorThread.run"><a class="viewcode-back" href="../../../quartjes.connector.html#quartjes.connector.server.ServerConnector.ReactorThread.run">[docs]</a>        <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
             <span class="c">#print(&quot;Starting reactor&quot;)</span>
-            <span class="n">reactor</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">installSignalHandlers</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">reactor</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">installSignalHandlers</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="c">#@UndefinedVariable</span>
             <span class="c">#print(&quot;Reactor stopped&quot;)</span>
 </div></div></div>
 <span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>

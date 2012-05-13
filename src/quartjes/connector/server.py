@@ -19,12 +19,13 @@ class ServerConnector(object):
 
     Register Service instances with the ServerConnector to allow clients to
     access the services.
+    
+    Parameters
+    ----------
+    port : int
+        Port number to listen for connections on.
     """
     def __init__(self, port=1234):
-        """
-        Construct a new ServerConnector for the given port number. The new
-        connector is not running yet!
-        """
         self.port = port
         self.factory = QuartjesServerFactory()
 
@@ -34,7 +35,7 @@ class ServerConnector(object):
         """
         self._endpoint = TCP4ServerEndpoint(reactor, self.port)
         self._endpoint.listen(self.factory)
-        if not reactor.running:
+        if not reactor.running: #@UndefinedVariable
             self._reactor_thread = ServerConnector.ReactorThread()
             self._reactor_thread.start()
 
@@ -42,11 +43,19 @@ class ServerConnector(object):
         """
         Stop accepting incoming connections. Stops the reactor.
         """
-        threads.blockingCallFromThread(reactor, reactor.stop)
+        threads.blockingCallFromThread(reactor, reactor.stop) #@UndefinedVariable
 
     def register_service(self, service, name):
         """
         Register a new Service instance to be accessible from clients.
+        
+        Parameters
+        ----------
+        service
+            Service instance to register. It will be available for remote clients.
+        name : string
+            Name the service will be registered under. Clients must use this to 
+            access the service.
         """
         self.factory.register_service(service, name)
 
@@ -62,7 +71,7 @@ class ServerConnector(object):
 
         def run(self):
             #print("Starting reactor")
-            reactor.run(installSignalHandlers=0)
+            reactor.run(installSignalHandlers=0) #@UndefinedVariable
             #print("Reactor stopped")
 
 if __name__ == "__main__":
