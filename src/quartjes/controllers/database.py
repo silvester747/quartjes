@@ -39,6 +39,7 @@ class Database:
     def replace_mixes(self, mixes):
         index = {}
         for mix in mixes:
+            self._localize_mix(mix)
             index[mix.id] = mix
         self._mixes, self._mix_index = mixes, index
         self.mix_dirty = True
@@ -72,8 +73,10 @@ class Database:
         if not local_mix:
             self.add_mix(mix)
         else:
+            self._localize_mix(mix)
             local_mix.name = mix.name
-            #TODO
+            local_mix.drinks = mix.drinks
+            local_mix.update_properties()
             self.mix_dirty = True
 
     @remote_method
@@ -91,6 +94,7 @@ class Database:
 
     @remote_method
     def add_mix(self, mix):
+        self._localize_mix(mix)
         self._mix_index[mix.id] = mix
         self._mixes.append(mix)
         self.mix_dirty = True
@@ -104,15 +108,19 @@ class Database:
 
     @remote_method
     def remove_drink(self, drink):
-        del self._drink_index[drink.id]
-        self._drinks.remove(drink)
-        self.drink_dirty = True
+        local_drink = self._drink_index.get(drink.id, None)
+        if local_drink:
+            del self._drink_index[local_drink.id]
+            self._drinks.remove(local_drink)
+            self.drink_dirty = True
 
     @remote_method
     def remove_mix(self, mix):
-        del self._mix_index[mix.id]
-        self._mixes.remove(mix)
-        self.mix_dirty = True
+        local_mix = self._mix_index.get(mix.id, None)
+        if local_mix:
+            del self._mix_index[local_mix.id]
+            self._mixes.remove(local_mix)
+            self.mix_dirty = True
 
     @remote_method
     def get(self, id):
@@ -141,6 +149,22 @@ class Database:
         if not self._mixes:
             self._load_drinks()
         return self._mixes
+
+    def _localize_mix(self, mix):
+        """
+        Make sure all components of a mix exist locally.
+        """
+        local_drinks = []
+        for remote_drink in mix.drinks:
+            local_drink = self.get_drink(remote_drink.id)
+            if not local_drink:
+                self.add(remote_drink)
+                local_drinks.append(remote_drink)
+            else:
+                local_drinks.append(local_drink)
+        
+        mix.drinks = local_drinks
+            
 
     def _load_drinks(self):
         db = shelve.open(self.db_file)
