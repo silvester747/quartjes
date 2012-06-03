@@ -61,7 +61,7 @@ class Database:
             local_drink.name = drink.name
             local_drink.alc_perc = drink.alc_perc
             local_drink.color = drink.color
-            local_drink.amount = drink.amount
+            local_drink.unit_amount = drink.unit_amount
             local_drink.unit_price = drink.unit_price
 
             self.drink_dirty = True
