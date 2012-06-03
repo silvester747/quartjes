@@ -6,9 +6,6 @@ Created on Jun 3, 2012
 from Tkinter import Tk
 from quartjes.gui.Sales_client import Sales_client
      
-hostname = None
-port = 1234
-    
 root = Tk()
-app = Sales_client(root,hostname,port)
+app = Sales_client(root)
 app.mainloop()
