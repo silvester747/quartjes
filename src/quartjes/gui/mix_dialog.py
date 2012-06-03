@@ -5,11 +5,11 @@ __author__="piet"
 __date__ ="$Jul 7, 2011 9:25:16 PM$"
 
 from Tkinter import *
-from quartjes.models.drink import *
+from quartjes.models.drink import Drink,Mix
 
 class mix_dialog(Frame):
     '''
-    this dialog is used for creating a mix from the suplyed drinks
+    this dialog is used for creating a mix from the supplied drinks
     '''
     def __init__(self, root, mix):
         root.title('Mix dialog')
@@ -54,7 +54,6 @@ class mix_dialog(Frame):
 
     def cancel(self):
         self.mix.drinks = self.orig_mix_drinks_list
-        print self.mix
         self.mix.update_properties()
         self.master.destroy()
 

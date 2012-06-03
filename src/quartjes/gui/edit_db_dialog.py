@@ -5,15 +5,16 @@ __author__="piet"
 __date__ ="$Jul 3, 2011 3:03:58 PM$"
 
 from Tkinter import *
-from quartjes.models.drink import *
-from mix_dialog import * 
-from drink_dialog import *
+from quartjes.models.drink import Drink,Mix
+from mix_dialog import mix_dialog 
+from drink_dialog import drink_dialog
 
 class edit_db_dialog(Frame):
     def __init__(self, root):
         root.title('Database editor')
         Frame.__init__(self, root)
         self.master.drinks = self.master.conn.database.get_drinks()
+        self.master.conn.database.on_drinks_updated += self.server_update_listener
             
         print self.master.drinks
         self.createWidgets(type)
@@ -62,6 +63,10 @@ class edit_db_dialog(Frame):
             drink = self.master.drinks.pop(selected)
             self.master.conn.database.remove(drink)
             self.update_listbox()
+            
+    def server_update_listener(self,drinks):
+        self.master.drinks = drinks
+        self.update_listbox()
 
     def update_listbox(self):
         self.lb_drinks.delete(0,END)

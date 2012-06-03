@@ -5,11 +5,12 @@ __author__="piet"
 __date__ ="$Jul 7, 2011 9:26:44 PM$"
 
 from Tkinter import *
-from tkColorChooser import *
-from quartjes.models.drink import *
+from tkColorChooser import askcolor
+from quartjes.models.drink import Drink
 
 class drink_dialog(Frame):
     def __init__(self, root, drink):
+        root.title('Drink dialog')
         Frame.__init__(self,root)        
         self.tags = ["name","alc_perc","unit_price","unit_amount"]
         self.drink = drink
