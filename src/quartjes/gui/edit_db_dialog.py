@@ -14,7 +14,10 @@ class edit_db_dialog(Frame):
         root.title('Database editor')
         Frame.__init__(self, root)
         self.master.drinks = self.master.conn.database.get_drinks()
-        self.master.conn.database.on_drinks_updated += self.server_update_listener
+        
+        # the following line should support multi client update refreshes, 
+        # but for now it generates an error for beining in the wrong loop
+        #self.master.conn.database.on_drinks_updated += self.server_update_listener
             
         self.createWidgets(type)
         self.pack()
