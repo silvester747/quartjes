@@ -15,7 +15,7 @@ import cocos.director
 import cocos.text
 import cocos.cocosnode
 import cocos.layer.base_layers
-from cocos.actions import Repeat, Waves3D, Delay, CallFunc, MoveTo, ScaleTo, Hide
+from cocos.actions import Repeat, Waves3D, Delay, CallFunc, MoveTo, ScaleTo, Hide, RotateBy, Shaky3D
 import pyglet.text
 from pyglet.gl import glPushMatrix, glPopMatrix
 from quartjes.connector.client import ClientConnector
@@ -23,6 +23,7 @@ from quartjes.models.drink import Mix
 import time
 import quartjes.gui.mix_drawer as mix_drawer
 import quartjes.gui.history_graph as history_graph
+import random
 
 debug_mode = False
 
@@ -34,13 +35,27 @@ class TitleLayer(cocos.layer.Layer):
     def __init__(self):
         super(TitleLayer, self).__init__()
         
-        title_label = cocos.text.Label("QuartjesAvond",
+        self._title_label = cocos.text.Label("QuartjesAvond",
                                       font_name='Times New Roman',
                                       font_size=80,
                                       anchor_x='center', anchor_y='top')
-        title_label.position = (512, 768)
-        self.add(title_label)
-        title_label.do(Repeat(Waves3D(duration=200, waves=100)))
+        self._title_label.position = (512, 768)
+        self.add(self._title_label)
+        self._title_label.do(Repeat(Waves3D(duration=200, waves=100)))
+        
+        self._next_round_label = cocos.text.Label("Next Round!",
+                                      font_name='Times New Roman',
+                                      font_size=80,
+                                      anchor_x='center', anchor_y='top')
+        self._next_round_label.position = (512, 768)
+        self._next_round_label.scale = 0
+        self.add(self._next_round_label)
+    
+    def next_round(self):
+        self._title_label.do((RotateBy(360, 1) | ScaleTo(0, 1)) + Delay(5) +
+                             (RotateBy(360, 1) | ScaleTo(1, 1)))
+        self._next_round_label.do((RotateBy(360, 1) | ScaleTo(1, 1)) + Shaky3D(duration=5) +
+                             (RotateBy(360, 1) | ScaleTo(0, 1)))
 
 
 class BottomTicker(cocos.layer.Layer):
@@ -109,6 +124,9 @@ class BottomTicker(cocos.layer.Layer):
         # Event fired when the currently focused drink has changed. Listeners
         # should have two parameters: the sender and the new drink.
         self.on_focus_changed = Event(sender=self)
+        
+        # Current round. Used to suppress old actions.
+        self._round_number = 0
 
         self._calculate_points()
         self._next_drink()
@@ -147,12 +165,13 @@ class BottomTicker(cocos.layer.Layer):
         except:
             pass
 
-    def _set_focussed_drink(self, drink):
+    def _set_focussed_drink(self, drink, round_nr):
         """
         Update the currently focussed drink and notify all listeners.
         """
-        self.focussed_drink = drink
-        self.on_focus_changed(drink)
+        if round_nr == self._round_number:
+            self.focussed_drink = drink
+            self.on_focus_changed(drink)
 
     def _next_drink(self):
         """
@@ -182,18 +201,19 @@ class BottomTicker(cocos.layer.Layer):
         move_actions += (MoveTo(self._points[self._focus_start + 1], self._display_time) |
                          (Delay(self._display_time / 2) +
                          ScaleTo(1, self._display_time / 2)) |
-                         CallFunc(self._set_focussed_drink, drink))
+                         CallFunc(self._set_focussed_drink, drink, self._round_number))
         move_actions += (MoveTo(self._points[self._focus_end - 1], self._display_time * self._focus_length))
         move_actions += (MoveTo(self._points[self._focus_end], self._display_time) |
                          (ScaleTo(0.5, self._display_time / 2) +
                          Delay(self._display_time / 2)))
         move_actions += MoveTo(self._points[-1], self._display_time * (self._segment_count - self._focus_end))
 
-        #next_label.do((spawn_actions | move_actions) + CallFunc(self._safe_kill, next_label))
         next_label.do(move_actions + CallFunc(self._safe_kill, next_label))
         self.do(spawn_actions)
         
     def next_round(self):
+        self._round_number += 1
+        
         nodes = self.get_children()
         
         for node in nodes:
@@ -428,8 +448,6 @@ class CocosGui(object):
         self._mix_layer = None
 
         self._drinks = None
-        self._mixes = None
-        self._all = None
 
     def start(self):
         """
@@ -455,12 +473,9 @@ class CocosGui(object):
         self._connector.start()
 
         self._drinks = self._connector.database.get_drinks()
-        self._mixes = self._connector.database.get_mixes()
-
-        self._all = self._drinks + self._mixes
+        random.shuffle(self._drinks)
 
         self._connector.database.on_drinks_updated += self._update_drinks
-        self._connector.database.on_mixes_updated += self._update_mixes
         self._connector.stock_exchange.on_next_round += self._next_round
 
         print()
@@ -517,7 +532,7 @@ class CocosGui(object):
         if not self._title_layer:
             self._title_layer = TitleLayer()
 
-        self._ticker_layer.update_drinks(self._all)
+        self._ticker_layer.update_drinks(self._drinks)
 
         if new_ticker:
             self._drink_layer.show_drink_history(None)
@@ -542,19 +557,14 @@ class CocosGui(object):
 
     def _update_drinks(self, drinks):
         self._drinks = drinks
-        self._all = self._mixes + self._drinks
+        random.shuffle(self._drinks)
         if self._ticker_layer:
-            self._ticker_layer.update_drinks(self._all)
-
-    def _update_mixes(self, mixes):
-        self._mixes = mixes
-        self._all = self._mixes + self._drinks
-        if self._ticker_layer:
-            self._ticker_layer.update_drinks(self._all)
+            self._ticker_layer.update_drinks(self._drinks)
 
     def _next_round(self):
         self._ticker_layer.next_round()
         self._drink_layer.clear_drink()
+        self._title_layer.next_round()
             
 def parse_command_line():
     """
@@ -581,46 +591,6 @@ def run_cocos_gui():
                    fullscreen=args.fullscreen)
     gui.start()
 
-def test_mix():
-    """
-    Self test for testing the mix drawing functionality.
-    """
-    cocos.director.director.init(width=1024, height=768,
-                                     fullscreen=True)
-    cocos.director.director.set_show_FPS(True)
-
-    drink_layer = DrinkLayer()
-    
-    from threading import Thread
-
-    class TestThread(Thread):
-
-        def __init__(self, drink_layer):
-            Thread.__init__(self, name="TestThread")
-            self.daemon = True
-            self.drink_layer = drink_layer
-
-        def run(self):
-            from quartjes.controllers.database import database
-            mixes = database.get_mixes()[:]
-            #mixes += database.get_drinks()[:]
-            current = 0
-
-            while True:
-                current += 1
-                if current >= len(mixes):
-                    current = 0
-                self.drink_layer.show_drink(mixes[current])
-                time.sleep(20)
-
-    t = TestThread(drink_layer)
-    t.start()
-
-    scene = cocos.scene.Scene(drink_layer)
-    cocos.director.director.run(scene)
-
-    print("Killed")
 
 if __name__ == "__main__":
-    #run_cocos_gui()
-    test_mix()
+    run_cocos_gui()
