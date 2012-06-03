@@ -11,6 +11,7 @@ from drink_dialog import *
 
 class edit_db_dialog(Frame):
     def __init__(self, root):
+        root.title('Database editor')
         Frame.__init__(self, root)
         self.master.drinks = self.master.conn.database.get_drinks()
             
@@ -25,6 +26,7 @@ class edit_db_dialog(Frame):
         master.wait_window()
                 
         self.master.drinks.append(d)
+        self.master.conn.database.add(d)
         self.update_listbox()
 
     def add_mix(self):
@@ -35,6 +37,7 @@ class edit_db_dialog(Frame):
         master.wait_window()
 
         self.master.drinks.append(mix)
+        self.master.conn.database.add(mix)
         self.update_listbox()
 
     def edit_drink(self):        
@@ -49,13 +52,15 @@ class edit_db_dialog(Frame):
             elif drink.__class__.__name__ == "Mix":
                 mix_dialog(master,drink)
             master.wait_window()
+            self.master.conn.database.update(drink)
             self.update_listbox()
 
     def remove_drink(self):
         selection = self.lb_drinks.curselection()
         if len(selection) > 0:
             selected = int(selection[0])            
-            self.master.drinks.pop(selected)
+            drink = self.master.drinks.pop(selected)
+            self.master.conn.database.remove(drink)
             self.update_listbox()
 
     def update_listbox(self):
