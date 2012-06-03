@@ -12,8 +12,8 @@ if __name__ == "__main__":
     while not con.is_connected():
         time.sleep(1)
 
-    database = con.get_service_interface("database")
-    exchange = con.get_service_interface("stock_exchange")
+    database = con.database
+    exchange = con.stock_exchange
 
     current_drinks = database.get_drinks()
     current_mixes = database.get_mixes()
@@ -31,8 +31,8 @@ if __name__ == "__main__":
         current_mixes = mixes
         current_all = current_drinks + current_mixes
 
-    database.subscribe("drinks_updated", update_drinks)
-    database.subscribe("mixes_updated", update_mixes)
+    database.on_drinks_updated += update_drinks
+    database.on_mixes_updated += update_mixes
 
     while True:
         i = random.randint(0, len(current_all) - 1)
