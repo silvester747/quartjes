@@ -61,8 +61,8 @@ class Database:
             local_drink.name = drink.name
             local_drink.alc_perc = drink.alc_perc
             local_drink.color = drink.color
-            local_drink.price_per_liter = drink.price_per_liter
             local_drink.amount = drink.amount
+            local_drink.unit_price = drink.unit_price
 
             self.drink_dirty = True
 
@@ -142,13 +142,13 @@ class Database:
     def get_drinks(self):
         if not self._drinks:
             self._load_drinks()
-        return self._drinks
+        return self._drinks[:]
 
     @remote_method
     def get_mixes(self):
         if not self._mixes:
             self._load_drinks()
-        return self._mixes
+        return self._mixes[:]
 
     def _localize_mix(self, mix):
         """
