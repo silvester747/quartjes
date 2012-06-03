@@ -189,7 +189,9 @@ class BottomTicker(cocos.layer.Layer):
                          Delay(self._display_time / 2)))
         move_actions += MoveTo(self._points[-1], self._display_time * (self._segment_count - self._focus_end))
 
-        next_label.do((spawn_actions | move_actions) + CallFunc(self._safe_kill, next_label))
+        #next_label.do((spawn_actions | move_actions) + CallFunc(self._safe_kill, next_label))
+        next_label.do(move_actions + CallFunc(self._safe_kill, next_label))
+        self.do(spawn_actions)
         
     def next_round(self):
         nodes = self.get_children()
