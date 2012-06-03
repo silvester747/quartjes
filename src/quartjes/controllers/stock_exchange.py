@@ -149,7 +149,7 @@ class StockExchangeUpdateThread(threading.Thread):
 
 if __name__ == "__main__":
     exchange = StockExchange(start_thread=False)
-    drinks = exchange.db.drinks
+    drinks = exchange.db.get_drinks()
 
     while True:
         for d in drinks:
