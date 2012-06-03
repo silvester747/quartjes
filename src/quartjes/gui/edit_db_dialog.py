@@ -16,7 +16,6 @@ class edit_db_dialog(Frame):
         self.master.drinks = self.master.conn.database.get_drinks()
         self.master.conn.database.on_drinks_updated += self.server_update_listener
             
-        print self.master.drinks
         self.createWidgets(type)
         self.pack()
 
@@ -93,7 +92,7 @@ class edit_db_dialog(Frame):
 if __name__ == "__main__":
     from quartjes.connector.client import ClientConnector
     master = Tk()
-    master.conn = ClientConnector(None)
+    master.conn = ClientConnector()
     master.conn.start()
     app = edit_db_dialog(master)
     app.mainloop()

@@ -7,14 +7,12 @@ __date__ ="$Jul 3, 2011 3:03:58 PM$"
 from Tkinter import *
 
 class dialogSell(Frame):
-    def __init__(self, root, conn = None):
+    def __init__(self, root):
         root.title('Sell Drinks')
         Frame.__init__(self, root)
-        self.root = root
-        self.pack()
-        self.conn = conn
-        self.db = self.conn.get_service_interface("database")
+         
         self.createWidgets()
+        self.pack()
 
     def sell_drink(self):
         self.calc_price
@@ -26,20 +24,20 @@ class dialogSell(Frame):
 
         self.entryvalue = self.sv_amount.get()
         if len(self.entryvalue) >0:
-            amount = entryvalue
+            amount = self.entryvalue
         else:
             return
         self.sex = self.conn.get_service_interface("stock_exchange")
-        self.sex.sell(drink[self.selected], amount)
+        self.sex.sell(self.db.drink[self.selected], amount)
 
     def fill_drinks_listbox(self,lb_drinks):
-        self.drinks = self.db.get_drinks()
+        self.drinks = self.master.conn.database.get_drinks()
         for d in self.drinks:
             lb_drinks.insert(END,d.name)
 
-    def calc_price(self):
+    def calc_price(self,eventdata):
         self.entryvalue = self.e_amount.get()
-        if len(self.entryvalue) >0:
+        if len(self.entryvalue) > 0:
             amount = int(self.entryvalue)
         else:
             return
@@ -49,21 +47,17 @@ class dialogSell(Frame):
             selected = int(self.selection[0])
         else:
             return
-        self.drinks = self.db.get_drinks()
+        self.drinks = self.master.conn.database.get_drinks()
         self.newprice = amount * int(self.drinks[selected].sellprice_quartjes())
-        print(self.newprice)
+        
         self.sv_price.set(self.newprice)
-
-    def printklik(self, eventdata):
-        print("klik")
-
 
     def createWidgets(self):
         font16 = ("Arial", 26, "bold")
         font12 = ("Arial", 18, "bold")
-        self.lb_drinks = Listbox(self, height=40, width = 100)
+        self.lb_drinks = Listbox(self, height=40, width = 80)
         self.lb_drinks.grid(row = 0,column=0,rowspan=10,sticky=EW, padx = 20, pady = 20)
-        self.lb_drinks.bind("<Button-1>", self.printklik)
+        self.lb_drinks.bind("<Button-1>", self.calc_price)
 
         self.fill_drinks_listbox(self.lb_drinks)
 
@@ -89,7 +83,10 @@ class dialogSell(Frame):
         self.b_sell.grid(row = 1,column=1,sticky=EW, padx = 20, pady = 20)
 
 
-if __name__ == "__main__":
-    root = Tk()
-    app = dialogSell(root)
+if __name__ == "__main__":    
+    from quartjes.connector.client import ClientConnector
+    master = Tk()
+    master.conn = ClientConnector()
+    master.conn.start()
+    app = dialogSell(master)
     app.mainloop()
