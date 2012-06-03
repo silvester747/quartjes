@@ -9,6 +9,8 @@ import shelve
 from quartjes.models.drink import Drink,Mix
 from quartjes.connector.services import remote_event, remote_method, remote_service
 
+debug_mode = False
+
 @remote_service
 class Database:
     def __init__(self):        
@@ -155,7 +157,8 @@ class Database:
 
 
     def store(self):
-        print("Storing db")
+        if debug_mode:
+            print("Storing db")
         db = shelve.open(self.db_file)
         db['drinks'] = self._drinks
         db['mixes'] =self._mixes
@@ -174,8 +177,8 @@ class Database:
         self.mix_dirty = True
 
     def db_reset(self):
-        #assert False
-        print("Resetting database")
+        if debug_mode:
+            print("Resetting database")
         names = ['Cola','Sinas','Cassis','7up','Safari','Bacardi lemon','Bacardi','Whiskey','Jenever','Oude Jenever']
         alc_perc = [0,0,0,0,14,20,40,40,40,40]
         unit_price = [0.75 ,0.75, 0.75, 0.75, 3.00, 3.00 , 3.00, 4.0,2.5,3.5]

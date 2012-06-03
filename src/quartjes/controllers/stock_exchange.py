@@ -7,6 +7,8 @@ from quartjes.connector.services import remote_service, remote_method, remote_ev
 
 __author__ = "Rob van der Most"
 
+debug_mode = False
+
 @remote_service
 class StockExchange(object):
 
@@ -59,7 +61,8 @@ class StockExchange(object):
 
         mean_sales = float(total_sales) / float(len(drinks))
 
-        print("Total: %d, Mean: %f" % (total_sales, mean_sales))
+        if debug_mode:
+            print("Total: %d, Mean: %f" % (total_sales, mean_sales))
 
         t = time.time()
 
@@ -95,11 +98,13 @@ class StockExchange(object):
             if len(dr.history) > self.max_history:
                 dr.history = dr.history[-self.max_history:]
 
-        print("Total factors: %f" % total_factors)
+        if debug_mode:
+            print("Total factors: %f" % total_factors)
 
         skew = float(len(drinks)) / total_factors
 
-        print("Skew: %f" % skew)
+        if debug_mode:
+            print("Skew: %f" % skew)
 
         for (dr, amount) in sales.items():
             dr.price_factor *= skew

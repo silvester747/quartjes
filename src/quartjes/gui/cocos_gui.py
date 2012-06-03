@@ -15,7 +15,7 @@ import cocos.director
 import cocos.text
 import cocos.cocosnode
 import cocos.layer.base_layers
-from cocos.actions import Repeat, Waves3D, Delay, CallFunc, MoveTo, ScaleTo
+from cocos.actions import Repeat, Waves3D, Delay, CallFunc, MoveTo, ScaleTo, Hide
 import pyglet.text
 from pyglet.gl import glPushMatrix, glPopMatrix
 from quartjes.connector.client import ClientConnector
@@ -23,6 +23,8 @@ from quartjes.models.drink import Mix
 import time
 import quartjes.gui.mix_drawer as mix_drawer
 import quartjes.gui.history_graph as history_graph
+
+debug_mode = False
 
 class TitleLayer(cocos.layer.Layer):
     """
@@ -129,7 +131,8 @@ class BottomTicker(cocos.layer.Layer):
         Replace the current list of drinks to show on the ticker. Will not remove
         already visible drinks.
         """
-        print("Receiving update")
+        if debug_mode:
+            print("Receiving update")
         cur_drink = self._current_drink_index
         if cur_drink >= len(drinks):
             cur_drink = 0
@@ -187,6 +190,12 @@ class BottomTicker(cocos.layer.Layer):
         move_actions += MoveTo(self._points[-1], self._display_time * (self._segment_count - self._focus_end))
 
         next_label.do((spawn_actions | move_actions) + CallFunc(self._safe_kill, next_label))
+        
+    def next_round(self):
+        nodes = self.get_children()
+        
+        for node in nodes:
+            node.do(ScaleTo(0, 1) + Hide() + CallFunc(self._safe_kill, node))
 
 
 class DrinkLayer(cocos.layer.base_layers.Layer):
@@ -217,12 +226,19 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
         self._current_node = None
 
         self._next_drink = None
+        self._clear_drink = False
 
     def show_drink(self, drink):
         """
         Change the drink currently being shown.
         """
         self._next_drink = drink
+        
+    def clear_drink(self):
+        """
+        Clear the current selection
+        """
+        self._clear_drink = True
 
     def draw(self, *args, **kwargs):
         """
@@ -231,13 +247,18 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
         if self._next_drink:
             self._show_drink(self._next_drink)
             self._next_drink = None
+        if self._clear_drink:
+            self._clear_drink = False
+            self._show_drink(None)
+            self._next_drink = None
 
     def _show_drink(self, drink):
         """
         Replace the current drink with the next drink to display.
         """
         if not self.is_running:
-            print("Not running")
+            if debug_mode:
+                print("Not running")
             if self._current_node:
                 self._current_node.kill
                 self._current_node = None
@@ -249,13 +270,17 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
                                  CallFunc(self._current_node.kill))
 
         if drink == None:
-            print("No drink")
+            if debug_mode:
+                print("No drink")
             return
 
         if isinstance(drink, Mix):
             self._current_node = self._get_mix(drink)
         else:
             self._current_node = self._get_drink_history(drink)
+
+        if not self._current_node:
+            return
 
         self._current_node.do(Delay(0.5 * self._move_time) +
                               MoveTo(self._points[1], 0.5 * self._move_time))
@@ -432,15 +457,15 @@ class CocosGui(object):
 
         self._all = self._drinks + self._mixes
 
-        #self._connector.database.subscribe("drinks_updated", self._update_drinks)
-        #self._connector.database.subscribe("mixes_updated", self._update_mixes)
-        #self._connector.stock_exchange.subscribe("next_round", self._next_round)
+        self._connector.database.on_drinks_updated += self._update_drinks
+        self._connector.database.on_mixes_updated += self._update_mixes
+        self._connector.stock_exchange.on_next_round += self._next_round
 
         print()
         print("Initializing graphics...")
         cocos.director.director.init(width=self._width, height=self._height,
                                      fullscreen=self._fullscreen)
-        cocos.director.director.set_show_FPS(True)
+        cocos.director.director.set_show_FPS(debug_mode)
         self.show_gl_info()
 
         print()
@@ -525,11 +550,9 @@ class CocosGui(object):
         if self._ticker_layer:
             self._ticker_layer.update_drinks(self._all)
 
-    def _next_round(self, drinks):
-        self._drinks = drinks
-        self._all = self._mixes + self._drinks
-        if self.t_icker_layer:
-            self._ticker_layer.update_drinks(self._all)
+    def _next_round(self):
+        self._ticker_layer.next_round()
+        self._drink_layer.clear_drink()
             
 def parse_command_line():
     """
