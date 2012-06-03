@@ -13,3 +13,11 @@ exchange = StockExchange()
 server.register_service(exchange, "stock_exchange")
 server.register_service(database, "database")
 server.start()
+print("Server started on port 1234")
+print("Press enter to stop")
+
+raw_input()
+
+print("Stopping server")
+server.stop()
+exchange.stop()
