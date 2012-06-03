@@ -16,26 +16,15 @@ if __name__ == "__main__":
     exchange = con.stock_exchange
 
     current_drinks = database.get_drinks()
-    current_mixes = database.get_mixes()
-    current_all = current_drinks + current_mixes
 
     def update_drinks(drinks):
         global current_drinks
-        global current_all
         current_drinks = drinks
-        current_all = current_drinks + current_mixes
-
-    def update_mixes(mixes):
-        global current_mixes
-        global current_all
-        current_mixes = mixes
-        current_all = current_drinks + current_mixes
 
     database.on_drinks_updated += update_drinks
-    database.on_mixes_updated += update_mixes
 
     while True:
-        i = random.randint(0, len(current_all) - 1)
+        i = random.randint(0, len(current_drinks) - 1)
 
         #if current_drinks[i].price_factor > 1.4:
         #    continue
@@ -43,5 +32,5 @@ if __name__ == "__main__":
         #a = random.randint(1, 6 - int((current_drinks[i].price_factor - 1) * 10))
         a = random.randint(1, 6)
 
-        exchange.sell(drink=current_all[i], amount=a)
+        exchange.sell(drink=current_drinks[i], amount=a)
         time.sleep(5.0)

@@ -2,12 +2,12 @@ import threading
 import random
 import time
 import quartjes.controllers.database
-from quartjes.models.drink import Mix
+from quartjes.models.drink import Mix, Drink
 from quartjes.connector.services import remote_service, remote_method, remote_event
 
 __author__ = "Rob van der Most"
 
-debug_mode = False
+debug_mode = True
 
 @remote_service
 class StockExchange(object):
@@ -15,10 +15,9 @@ class StockExchange(object):
     def __init__(self, start_thread=True):
         self.transactions = []
         self.db = quartjes.controllers.database.database
-        self.service = None
         self.max_history = 120
 
-        self.round_time = 30
+        self.round_time = 20
 
         if start_thread:
             self.thread = StockExchangeUpdateThread(self)
@@ -38,10 +37,14 @@ class StockExchange(object):
     def recalculate_factors(self):
         sales = {}
         drinks = self.db.get_drinks()
-        total_sales = len(drinks)
+        total_sales = 0
+        component_count = 0
 
         for dr in drinks:
-            sales[dr] = 1
+            if isinstance(dr, Drink):
+                sales[dr] = 1
+                total_sales += 1
+                component_count += 1
 
         for (dr, amount) in self.transactions:
             if isinstance(dr, Mix):
@@ -62,7 +65,7 @@ class StockExchange(object):
         mean_sales = float(total_sales) / float(len(drinks))
 
         if debug_mode:
-            print("Total: %d, Mean: %f" % (total_sales, mean_sales))
+            print("Total sales: %d, Mean sales: %f" % (total_sales, mean_sales))
 
         t = time.time()
 
@@ -99,9 +102,9 @@ class StockExchange(object):
                 dr.history = dr.history[-self.max_history:]
 
         if debug_mode:
-            print("Total factors: %f" % total_factors)
+            print("Amount of components: %i, Total factors: %f" % (component_count, total_factors))
 
-        skew = float(len(drinks)) / total_factors
+        skew = float(component_count) / total_factors
 
         if debug_mode:
             print("Skew: %f" % skew)
@@ -109,9 +112,9 @@ class StockExchange(object):
         for (dr, amount) in sales.items():
             dr.price_factor *= skew
 
-        mixes = self.db.get_mixes()
-        for m in mixes:
-            m.update_properties()
+        for drink in drinks:
+            if isinstance(drink, Mix):
+                drink.update_properties()
 
         self.transactions = []
 
