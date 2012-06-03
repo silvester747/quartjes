@@ -107,7 +107,7 @@ def serialize_dict(value, parent=None, tag_name="dict", cache=None):
         Root node containing the serialized dictionary.
     """
     #print("serializeDict %s" % value)
-    dict_node = add_element(tag_name, parent=parent, type="dict")
+    dict_node = add_element(tag_name, parent=parent, type_name="dict")
 
     for (key, value) in value.items():
 
