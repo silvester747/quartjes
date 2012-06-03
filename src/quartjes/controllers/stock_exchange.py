@@ -16,7 +16,7 @@ class StockExchange(object):
         self.service = None
         self.max_history = 120
 
-        self.round_time = 10
+        self.round_time = 30
 
         if start_thread:
             self.thread = StockExchangeUpdateThread(self)
@@ -114,13 +114,13 @@ class StockExchange(object):
         self._notify_next_round()
         
     def stop(self):
-        print("Stock exchange stopping after next round...")
+        print("Stock exchange stopping in 1 second...")
         self.thread.stop()
 
     on_next_round = remote_event()
     
     def _notify_next_round(self):
-        self.on_next_round(self.db.get_drinks())
+        self.on_next_round()
 
 
 class StockExchangeUpdateThread(threading.Thread):
@@ -131,7 +131,11 @@ class StockExchangeUpdateThread(threading.Thread):
 
     def run(self):
         while (self.running):
-            time.sleep(self.exchange.round_time)
+            for _ in range(0, self.exchange.round_time):
+                if self.running:
+                    time.sleep(1)
+                else:
+                    return
             self.exchange.recalculate_factors()
             
     def stop(self):
