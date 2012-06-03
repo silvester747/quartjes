@@ -35,18 +35,11 @@ class Database:
         self._drink_dirty = True
 
     @remote_method
-    def update(self, obj):
-        if isinstance(obj, Mix):
-            self.update_mix(obj)
-        else:
-            self.update_drink(obj)
-
-    @remote_method
-    def update_drink(self, drink):
-        local_drink = self.get_drink(drink.id)
+    def update(self, drink):
+        local_drink = self.get(drink.id)
 
         if not local_drink:
-            self.add_drink(drink)
+            self.add(drink)
         else:
             if isinstance(drink, Mix):
                 self._localize_mix(drink)
@@ -75,7 +68,7 @@ class Database:
             self._dump_drinks()
         
     @remote_method
-    def remove(self, obj):
+    def remove(self, drink):
         local_drink = self._drink_index.get(drink.id, None)
         if local_drink:
             if debug_mode:
