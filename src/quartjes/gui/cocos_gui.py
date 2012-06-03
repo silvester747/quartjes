@@ -50,12 +50,20 @@ class TitleLayer(cocos.layer.Layer):
         self._next_round_label.position = (512, 768)
         self._next_round_label.scale = 0
         self.add(self._next_round_label)
+        
+        self._waiting_for_next_round = False
     
     def next_round(self):
-        self._title_label.do((RotateBy(360, 1) | ScaleTo(0, 1)) + Delay(5) +
-                             (RotateBy(360, 1) | ScaleTo(1, 1)))
-        self._next_round_label.do((RotateBy(360, 1) | ScaleTo(1, 1)) + Shaky3D(duration=5) +
-                             (RotateBy(360, 1) | ScaleTo(0, 1)))
+        self._title_label.do((RotateBy(360, 1) | ScaleTo(0, 1)))
+        self._next_round_label.do((RotateBy(360, 1) | ScaleTo(1, 1)) + Shaky3D(duration=10))
+        self._waiting_for_next_round = True
+
+    def next_round_started(self):
+        if not self._waiting_for_next_round:
+            return
+        self._title_label.do((RotateBy(360, 1) | ScaleTo(1, 1)))
+        self._next_round_label.do((RotateBy(360, 1) | ScaleTo(0, 1)))
+        self._waiting_for_next_round = False
 
 
 class BottomTicker(cocos.layer.Layer):
@@ -540,6 +548,7 @@ class CocosGui(object):
         scene = cocos.scene.Scene(self._ticker_layer, self._drink_layer, self._title_layer)
 
         self._ticker_layer.on_focus_changed += lambda sender, drink: self._drink_layer.show_drink(drink)
+        self._ticker_layer.on_focus_changed += lambda sender, drink: self._title_layer.next_round_started()
 
         self._display_scene(scene)
 
