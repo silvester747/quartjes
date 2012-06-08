@@ -79,6 +79,7 @@ class ClientConnector(object):
         self._factory = QuartjesClientFactory()
         self._database = None
         self._stock_exchange = None
+        self._connection = None
 
     @property
     def host(self):
@@ -157,7 +158,8 @@ class ClientConnector(object):
         The Reactor loop remains active as the reactor cannot be restarted.
         """
         if self._host:
-            threads.blockingCallFromThread(reactor, self._factory.stopTrying)
+            #threads.blockingCallFromThread(reactor, self._factory.stopTrying)
+            threads.blockingCallFromThread(reactor, self._disconnect)
         else:
             self._database = None
             self._stock_exchange.stop()
@@ -207,7 +209,14 @@ class ClientConnector(object):
         Internal method called from the reactor to start a new connection.
         """
         #print("Connecting...")
-        reactor.connectTCP(self.host, self.port, self.factory)  #@UndefinedVariable
+        self._connection = reactor.connectTCP(self.host, self.port, self.factory)  #@UndefinedVariable
+
+    def _disconnect(self):
+        """
+        Internal method called from the reactor to shut down a connection.
+        """
+        self._factory.stopTrying()
+        self._connection.disconnect()
 
     class _ReactorThread(Thread):
         """
@@ -232,6 +241,9 @@ def self_test():
 
     def callback(text):
         print("Received event: " + text)
+        callback.count += 1
+
+    callback.count = 0
 
     cl = ClientConnector("localhost", 1234)
     cl.start()
@@ -247,12 +259,16 @@ def self_test():
 
     time.sleep(1)
     print("Subscribe to topic")
-    testService.subscribe("on_trigger", callback)
+    testService.on_trigger += callback
 
     time.sleep(1)
     print("Trigger topic")
     testService.trigger(text="Eggs")
+    time.sleep(1)
+    assert callback.count==1, "No callback received"
     testService.trigger2("Ham")
+    time.sleep(1)
+    assert callback.count==2, "No callback received"
     
     print("Trigger timeout")
     try:
