@@ -8,6 +8,7 @@ from Tkinter import *
 from quartjes.models.drink import Drink,Mix
 from mix_dialog import mix_dialog 
 from drink_dialog import drink_dialog
+from quartjes.connector.client import tk_inter_event_listener, tk_prepare_instance_for_events
 
 class edit_db_dialog(Frame):
     def __init__(self, root):
@@ -17,7 +18,10 @@ class edit_db_dialog(Frame):
         
         # the following line should support multi client update refreshes, 
         # but for now it generates an error for beining in the wrong loop
-        #self.master.conn.database.on_drinks_updated += self.server_update_listener
+        
+        # Rob: I fixed it, see the following method
+        tk_prepare_instance_for_events(self)
+        self.master.conn.database.on_drinks_updated += self.server_update_listener
             
         self.createWidgets(type)
         self.pack()
@@ -66,6 +70,7 @@ class edit_db_dialog(Frame):
             self.master.conn.database.remove(drink)
             self.update_listbox()
             
+    @tk_inter_event_listener
     def server_update_listener(self,drinks):
         self.master.drinks = drinks
         self.update_listbox()
