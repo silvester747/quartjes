@@ -8,7 +8,7 @@ from Tkinter import *
 from quartjes.models.drink import Drink,Mix
 from mix_dialog import mix_dialog 
 from drink_dialog import drink_dialog
-from quartjes.connector.client import tk_inter_event_listener, tk_prepare_instance_for_events
+from quartjes.connector.client import tk_event_listener, tk_prepare_instance_for_events
 
 class edit_db_dialog(Frame):
     def __init__(self, root):
@@ -70,7 +70,7 @@ class edit_db_dialog(Frame):
             self.master.conn.database.remove(drink)
             self.update_listbox()
             
-    @tk_inter_event_listener
+    @tk_event_listener
     def server_update_listener(self,drinks):
         self.master.drinks = drinks
         self.update_listbox()

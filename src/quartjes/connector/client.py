@@ -231,7 +231,7 @@ class ClientConnector(object):
         def run(self):
             reactor.run(installSignalHandlers=0)       #@UndefinedVariable
 
-def tk_inter_event_listener(F):
+def tk_event_listener(F):
     """
     Make a method able to receive events from the connector while running in
     the TK mainloop.
@@ -245,7 +245,7 @@ def tk_prepare_instance_for_events(instance):
     """
     Prepare a class to receive events from outside the tk mainloop.
     Call this from the TK mainloop before any events are going to be received.
-    Decorate methods to call using tk_inter_event_listener
+    Decorate methods to call using tk_event_listener
     """
     def listener():
         try:
