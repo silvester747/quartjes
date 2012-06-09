@@ -11,7 +11,7 @@ class TestDatabase(unittest.TestCase):
 
     def setUp(self):
         self.db = Database()
-        
+        self.db.db_reset()
 
 
     def tearDown(self):
