@@ -395,7 +395,7 @@ def add_value_element(value, parent=None, tag_name="value", cache=None):
         The newly created node.
     """
     
-    if value.__class__ in ignored_types:
+    if isinstance(value, ignored_types):
         print("Warning: value type cannot be serialized: %s. Ignoring value." % value.__class__)
         return None
     
