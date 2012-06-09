@@ -1,28 +1,29 @@
+"""
+The 'database' used by the Quartjesavond server. 
+Just a simple memory store of drinks that uses shelve to constantly write
+a copy to disk.
+"""
+
 import time
 import threading
-# To change this template, choose Tools | Templates
-# and open the template in the editor.
-
-__author__="piet"
-__date__ ="$16-jun-2011 20:35:14$"
 import shelve
 from quartjes.models.drink import Drink,Mix
 from quartjes.connector.services import remote_event, remote_method, remote_service
 
-debug_mode = True
+debug_mode = False
 
 @remote_service
 class Database:
     def __init__(self):        
         self._drinks = None
         self._drink_index = {}
-
         self._drink_dirty = False
         self._service = None
-
         self._db_file = "database"
 
         self._monitor = DatabaseMonitor(self)
+        
+        self._load_drinks()
 
     @remote_method
     def replace_drinks(self, drinks):
@@ -88,8 +89,6 @@ class Database:
 
     @remote_method
     def get_drinks(self):
-        if not self._drinks:
-            self._load_drinks()
         return self._drinks[:]
 
     def _localize_mix(self, mix):
