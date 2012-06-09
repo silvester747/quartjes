@@ -272,6 +272,9 @@ def self_test():
     def callback(text):
         print("Received event: " + text)
         callback.count += 1
+    
+    def testfunc():
+        pass
 
     callback.count = 0
 
@@ -286,6 +289,15 @@ def self_test():
     print(result)
     result = testService.test("Spam")
     print(result)
+    
+    time.sleep(1)
+    print("Test sending a function (should trigger a warning)")
+    try:
+        result = testService.test(testfunc)
+    except TypeError:
+        print("Test OK")
+    else:
+        assert False, "A TypeError was expected as the only argument is ignored"
 
     time.sleep(1)
     print("Subscribe to topic")

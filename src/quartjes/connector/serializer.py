@@ -12,6 +12,13 @@ Several types of objects are supported for serialization:
 * tuples, lists and dictionaries of supported types
 * custom types that are registered with this module
 
+Some object types are not supported and will be ignored (this will not break
+existing methods on classes, just happens when you assign such a method to
+a instance variable):
+
+* various types of functions and methods
+* file handles
+
 For class instances with an id attribute containing a UUID, that id is used
 as identifier of the serialized object. If no id attribute is present, one
 is added to the instance.
@@ -38,6 +45,15 @@ __docformat__ = "restructuredtext en"
 # That makes it easy to switch between py and c version.
 import xml.etree.cElementTree as et
 import uuid
+import types
+
+ignored_types = (types.FunctionType, types.BuiltinFunctionType, types.BuiltinMethodType,
+                 types.FileType, types.GeneratorType, types.LambdaType, types.MemberDescriptorType,
+                 types.MethodType, types.ModuleType, types.TypeType, types.UnboundMethodType)
+"""
+For these internal types, serialization is not supported. They will be ignored
+when encountered.
+"""
 
 def serialize(obj, parent=None, tag_name="unknown", cache=None):
     """
@@ -378,7 +394,11 @@ def add_value_element(value, parent=None, tag_name="value", cache=None):
     node : ElementTree Node
         The newly created node.
     """
-    #print("addValueElement %s" % value)
+    
+    if value.__class__ in ignored_types:
+        print("Warning: value type cannot be serialized: %s. Ignoring value." % value.__class__)
+        return None
+    
 
     if hasattr(value, "__serialize__"):
 
