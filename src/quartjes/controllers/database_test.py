@@ -39,9 +39,9 @@ class TestDatabase(unittest.TestCase):
         self.assertTrue(self.db.contains(drink), "Database should contain new drink")
         self.assertEqual(len(self.db), count_before + 1, "Database should contain exactly one item more")
         
-    def test_add_mix(self):
+    def test_add_mix_with_new_drinks(self):
         """
-        Test adding a new mix.
+        Test adding a new mix where the components are not in the database yet.
         """
         mix = self._create_random_mix()
         self.assertNotIn(mix, self.db, "New mix should be unique")
@@ -61,6 +61,43 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(len(self.db), count_before + 1 + len(mix.drinks), 
                          "Database should contain mix plus contents now")
     
+    def test_add_mix_with_existing_drinks(self):
+        """
+        Test adding a new mix where the components are already in the database.
+        """
+        mix = self._create_random_mix()
+        self.assertNotIn(mix, self.db, "New mix should be unique")
+        
+        for drink in mix.drinks:
+            self.db.add(drink)
+        
+        count_before = len(self.db)
+        
+        self.db.add(mix)
+        self.assertIn(mix, self.db, "New mix should be added")
+        
+        self.assertEqual(len(self.db), count_before + 1, "Only the mix should be added")
+    
+    def test_add_mix_with_some_new_drinks(self):
+        """
+        Test adding a new mix where the components are already in the database.
+        """
+        mix = self._create_random_mix()
+        self.assertNotIn(mix, self.db, "New mix should be unique")
+        
+        drinks_added_before = len(mix.drinks)/2
+        for drink in mix.drinks[0:drinks_added_before]:
+            self.db.add(drink)
+        
+        count_before = len(self.db)
+        
+        self.db.add(mix)
+        self.assertIn(mix, self.db, "New mix should be added")
+        
+        expected_drinks_added = len(mix.drinks) - drinks_added_before
+        self.assertEqual(len(self.db), count_before + 1 + expected_drinks_added, 
+                         "Only the mix should be added")
+    
     def test_add_existing_drink(self):
         """
         Test adding a drink that already exists.
@@ -71,10 +108,9 @@ class TestDatabase(unittest.TestCase):
         self.db.add(drink)
         self.assertIn(drink, self.db, "New drink should be added")
 
-        with self.assertRaises(ValueError, "Adding the drink twice should raise a ValueError."):
+        with self.assertRaises(ValueError):
             self.db.add(drink)
             
-    
     def test_remove_drink(self):
         """
         Test removing a drink from the database.
@@ -114,7 +150,7 @@ class TestDatabase(unittest.TestCase):
         other = self._create_random_drink()
         self.assertNotIn(other, self.db, "Other drink should not exist yet")
         
-        with self.assertRaises(KeyError, "Adding the drink twice should raise a KeyError."):
+        with self.assertRaises(KeyError):
             self.db.remove(other)
     
     def _create_random_drink(self):
