@@ -22,6 +22,9 @@ class TestDatabase(unittest.TestCase):
 
 
     def test_add_drink(self):
+        """
+        Test adding a new drink.
+        """
         drink = self._create_random_drink()
         self.assertNotIn(drink, self.db, "New drink should be unique")
         
@@ -37,6 +40,9 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(len(self.db), count_before + 1, "Database should contain exactly one item more")
         
     def test_add_mix(self):
+        """
+        Test adding a new mix.
+        """
         mix = self._create_random_mix()
         self.assertNotIn(mix, self.db, "New mix should be unique")
         
@@ -54,7 +60,62 @@ class TestDatabase(unittest.TestCase):
         self.assertTrue(self.db.contains(mix), "Database should contain new mix")
         self.assertEqual(len(self.db), count_before + 1 + len(mix.drinks), 
                          "Database should contain mix plus contents now")
+    
+    def test_add_existing_drink(self):
+        """
+        Test adding a drink that already exists.
+        """
+        drink = self._create_random_drink()
+        self.assertNotIn(drink, self.db, "New drink should be unique")
         
+        self.db.add(drink)
+        self.assertIn(drink, self.db, "New drink should be added")
+
+        with self.assertRaises(ValueError, "Adding the drink twice should raise a ValueError."):
+            self.db.add(drink)
+            
+    
+    def test_remove_drink(self):
+        """
+        Test removing a drink from the database.
+        """
+        drink = self._create_random_drink()
+        self.assertNotIn(drink, self.db, "New drink should be unique")
+        self.db.add(drink)
+        self.assertIn(drink, self.db, "New drink should be added")
+
+        self.db.remove(drink)
+        self.assertNotIn(drink, self.db, "Drink should no longer be present")
+        
+    def test_remove_drink_using_copy(self):
+        """
+        Test removing a drink from the database using a copy of the drink.
+        """
+        drink = self._create_random_drink()
+        self.assertNotIn(drink, self.db, "New drink should be unique")
+        self.db.add(drink)
+        self.assertIn(drink, self.db, "New drink should be added")
+        
+        copy = Drink()
+        copy.id = drink.id
+        
+        self.db.remove(copy)
+        self.assertNotIn(drink, self.db, "Drink should no longer be present")
+    
+    def test_remove_nonexisting_drink(self):
+        """
+        Test removing a drink from the database that does not exist.
+        """
+        drink = self._create_random_drink()
+        self.assertNotIn(drink, self.db, "New drink should be unique")
+        self.db.add(drink)
+        self.assertIn(drink, self.db, "New drink should be added")
+
+        other = self._create_random_drink()
+        self.assertNotIn(other, self.db, "Other drink should not exist yet")
+        
+        with self.assertRaises(KeyError, "Adding the drink twice should raise a KeyError."):
+            self.db.remove(other)
     
     def _create_random_drink(self):
         drink = Drink()
