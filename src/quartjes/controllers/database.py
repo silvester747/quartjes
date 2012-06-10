@@ -33,9 +33,9 @@ class Database:
         self._service = None
         self._db_file = "database"
 
-        self._monitor = DatabaseMonitor(self)
+        self._monitor = Database._DatabaseMonitor(self)
         
-        self._load_drinks()
+        self._load_database()
 
     @remote_method
     def replace_drinks(self, drinks):
@@ -144,12 +144,30 @@ class Database:
     @remote_method
     def get(self, id):
         """
+        Get a drink from the database by id.
         
+        Parameters
+        ----------
+        id : UUID
+            Id of the drink to get.
+            
+        Returns
+        -------
+        drink : :class:`quartjes.models.drink.Drink`
+            The drink with the given id. None if it does not exist.
         """
         return self._drink_index.get(id)
 
     @remote_method
     def get_drinks(self):
+        """
+        Get all drinks in the database.
+        
+        Returns
+        -------
+        drinks : list of :class:`quartjes.models.drink.Drink`
+            All drinks in the database.
+        """
         return self._drinks[:]
 
     def contains(self, drink):
@@ -184,14 +202,21 @@ class Database:
         mix.drinks = local_drinks
 
     def _dump_drinks(self):
+        """
+        Debug method to dump the contents to the console.
+        """
         for drink in self._drinks:
             print(drink)
     
-    def _load_drinks(self):
+    def _load_database(self):
+        """
+        Load the current database from disk.
+        If no database exists on disk, create a new one.
+        """
         db = shelve.open(self._db_file)
         if not db.has_key('drinks'):
             db.close()
-            self.db_reset()
+            self.reset()
 
         else:
             self._internal_replace_drinks(db['drinks'])
@@ -200,12 +225,19 @@ class Database:
         self._monitor.start()
 
     def _internal_replace_drinks(self, drinks):
+        """
+        Replace all drinks in the database.
+        Internal use only. Does not trigger any updates or saves.
+        """
         index = {}
         for dr in drinks:
             index[dr.id] = dr
         self._drinks, self._drink_index = drinks, index
 
-    def store(self):
+    def _store(self):
+        """
+        Save the database to disk.
+        """
         if debug_mode:
             print("Storing db")
         db = shelve.open(self._db_file)
@@ -213,14 +245,21 @@ class Database:
         db.close()
 
         if self._drink_dirty:
-            self._drinks_updated()
+            self._notify_drinks_updated()
 
         self._drink_dirty = False
 
-    def set_dirty(self):
+    def force_save(self):
+        """
+        Force the database to be saved the next time the monitor checks.
+        Will also trigger an update message to listeners.
+        """
         self._drink_dirty = True
 
-    def db_reset(self):
+    def reset(self):
+        """
+        Reset the database to a predefined default database.
+        """
         if debug_mode:
             print("Resetting database")
         names = ['Cola','Sinas','Cassis','7up','Safari','Bacardi lemon','Bacardi','Whiskey','Jenever','Oude Jenever']
@@ -240,30 +279,72 @@ class Database:
         drinks.append(Mix('Safari Cassis',[d1,d1,d1,d2]))
         self._internal_replace_drinks(drinks)
 
-        self.store()
+        self._store()
+    
+    def clear(self):
+        """
+        Remove all contents from the database.
+        """
+        self._drinks = []
+        self._drink_index = {}
+        self._drink_dirty = True
+        
+        self._store()
+
+        
 
     on_drinks_updated = remote_event()
+    """
+    Event triggered when the contents of the database has changed.
+    
+    Attributes
+    ----------
+    drinks : iterable of :class:`quartjes.models.drink.Drink`
+        The latest contents of the database.
+    """
 
-    def _drinks_updated(self):
+    def _notify_drinks_updated(self):
+        """
+        Notify event listeners that the list of drinks has been updated.
+        """
         self.on_drinks_updated(self._drinks)
 
+    __contains__ = contains
+    __getitem__ = get
+    
+    def __len__(self):
+        return len(self._drinks)
 
-class DatabaseMonitor(threading.Thread):
-    def __init__(self, db):
-        super(DatabaseMonitor, self).__init__()
-        self.daemon = True
-        self.db = db
+
+    class _DatabaseMonitor(threading.Thread):
+        """
+        Internal monitoring thread to ensure the database is saved to disk
+        on a regular base. This will also cause event listeners to be
+        notified.
         
-    def run(self):
-        while True:
-            time.sleep(1)
-            if self.db._drink_dirty:
-                self.db.store()
+        Attributes
+        ----------
+        db : Database
+            The database to monitor.
+        """
+        def __init__(self, db):
+            super(Database._DatabaseMonitor, self).__init__()
+            self.daemon = True
+            self.db = db
+            
+        def run(self):
+            """
+            This is where the magic happens.
+            """
+            while True:
+                time.sleep(1)
+                if self.db._drink_dirty:
+                    self.db._store()
 
+database = Database()
 '''
 Singleton reference to the database.
 '''
-database = Database()
 
 if __name__ == "__main__":
     print "Running self test"

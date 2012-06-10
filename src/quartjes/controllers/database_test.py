@@ -5,22 +5,77 @@ features active.
 '''
 import unittest
 from quartjes.controllers.database import Database
+from quartjes.models.drink import Drink, Mix
+import random
 
 class TestDatabase(unittest.TestCase):
 
 
     def setUp(self):
         self.db = Database()
-        self.db.db_reset()
+        self.db.clear()
+        self.random = random.Random()
 
 
     def tearDown(self):
-        pass
+        self.db.reset()
 
 
-    def testName(self):
-        pass
-
+    def test_add_drink(self):
+        drink = self._create_random_drink()
+        self.assertNotIn(drink, self.db, "New drink should be unique")
+        
+        count_before = len(self.db)
+        
+        self.db.add(drink)
+        self.assertIn(drink, self.db, "New drink should be added")
+        
+        get = self.db.get(drink.id)
+        self.assertIs(get, drink, "Should be able to get drink by id")
+        
+        self.assertTrue(self.db.contains(drink), "Database should contain new drink")
+        self.assertEqual(len(self.db), count_before + 1, "Database should contain exactly one item more")
+        
+    def test_add_mix(self):
+        mix = self._create_random_mix()
+        self.assertNotIn(mix, self.db, "New mix should be unique")
+        
+        count_before = len(self.db)
+        
+        self.db.add(mix)
+        self.assertIn(mix, self.db, "New mix should be added")
+        
+        for drink in mix.drinks:
+            self.assertIn(drink, self.db, "Components from the mix should be added")
+        
+        get = self.db.get(mix.id)
+        self.assertIs(get, mix, "Should be able to get mix by id")
+        
+        self.assertTrue(self.db.contains(mix), "Database should contain new mix")
+        self.assertEqual(len(self.db), count_before + 1 + len(mix.drinks), 
+                         "Database should contain mix plus contents now")
+        
+    
+    def _create_random_drink(self):
+        drink = Drink()
+        drink.name = [chr(self.random.randint(ord('a'), ord('z'))) for _ in range(0, self.random.randint(8, 30))]
+        drink.alc_perc = self.random.random()
+        drink.color = (self.random.randint(0, 255), self.random.randint(0, 255), self.random.randint(0, 255))
+        drink.price_factor = self.random.random() * 2
+        drink.unit_amount = self.random.randint(100, 1000)
+        drink.unit_price = self.random.random() * 4
+        
+        return drink
+    
+    def _create_random_mix(self):
+        mix = Mix()
+        mix.name = [chr(self.random.randint(ord('a'), ord('z'))) for _ in range(0, self.random.randint(8, 30))]
+        mix.unit_amount = self.random.randint(100, 1000)
+        
+        for drink in (self._create_random_drink() for _ in range(1, self.random.randint(2, 10))):
+            mix.insert_drink(drink)
+        
+        return mix
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
