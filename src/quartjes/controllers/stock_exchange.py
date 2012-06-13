@@ -118,7 +118,7 @@ class StockExchange(object):
 
         self.transactions = []
 
-        self.db.set_dirty()
+        self.db.force_save()
         self._notify_next_round()
         
     def stop(self):
