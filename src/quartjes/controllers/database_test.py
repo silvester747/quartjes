@@ -7,6 +7,7 @@ import unittest
 from quartjes.controllers.database import Database
 from quartjes.models.drink import Drink, Mix
 import random
+from quartjes.connector.client import ClientConnector
 
 class TestDatabase(unittest.TestCase):
 
@@ -26,27 +27,27 @@ class TestDatabase(unittest.TestCase):
         Test adding a new drink.
         """
         drink = self._create_random_drink()
-        self.assertNotIn(drink, self.db, "New drink should be unique")
+        self.assertFalse(self.db.contains(drink), "New drink should be unique")
         
-        count_before = len(self.db)
+        count_before = self.db.count()
         
         self.db.add(drink)
-        self.assertIn(drink, self.db, "New drink should be added")
+        self.assertTrue(self.db.contains(drink), "New drink should be added")
         
         get = self.db.get(drink.id)
-        self.assertIs(get, drink, "Should be able to get drink by id")
+        self.assertEquals(get, drink, "Should be able to get drink by id")
         
         self.assertTrue(self.db.contains(drink), "Database should contain new drink")
-        self.assertEqual(len(self.db), count_before + 1, "Database should contain exactly one item more")
+        self.assertEqual(self.db.count(), count_before + 1, "Database should contain exactly one item more")
         
     def test_add_mix_with_new_drinks(self):
         """
         Test adding a new mix where the components are not in the database yet.
         """
         mix = self._create_random_mix()
-        self.assertNotIn(mix, self.db, "New mix should be unique")
+        self.assertFalse(self.db.contains(mix), "New mix should be unique")
         
-        count_before = len(self.db)
+        count_before = self.db.count()
         
         self.db.add(mix)
         self.assertIn(mix, self.db, "New mix should be added")
@@ -58,7 +59,7 @@ class TestDatabase(unittest.TestCase):
         self.assertIs(get, mix, "Should be able to get mix by id")
         
         self.assertTrue(self.db.contains(mix), "Database should contain new mix")
-        self.assertEqual(len(self.db), count_before + 1 + len(mix.drinks), 
+        self.assertEqual(self.db.count(), count_before + 1 + len(mix.drinks), 
                          "Database should contain mix plus contents now")
     
     def test_add_mix_with_existing_drinks(self):
@@ -71,12 +72,12 @@ class TestDatabase(unittest.TestCase):
         for drink in mix.drinks:
             self.db.add(drink)
         
-        count_before = len(self.db)
+        count_before = self.db.count()
         
         self.db.add(mix)
         self.assertIn(mix, self.db, "New mix should be added")
         
-        self.assertEqual(len(self.db), count_before + 1, "Only the mix should be added")
+        self.assertEqual(self.db.count(), count_before + 1, "Only the mix should be added")
     
     def test_add_mix_with_some_new_drinks(self):
         """
@@ -89,13 +90,13 @@ class TestDatabase(unittest.TestCase):
         for drink in mix.drinks[0:drinks_added_before]:
             self.db.add(drink)
         
-        count_before = len(self.db)
+        count_before = self.db.count()
         
         self.db.add(mix)
         self.assertIn(mix, self.db, "New mix should be added")
         
         expected_drinks_added = len(mix.drinks) - drinks_added_before
-        self.assertEqual(len(self.db), count_before + 1 + expected_drinks_added, 
+        self.assertEqual(self.db.count(), count_before + 1 + expected_drinks_added, 
                          "Only the mix should be added")
     
     def test_add_existing_drink(self):
@@ -153,9 +154,62 @@ class TestDatabase(unittest.TestCase):
         with self.assertRaises(KeyError):
             self.db.remove(other)
     
+    def test_update_drink(self):
+        """
+        Test updating a drink in the database
+        """
+        drink = self._create_random_drink()
+        self.assertNotIn(drink, self.db, "New drink should be unique")
+        self.db.add(drink)
+        self.assertIn(drink, self.db, "New drink should be added")
+
+        other = self._create_random_drink()
+        other.id = drink.id
+        self.assertNotEqual(drink, other, "Other drink object should differ from first drink")
+        
+        count = self.db.count()
+        self.db.update(other)
+        
+        self.assertEqual(drink.name, other.name, 
+                         "Original drink object should be updated to match other drink object")
+        self.assertEqual(drink.alc_perc, other.alc_perc, 
+                         "Original drink object should be updated to match other drink object")
+        self.assertEqual(drink.color, other.color, 
+                         "Original drink object should be updated to match other drink object")
+        self.assertEqual(drink.unit_amount, other.unit_amount, 
+                         "Original drink object should be updated to match other drink object")
+        self.assertEqual(drink.unit_price, other.unit_price, 
+                         "Original drink object should be updated to match other drink object")
+        self.assertEqual(count, self.db.count(), "No new drinks should be added.")
+        
+        drink = self.db.get(other.id)
+        self.assertEqual(drink.name, other.name, 
+                         "Drink in database should be updated to match other drink object")
+        self.assertEqual(drink.alc_perc, other.alc_perc, 
+                         "Drink in database should be updated to match other drink object")
+        self.assertEqual(drink.color, other.color, 
+                         "Drink in database should be updated to match other drink object")
+        self.assertEqual(drink.unit_amount, other.unit_amount, 
+                         "Drink in database should be updated to match other drink object")
+        self.assertEqual(drink.unit_price, other.unit_price, 
+                         "Drink in database should be updated to match other drink object")
+    
+    def test_update_nonexisting_drink(self):
+        """
+        Test that when a non existing drink is updated, it is added to the database.
+        """
+        drink = self._create_random_drink()
+        self.assertNotIn(drink, self.db, "New drink should be unique")
+        count = self.db.count()
+        
+        self.db.update(drink)
+        self.assertIn(drink, self.db, "New drink should be added")
+        self.assertEqual(self.db.count(), count + 1, "A drink should be added.")
+
+    
     def _create_random_drink(self):
         drink = Drink()
-        drink.name = [chr(self.random.randint(ord('a'), ord('z'))) for _ in range(0, self.random.randint(8, 30))]
+        drink.name = "".join([chr(self.random.randint(ord('a'), ord('z'))) for _ in range(0, self.random.randint(8, 30))])
         drink.alc_perc = self.random.random()
         drink.color = (self.random.randint(0, 255), self.random.randint(0, 255), self.random.randint(0, 255))
         drink.price_factor = self.random.random() * 2
@@ -166,13 +220,34 @@ class TestDatabase(unittest.TestCase):
     
     def _create_random_mix(self):
         mix = Mix()
-        mix.name = [chr(self.random.randint(ord('a'), ord('z'))) for _ in range(0, self.random.randint(8, 30))]
+        mix.name = "".join([chr(self.random.randint(ord('a'), ord('z'))) for _ in range(0, self.random.randint(8, 30))])
         mix.unit_amount = self.random.randint(100, 1000)
         
         for drink in (self._create_random_drink() for _ in range(1, self.random.randint(2, 10))):
             mix.insert_drink(drink)
         
         return mix
+
+class TestDatabaseOnline(TestDatabase):
+    """
+    Test cases for the the database, but now using a connector
+    """
+    
+    def setUp(self):
+        """
+        Prepare a database connection
+        """
+        self.connector = ClientConnector("localhost", 1234)
+        self.connector.start()
+        self.db = self.connector.database
+        self.random = random.Random()
+
+    
+    def tearDown(self):
+        """
+        Clean up the database connection
+        """
+        self.connector.stop()
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

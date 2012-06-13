@@ -170,6 +170,7 @@ class Database:
         """
         return self._drinks[:]
 
+    @remote_method
     def contains(self, drink):
         """
         Does the database already contain (a copy of) the given drink?
@@ -309,11 +310,16 @@ class Database:
         """
         self.on_drinks_updated(self._drinks)
 
+    @remote_method
+    def count(self):
+        """
+        Get the number of drinks in the database.
+        """
+        return len(self._drinks)
+
     __contains__ = contains
     __getitem__ = get
-    
-    def __len__(self):
-        return len(self._drinks)
+    __len__ = count
 
 
     class _DatabaseMonitor(threading.Thread):
