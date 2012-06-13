@@ -598,9 +598,11 @@ _int_serializer = ValueSerializer(int, str, int)
 _string_serializer = ValueSerializer(str, lambda x: x, lambda x: x)
 _float_serializer = ValueSerializer(float, str, float)
 _uuid_serializer = ValueSerializer(uuid.UUID, lambda x: x.urn, uuid.UUID, klass_name="uuid")
+_bool_serializer = ValueSerializer(bool, str, lambda x: x == "True")
 
 add_value_serializer(_int_serializer)
 add_value_serializer(_string_serializer)
 add_value_serializer(_float_serializer)
 add_value_serializer(_uuid_serializer)
+add_value_serializer(_bool_serializer)
 
