@@ -154,7 +154,7 @@ def execute_remote_method_call(service, method_name, *pargs, **kwargs):
         raise MessageHandleError(MessageHandleError.RESULT_INVALID_PARAMS, error_details=err.message)
     except Exception as err:
         traceback.print_exc()
-        raise MessageHandleError(MessageHandleError.RESULT_EXCEPTION_RAISED, error_details=str(err))
+        raise MessageHandleError(MessageHandleError.RESULT_EXCEPTION_RAISED, error_details=err)
 
 def subscribe_to_remote_event(service, service_name, event_name, listener, factory):
     """
@@ -359,6 +359,8 @@ class ServiceInterface(object):
                 raise AttributeError("Method %s does not exist in service %s." % (name, self._service_name))
             elif err.error_code == err.RESULT_INVALID_PARAMS:
                 raise TypeError(err.error_details)
+            elif err.error_code == err.RESULT_EXCEPTION_RAISED:
+                raise err.error_details
             else:
                 raise
 
