@@ -594,9 +594,9 @@ class ValueSerializer(object):
         return self._deserialize_method(string)
 
 # Already included value serializers. Mostly for builtin python data types.
-_int_serializer = ValueSerializer(int, str, int)
+_int_serializer = ValueSerializer(int, repr, int)
 _string_serializer = ValueSerializer(str, lambda x: x, lambda x: x)
-_float_serializer = ValueSerializer(float, str, float)
+_float_serializer = ValueSerializer(float, repr, float)
 _uuid_serializer = ValueSerializer(uuid.UUID, lambda x: x.urn, uuid.UUID, klass_name="uuid")
 _bool_serializer = ValueSerializer(bool, str, lambda x: x == "True")
 
