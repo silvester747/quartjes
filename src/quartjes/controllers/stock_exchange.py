@@ -7,7 +7,7 @@ from quartjes.connector.services import remote_service, remote_method, remote_ev
 
 __author__ = "Rob van der Most"
 
-debug_mode = True
+debug_mode = False
 
 @remote_service
 class StockExchange(object):
