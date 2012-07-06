@@ -319,8 +319,91 @@ class ServiceInterface(object):
         Return a special callable object as a proxy to the action on the service for
         each attribute that does not exist.
         """
-        return ServiceInterfaceAttribute(self._client_factory, self._service_name, name)
+        return ServiceInterfaceAttribute(self, name)
+    
+    def _do_remote_call(self, name, *pargs, **kwargs):
+        """
+        Perform the remote method call
+        
+        Parameters
+        ----------
+        name
+            Name of the remote method to call.
+        *pargs
+            Positional arguments for the method.
+        **kwargs
+            Keyword arguments for the method.
+        
+        Returns
+        -------
+        result
+            Result returned from the server method.
+            
+        Raises
+        ------
+        AttributeError
+            The method does not exist on the server.
+        TypeError
+            The method on the server expects different arguments.
+        MessageHandleError
+            An error occurred handling the message.
+        ConnectionError
+            An error occurred in the connection to the server.
+        TimeoutError
+            A timeout occurred in the request to the server.
+        """
+        try:
+            return self._client_factory.send_method_call(self._service_name, name, *pargs, **kwargs)
+        except MessageHandleError as err:
+            if err.error_code == MessageHandleError.RESULT_UNKNOWN_METHOD:
+                raise AttributeError("Method %s does not exist in service %s." % (name, self._service_name))
+            elif err.error_code == err.RESULT_INVALID_PARAMS:
+                raise TypeError(err.error_details)
+            else:
+                raise
 
+    def _do_subscribe(self, name, handler):
+        """
+        Act as a server side event. Add the handler to the list of callbacks.
+        
+        Parameters
+        ----------
+        name : string
+            Name of the event to subscribe to.
+        handler : method
+            Method that handles event notifications.
+
+        Raises
+        ------
+        MessageHandleError
+            An error occurred handling the message.
+        ConnectionError
+            An error occurred in the connection to the server.
+        TimeoutError
+            A timeout occurred in the request to the server.
+        """
+        self._client_factory.subscribe(self._service_name, name, handler)
+
+    def operator_handler(name): #@NoSelf
+        def handler(self, *pargs, **kwargs):
+            return self._do_remote_call(name, *pargs, **kwargs)
+        return handler
+    
+    __bool__ = operator_handler("__bool__")
+    __call__ = operator_handler("__call__")
+    __lt__ = operator_handler("__lt__")
+    __le__ = operator_handler("__le__")
+    __eq__ = operator_handler("__eq__")
+    __ne__ = operator_handler("__ne__")
+    __gt__ = operator_handler("__gt__")
+    __ge__ = operator_handler("__ge__")
+    __len__ = operator_handler("__len__")
+    __contains__ = operator_handler("__contains__")
+    __getitem__ = operator_handler("__getitem__")
+    __setitem__ = operator_handler("__setitem__")
+    __delitem__ = operator_handler("__delitem__")
+    
+    del operator_handler
 
 class ServiceInterfaceAttribute(object):
     """
@@ -338,12 +421,11 @@ class ServiceInterfaceAttribute(object):
     name : string
         Name of the event or method.
     """
-    def __init__(self, client_factory, service_name, name):
+    def __init__(self, interface, name):
         """
         Set all required parameters.
         """
-        self._client_factory = client_factory
-        self._service_name = service_name
+        self._interface = interface
         self._name = name
 
     def __call__(self, *pargs, **kwargs):
@@ -375,15 +457,7 @@ class ServiceInterfaceAttribute(object):
         TimeoutError
             A timeout occurred in the request to the server.
         """
-        try:
-            return self._client_factory.send_method_call(self._service_name, self._name, *pargs, **kwargs)
-        except MessageHandleError as err:
-            if err.error_code == MessageHandleError.RESULT_UNKNOWN_METHOD:
-                raise AttributeError("Method %s does not exist in service %s." % (self._name, self._service_name))
-            elif err.error_code == err.RESULT_INVALID_PARAMS:
-                raise TypeError(err.error_details)
-            else:
-                raise
+        return self._interface._do_remote_call(self._name, *pargs, **kwargs)
     
     def __iadd__(self, handler):
         """
@@ -403,7 +477,7 @@ class ServiceInterfaceAttribute(object):
         TimeoutError
             A timeout occurred in the request to the server.
         """
-        self._client_factory.subscribe(self._service_name, self._name, handler)
+        self._interface._do_subscribe(self._name, handler)
     
     def __isub__(self, handler):
         """
