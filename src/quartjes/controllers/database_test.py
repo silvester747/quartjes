@@ -2,6 +2,9 @@
 Unit tests for the database module.
 Contains tests running directly on the database component without connector
 features active.
+
+TODO: We need a database only server, so no running stock exchange. Then the
+Nonification of the history and factor can be removed.
 '''
 import unittest
 from quartjes.controllers.database import Database
@@ -34,7 +37,10 @@ class TestDatabase(unittest.TestCase):
         self.db.add(drink)
         self.assertTrue(self.db.contains(drink), "New drink should be added")
         
+        # Note the history can change
         get = self.db.get(drink.id)
+        drink.history = None
+        get.history = None
         self.assertEquals(get, drink, "Should be able to get drink by id")
         
         self.assertTrue(self.db.contains(drink), "Database should contain new drink")
