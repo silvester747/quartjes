@@ -2,28 +2,26 @@
 Unit tests for the database module.
 Contains tests running directly on the database component without connector
 features active.
-
-TODO: We need a database only server, so no running stock exchange. Then the
-Nonification of the history and factor can be removed.
 '''
 import unittest
 from quartjes.controllers.database import Database
 from quartjes.models.drink import Drink, Mix
 import random
-from quartjes.connector.client import ClientConnector
 
 class TestDatabase(unittest.TestCase):
 
 
-    def setUp(self):
-        self.db = Database()
-        self.db.clear()
-        self.random = random.Random()
+    @classmethod
+    def setUpClass(cls):
+        print("Running offline")
+        cls.db = Database()
+        cls.db.clear()
+        cls.random = random.Random()
 
 
-    def tearDown(self):
-        self.db.reset()
-
+    @classmethod
+    def tearDownClass(cls):
+        cls.db.reset()
 
     def test_add_drink(self):
         """
@@ -37,10 +35,7 @@ class TestDatabase(unittest.TestCase):
         self.db.add(drink)
         self.assertTrue(self.db.contains(drink), "New drink should be added")
         
-        # Note the history can change
         get = self.db.get(drink.id)
-        drink.history = None
-        get.history = None
         self.assertEquals(get, drink, "Should be able to get drink by id")
         
         self.assertTrue(self.db.contains(drink), "Database should contain new drink")
@@ -52,6 +47,8 @@ class TestDatabase(unittest.TestCase):
         """
         mix = self._create_random_mix()
         self.assertFalse(self.db.contains(mix), "New mix should be unique")
+        for drink in mix.drinks:
+            self.assertNotIn(drink, self.db, "Components from the mix should be unique")
         
         count_before = self.db.count()
         
@@ -62,7 +59,7 @@ class TestDatabase(unittest.TestCase):
             self.assertIn(drink, self.db, "Components from the mix should be added")
         
         get = self.db.get(mix.id)
-        self.assertIs(get, mix, "Should be able to get mix by id")
+        self.assertEquals(get.id, mix.id, "Should be able to get mix by id") # TODO better checking
         
         self.assertTrue(self.db.contains(mix), "Database should contain new mix")
         self.assertEqual(self.db.count(), count_before + 1 + len(mix.drinks), 
@@ -175,6 +172,7 @@ class TestDatabase(unittest.TestCase):
         
         count = self.db.count()
         self.db.update(other)
+        drink = self.db[other.id]
         
         self.assertEqual(drink.name, other.name, 
                          "Original drink object should be updated to match other drink object")
@@ -234,27 +232,6 @@ class TestDatabase(unittest.TestCase):
         
         return mix
 
-class TestDatabaseOnline(TestDatabase):
-    """
-    Test cases for the the database, but now using a connector
-    """
-    
-    def setUp(self):
-        """
-        Prepare a database connection
-        """
-        self.connector = ClientConnector("localhost", 1234)
-        self.connector.start()
-        self.db = self.connector.database
-        self.random = random.Random()
-
-    
-    def tearDown(self):
-        """
-        Clean up the database connection
-        """
-        self.connector.stop()
-
 if __name__ == "__main__":
-    #import sys;sys.argv = ['', 'Test.testName']
     unittest.main()
+    
