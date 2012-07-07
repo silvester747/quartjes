@@ -95,11 +95,6 @@ class StockExchange(object):
                 dr.price_factor = 0.4
 
             total_factors += dr.price_factor
-            if not dr.history:
-                dr.history = []
-            dr.history.append((t, dr.sellprice_quartjes()))
-            if len(dr.history) > self.max_history:
-                dr.history = dr.history[-self.max_history:]
 
         if debug_mode:
             print("Amount of components: %i, Total factors: %f" % (component_count, total_factors))
@@ -115,6 +110,11 @@ class StockExchange(object):
         for drink in drinks:
             if isinstance(drink, Mix):
                 drink.update_properties()
+            if not drink.history:
+                drink.history = []
+            drink.history.append((t, drink.sellprice_quartjes()))
+            if len(drink.history) > self.max_history:
+                drink.history = drink.history[-self.max_history:]
 
         self.transactions = []
 
