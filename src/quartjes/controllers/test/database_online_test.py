@@ -4,13 +4,13 @@ Created on Jul 7, 2012
 @author: rob
 '''
 import unittest
-import quartjes.controllers.database_test
+import quartjes.controllers.test.database_test
 from quartjes.connector.client import ClientConnector
 import random
 
 test_port = 7451 # special port number for testing only
 
-class TestDatabaseOnline(quartjes.controllers.database_test.TestDatabase):
+class TestDatabaseOnline(quartjes.controllers.test.database_test.TestDatabase):
     """
     Test cases for the the database, but now using a connector
     """
