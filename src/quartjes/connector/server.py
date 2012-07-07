@@ -13,6 +13,11 @@ from twisted.internet.endpoints import TCP4ServerEndpoint
 from quartjes.connector.protocol import QuartjesServerFactory
 from threading import Thread
 
+default_port = 1234
+"""
+Default port number the server runs on.
+"""
+
 class ServerConnector(object):
     """
     Server side endpoint of the quartjes connector.
@@ -29,8 +34,11 @@ class ServerConnector(object):
     port : int
         Port number to listen for connections on.
     """
-    def __init__(self, port=1234):
-        self.port = port
+    def __init__(self, port=None):
+        if port:
+            self.port = port
+        else:
+            self.port = default_port
         self.factory = QuartjesServerFactory()
 
     def start(self):
@@ -78,10 +86,25 @@ class ServerConnector(object):
             reactor.run(installSignalHandlers=0) #@UndefinedVariable
             #print("Reactor stopped")
 
-if __name__ == "__main__":
-    from quartjes.connector.services import TestRemoteService
-
-    server = ServerConnector(1234)
-    server.register_service(TestRemoteService(), "test")
+def run_server():
+    """
+    Run the default quartjes server.
+    """
+    from quartjes.controllers.stock_exchange import StockExchange
+    from quartjes.controllers.database import database
+    
+    server = ServerConnector(default_port)
+    exchange = StockExchange()
+    server.register_service(exchange, "stock_exchange")
+    server.register_service(database, "database")
     server.start()
+    print("Server started on port %i" % default_port)
+    print("Press enter to stop")
+    
+    raw_input()
+    
+    print("Stopping server")
+    server.stop()
+    exchange.stop()
+
 

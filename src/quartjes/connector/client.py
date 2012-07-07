@@ -73,9 +73,13 @@ class ClientConnector(object):
     
     """
 
-    def __init__(self, host=None, port=1234):
+    def __init__(self, host=None, port=None):
         self._host = host
-        self._port = port
+        if port:
+            self._port = port
+        else:
+            from quartjes.connector.server import default_port
+            self._port = default_port
         self._factory = QuartjesClientFactory()
         self._database = None
         self._stock_exchange = None
@@ -260,84 +264,3 @@ def tk_prepare_instance_for_events(instance):
     instance._event_queue = Queue.Queue()
     instance.after(100, listener)
      
-        
-def self_test():
-    """
-    Perform a self test of this module.
-    
-    Requires that the test from :mod:`quartjes.connector.server` is running.
-    """
-    import time
-
-    def callback(text):
-        print("Received event: " + text)
-        callback.count += 1
-    
-    def testfunc():
-        pass
-
-    callback.count = 0
-
-    cl = ClientConnector("localhost", 1234)
-    cl.start()
-
-    testService = cl.get_service_interface("test")
-
-    time.sleep(1)
-    print("Sending message")
-    result = testService.test(text="Spam")
-    print(result)
-    result = testService.test("Spam")
-    print(result)
-    
-    time.sleep(1)
-    print("Test sending a function (should trigger a warning)")
-    try:
-        result = testService.test(testfunc)
-    except TypeError:
-        print("Test OK")
-    else:
-        assert False, "A TypeError was expected as the only argument is ignored"
-
-    time.sleep(1)
-    print("Subscribe to topic")
-    testService.on_trigger += callback
-
-    time.sleep(1)
-    print("Trigger topic")
-    testService.trigger(text="Eggs")
-    time.sleep(1)
-    assert callback.count==1, "No callback received"
-    testService.trigger2("Ham")
-    time.sleep(1)
-    assert callback.count==2, "No callback received"
-    
-    print("Trigger timeout")
-    from quartjes.connector.protocol import default_timeout
-    try:
-        testService.test_timeout(default_timeout + 10)
-    except TimeoutError:
-        print("Timeout OK")
-    else:
-        assert False, "This should have triggered a timeout!"
-        
-
-    time.sleep(10)
-    print("Stopping client")
-    cl.stop()
-
-    time.sleep(10)
-
-    cl.start()
-
-    time.sleep(1)
-    print("Sending message")
-    result = testService.test(text="Spam")
-    print(result)
-
-    cl.stop()
-
-    time.sleep(1)
-    
-if __name__ == "__main__":
-    self_test()
