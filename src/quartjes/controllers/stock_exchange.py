@@ -8,7 +8,7 @@ __author__ = "Rob van der Most"
 
 debug_mode = False
 
-default_round_time = 120
+default_round_time = 20
 damp_sales = 2
 max_price_factor = 3
 min_price_factor = 0.4
@@ -149,7 +149,7 @@ class StockExchange(object):
                 drink.history = []
             drink.history.append((t, drink.sellprice_quartjes()))
             if len(drink.history) > self._max_history:
-                drink.history = drink.history[-self.max_history:]
+                drink.history = drink.history[-self._max_history:]
 
         self._transactions = []
 
