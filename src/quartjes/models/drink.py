@@ -29,7 +29,7 @@ class Drink(QuartjesBaseClass):
         return self.unit_price * self.price_factor
 
     def sellprice_quartjes(self):
-        return self.sellprice()*10
+        return round(self.sellprice()*10)
 
     def __eq__(self, other):
         if other == None:
