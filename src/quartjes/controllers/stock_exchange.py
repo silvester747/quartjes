@@ -178,7 +178,7 @@ class StockExchangeUpdateThread(threading.Thread):
             # time instantly.
             time_spend = 0
             while time_spend < self._exchange._round_time:
-                if self.running:
+                if self._running:
                     time.sleep(1)
                     time_spend += 1
                 else:
