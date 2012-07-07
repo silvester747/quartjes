@@ -12,7 +12,7 @@ class Drink(QuartjesBaseClass):
     Drink class
     """
 
-    def __init__(self, name="Unnamed", alc_perc = 0,color = (255,255,255),unit_price = 0.70,price_factor = 1,unit_amount = 200):
+    def __init__(self, name="Unnamed", alc_perc = 0.0,color = (255,255,255),unit_price = 0.70,price_factor = 1.0,unit_amount = 200):
         super(Drink, self).__init__()
         self.name = name
         self.alc_perc = alc_perc
@@ -72,11 +72,10 @@ class Mix(Drink):
             self.price_factor = 0
             color = array([0,0,0])
             for d in self.drinks:
-                pass
-                self.alc_perc = self.alc_perc + d.alc_perc / parts
+                self.alc_perc = self.alc_perc + float(d.alc_perc) / parts
                 color += array(d.color)/parts
                 self.unit_price = self.unit_price + (d.price_per_liter()/parts)*(float(self.unit_amount)/1000)
-                self.price_factor = self.price_factor + d.price_factor/parts
+                self.price_factor = self.price_factor + float(d.price_factor)/parts
             self.color = tuple(color)
 
 if __name__ == "__main__":
