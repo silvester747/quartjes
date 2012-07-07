@@ -313,8 +313,9 @@ def self_test():
     assert callback.count==2, "No callback received"
     
     print("Trigger timeout")
+    from quartjes.connector.protocol import default_timeout
     try:
-        testService.test_timeout(10)
+        testService.test_timeout(default_timeout + 10)
     except TimeoutError:
         print("Timeout OK")
     else:

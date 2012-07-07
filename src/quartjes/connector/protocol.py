@@ -27,6 +27,11 @@ from quartjes.connector.messages import EventMessage
 from quartjes.connector.exceptions import MessageHandleError, ConnectionError, TimeoutError
 from quartjes.connector.services import execute_remote_method_call, prepare_remote_service, subscribe_to_remote_event
 
+default_timeout = 10
+"""
+Default value for the timeout in seconds.
+"""
+
 class QuartjesProtocol(NetstringReceiver):
     """
     Protocol implementation for the Quartjes application. For now we are using a basic
@@ -446,7 +451,7 @@ class QuartjesClientFactory(ReconnectingClientFactory):
     to use for this factory.
     """
 
-    def __init__(self, timeout=5):
+    def __init__(self, timeout=None):
         """
         Initialize the client factory.
         """
@@ -454,7 +459,10 @@ class QuartjesClientFactory(ReconnectingClientFactory):
         self._waiting_for_connection = []
         self._current_protocol = None
         self._event_callbacks = {}
-        self._timeout = timeout
+        if timeout:
+            self._timeout = timeout
+        else:
+            self._timeout = default_timeout
 
     @property
     def timeout(self):
