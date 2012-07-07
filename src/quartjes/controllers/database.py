@@ -195,9 +195,13 @@ class Database:
         for remote_drink in mix.drinks:
             local_drink = self.get(remote_drink.id)
             if not local_drink:
+                if debug_mode:
+                    print "Drink not local"
                 self.add(remote_drink)
                 local_drinks.append(remote_drink)
             else:
+                if debug_mode:
+                    print "Drink local"
                 local_drinks.append(local_drink)
         
         mix.drinks = local_drinks
