@@ -45,9 +45,12 @@ class Mix(Drink):
     """
     Mix class
     """
-    def __init__(self,name="Unnamed",drinks = [],unit_amount = 200):
+    def __init__(self,name="Unnamed",drinks = None,unit_amount = 200):
         super(Mix, self).__init__(unit_amount = unit_amount, name=name)
-        self.drinks = drinks
+        if drinks:
+            self.drinks = drinks
+        else:
+            self.drinks = []
         self.update_properties()
 
     def insert_drink(self,drink):
