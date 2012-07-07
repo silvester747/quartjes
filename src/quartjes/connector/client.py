@@ -49,7 +49,6 @@ from threading import Thread
 from quartjes.connector.services import ServiceInterface
 import quartjes.controllers.database
 import quartjes.controllers.stock_exchange
-from quartjes.connector.exceptions import TimeoutError
 
 class ClientConnector(object):
     """
