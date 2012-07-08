@@ -257,6 +257,7 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
 
         self._next_drink = None
         self._clear_drink = False
+        self._show_explanation = False
 
     def show_drink(self, drink):
         """
@@ -269,6 +270,9 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
         Clear the current selection
         """
         self._clear_drink = True
+    
+    def show_explanation(self):
+        self._show_explanation = True
 
     def draw(self, *args, **kwargs):
         """
@@ -279,13 +283,32 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
             self._next_drink = None
         if self._clear_drink:
             self._clear_drink = False
-            self._show_drink(None)
+            self._replace_node(None)
             self._next_drink = None
+        if self._show_explanation:
+            self._clear_drink = False
+            self._next_drink = None
+            self._show_explanation = False
+            self._replace_node(self._get_explanation())
+            
 
     def _show_drink(self, drink):
         """
         Replace the current drink with the next drink to display.
         """
+
+        new_node = None
+
+        if drink:
+            if isinstance(drink, Mix):
+                new_node = self._get_mix(drink)
+            else:
+                new_node = self._get_drink_history(drink)
+        
+        self._replace_node(new_node)
+
+
+    def _replace_node(self, new_node):
         if not self.is_running:
             if debug_mode:
                 print("Not running")
@@ -299,15 +322,7 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
             self._current_node.do(MoveTo(self._points[2], 0.5 * self._move_time) +
                                  CallFunc(self._current_node.kill))
 
-        if drink == None:
-            if debug_mode:
-                print("No drink")
-            return
-
-        if isinstance(drink, Mix):
-            self._current_node = self._get_mix(drink)
-        else:
-            self._current_node = self._get_drink_history(drink)
+        self._current_node = new_node
 
         if not self._current_node:
             return
@@ -315,6 +330,37 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
         self._current_node.do(Delay(0.5 * self._move_time) +
                               MoveTo(self._points[1], 0.5 * self._move_time))
         self.add(self._current_node)
+        
+    def _get_explanation(self):
+        """
+        Construct a node with an explanation of the game.
+        
+        """
+        
+        text = ("Let op!",
+                "",
+                "Op Quartjesavond kan alleen met",
+                "10 eurocent munten betaald worden.",
+                "Alle prijzen zijn zoals het systeem",
+                "weergeeft in eenheden van 10 eurocent.")
+        
+        font = 'Times New Roman'
+        center_x = 0
+        max_y = self._graph_height
+        y = max_y - 50
+
+        labels = LabelBatch(position=self._points[0])
+
+        for line in text:
+            labels.add_text(line,
+                            font_name=font,
+                            font_size=40,
+                            anchor_x='center', anchor_y='top',
+                            position = (center_x, y))
+            
+            y -= 70
+
+        return labels
 
 
     def _get_drink_history(self, drink):
@@ -340,9 +386,6 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
         """
 
         font = 'Times New Roman'
-        #font = 'Verdana'
-
-        #center_x = self._graph_width / 2
         center_x = 0
         max_y = self._graph_height
 
@@ -550,6 +593,8 @@ class CocosGui(object):
         self._ticker_layer.on_focus_changed += lambda sender, drink: self._drink_layer.show_drink(drink)
         self._ticker_layer.on_focus_changed += lambda sender, drink: self._title_layer.next_round_started()
 
+        self._drink_layer.show_explanation()
+
         self._display_scene(scene)
 
 
@@ -572,7 +617,8 @@ class CocosGui(object):
 
     def _next_round(self):
         self._ticker_layer.next_round()
-        self._drink_layer.clear_drink()
+        #self._drink_layer.clear_drink()
+        self._drink_layer.show_explanation()
         self._title_layer.next_round()
             
 def parse_command_line():
