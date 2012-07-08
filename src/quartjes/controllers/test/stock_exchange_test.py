@@ -1,8 +1,9 @@
-'''
-Created on Jul 7, 2012
+"""
+Test cases for the stock exchange.
 
-@author: rob
-'''
+Due to the nature of the stock exchange the tests do not always succeed yet. 
+Need to improve algorithms for both exchange and test cases.
+"""
 import unittest
 import quartjes
 from quartjes.controllers.stock_exchange import StockExchange
@@ -52,13 +53,23 @@ class Test(unittest.TestCase):
         self.exchange._recalculate_factors()
         prices_after = self._get_drink_prices()
         
-        self.exchange._db._dump_drinks()
+        #self.exchange._db._dump_drinks()
+        
+        total_before = 0
+        total_after = 0
         
         for id in prices_before:
+            total_before += prices_before[id]
+            total_after += prices_after[id]
             if id == drink.id:
                 self.assertGreaterEqual(prices_after[id], prices_before[id], "Expected sold drink price to rise.")
             else:
-                self.assertLessEqual(prices_after[id], prices_before[id], "Expected other drink prices to fall")
+                self.assertLessEqual(prices_after[id], prices_before[id], 
+                                     "Expected other drink prices to fall: %s" % id)
+        
+        self.assertAlmostEqual(total_before, total_after, 
+                               msg="Expect total price level to remain equal (before=%f, after=%f)" % (total_before, total_after), 
+                               delta=15)
     
     def test_different_amount_sales(self):
         """
@@ -97,13 +108,33 @@ class Test(unittest.TestCase):
         diff2 = prices_after[drink2.id] - prices_before[drink2.id]
         self.assertGreater(diff2, diff1, "Expected large sale to have larger difference.")
 
+    def test_single_sales_multiple_rounds(self):
+        prices_before = self._get_drink_prices()
+
+        for i in range(0, 1000):
+            print("Round %i" % i)
+            self.test_single_sale()
+
+        prices_after = self._get_drink_prices()
+
+        total_before = 0
+        total_after = 0
+        for id in prices_before:
+            total_before += prices_before[id]
+            total_after += prices_after[id]
+        
+        self.assertAlmostEqual(total_before, total_after, 
+                               msg="Expect total price level to remain equal (before=%f, after=%f)" % (total_before, total_after), 
+                               delta=5)
+
+
     def _get_drink_prices(self):
         
         prices = {}
         drinks = self.exchange._db.get_drinks()
         for drink in drinks:
             if not isinstance(drink, Mix):
-                prices[drink.id] = drink.sellprice()
+                prices[drink.id] = drink.sellprice_quartjes()
         return prices
 
 if __name__ == "__main__":
