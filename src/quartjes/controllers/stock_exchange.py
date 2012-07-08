@@ -7,12 +7,13 @@ import time
 import quartjes.controllers.database
 from quartjes.models.drink import Mix, Drink
 from quartjes.connector.services import remote_service, remote_method, remote_event
+import random
 
 __author__ = "Rob van der Most"
 
 debug_mode = False
 
-default_round_time = 120
+default_round_time = 20
 
 @remote_service
 class StockExchange(object):
@@ -45,6 +46,8 @@ class StockExchange(object):
         self._damp_sales = damp_sales
         self._max_price_factor = max_price_factor
         self._min_price_factor = min_price_factor
+        self._min_mix_discount = 0.5
+        self._max_mix_discount = 0.9
 
         if start_thread:
             self._thread = StockExchangeUpdateThread(self)
@@ -184,6 +187,8 @@ class StockExchange(object):
         for drink in drinks:
             if isinstance(drink, Mix):
                 drink.update_properties()
+                drink.discount = (self._min_mix_discount + 
+                                  random.random() * (self._max_mix_discount - self._min_mix_discount))
             if not drink.history:
                 drink.history = []
             drink.history.append((t, drink.sellprice_quartjes()))
