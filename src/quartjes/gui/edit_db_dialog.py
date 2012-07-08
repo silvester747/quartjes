@@ -19,13 +19,13 @@ class edit_db_dialog(Frame):
         # keep local drinks db in sync
         self.drinks = self.master.conn.database.get_drinks()        
         tk_prepare_instance_for_events(self)
-        self.master.conn.database.on_drinks_updated += self.server_update_listener
+        self.master.conn.database.on_drinks_updated += self.db_update_listener
 
         self.createWidgets(type)
         self.pack()
 
     @tk_event_listener
-    def server_update_listener(self,drinks):
+    def db_update_listener(self,drinks):
         self.drinks = drinks
         self.update_listbox()
 

@@ -15,13 +15,13 @@ class SellDialog(Frame):
         # keep local drinks db in sync
         self.drinks = self.master.conn.database.get_drinks()        
         tk_prepare_instance_for_events(self)
-        self.master.conn.database.on_drinks_updated += self.server_update_listener
+        self.master.conn.database.on_drinks_updated += self.sell_update_listener
 
         self.createWidgets()
         self.pack()
 
     @tk_event_listener
-    def server_update_listener(self,drinks):
+    def sell_update_listener(self,drinks):
         self.drinks = drinks
         self.update_listbox()
 
@@ -57,9 +57,10 @@ class SellDialog(Frame):
             self.lb_drinks.insert(END,d.name)
 
     def listbox(self):
+        font16 = ("Arial", 16, "bold")
         lbf = Frame(self)
         vscroll = Scrollbar(lbf)
-        lb = Listbox(lbf,height=10, exportselection=0)
+        lb = Listbox(lbf,height=20, width=20, exportselection=0, font = font16)
         
         vscroll.config(command=lb.yview)
         lb.config(yscrollcommand=vscroll.set)
