@@ -48,5 +48,8 @@ if __name__ == "__main__":
 
         a = random.randint(1, 6)
 
-        exchange.sell(drink=current_drinks[pos], amount=a)
+        try:
+            exchange.sell(drink=current_drinks[pos], amount=a)
+        except:
+            pass
         time.sleep(1.0)
