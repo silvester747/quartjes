@@ -10,21 +10,24 @@ from mix_dialog import mix_dialog
 from drink_dialog import drink_dialog
 from quartjes.connector.client import tk_event_listener, tk_prepare_instance_for_events
 
+
 class edit_db_dialog(Frame):
     def __init__(self, root):
         root.title('Database editor')
         Frame.__init__(self, root)
-        self.master.drinks = self.master.conn.database.get_drinks()
-        
-        # the following line should support multi client update refreshes, 
-        # but for now it generates an error for beining in the wrong loop
-        
-        # Rob: I fixed it, see the following method
+
+        # keep local drinks db in sync
+        self.drinks = self.master.conn.database.get_drinks()        
         tk_prepare_instance_for_events(self)
         self.master.conn.database.on_drinks_updated += self.server_update_listener
-            
+
         self.createWidgets(type)
         self.pack()
+
+    @tk_event_listener
+    def server_update_listener(self,drinks):
+        self.drinks = drinks
+        self.update_listbox()
 
     def add_drink(self):
         d = Drink()
@@ -32,52 +35,45 @@ class edit_db_dialog(Frame):
         drink_dialog(master,d)
         master.wait_window()
                 
-        self.master.drinks.append(d)
+        self.drinks.append(d)
         self.master.conn.database.add(d)
         self.update_listbox()
 
     def add_mix(self):
         mix = Mix()
-        master = Tk()
-        master.drinks = self.master.drinks
+        master = Toplevel()
+        master.drinks = self.drinks
         mix_dialog(master,mix)
         master.wait_window()
 
-        self.master.drinks.append(mix)
         self.master.conn.database.add(mix)
-        self.update_listbox()
 
     def edit_drink(self):        
         selection = self.lb_drinks.curselection()
         if len(selection) > 0:
-            master = Tk()
-            master.drinks = self.master.drinks
+            master = Toplevel()
+            master.drinks = self.drinks
             selected = int(selection[0])
-            drink = self.master.drinks[selected]
+            drink = self.drinks[selected]
             if drink.__class__.__name__ == "Drink":
                 drink_dialog(master,drink)
             elif drink.__class__.__name__ == "Mix":
                 mix_dialog(master,drink)
             master.wait_window()
             self.master.conn.database.update(drink)
-            self.update_listbox()
 
     def remove_drink(self):
         selection = self.lb_drinks.curselection()
         if len(selection) > 0:
             selected = int(selection[0])            
-            drink = self.master.drinks.pop(selected)
-            self.master.conn.database.remove(drink)
-            self.update_listbox()
+            self.master.conn.database.remove(self.drinks[selected])
             
-    @tk_event_listener
-    def server_update_listener(self,drinks):
-        self.master.drinks = drinks
+    def drinks_update_listener(self,drinks):
         self.update_listbox()
 
     def update_listbox(self):
         self.lb_drinks.delete(0,END)
-        for d in self.master.drinks:
+        for d in self.drinks:
             self.lb_drinks.insert(END,d.name)
 
     def createWidgets(self,type):

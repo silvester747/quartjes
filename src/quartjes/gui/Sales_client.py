@@ -5,12 +5,14 @@ __author__="piet"
 __date__ ="$5-jun-2011 22:04:13$"
 
 from Tkinter import *
-from quartjes.connector.client import ClientConnector
 from edit_db_dialog import edit_db_dialog
-from sell_dialog import dialogSell
+from quartjes.gui.sell_dialog import SellDialog
 import tkMessageBox
+from axel import Event
+from quartjes.connector.client import ClientConnector
 
-class Sales_client(Frame):
+
+class Sales_client(Frame):    
     def __init__(self, root):
         root.title('Sales client')
         Frame.__init__(self, root)
@@ -35,7 +37,7 @@ class Sales_client(Frame):
 
     def edit_db(self):
         if self.conn.is_connected():
-            root = Tk()
+            root = Toplevel()
             root.conn = self.conn
             edit_db_dialog(root)
         else:
@@ -43,8 +45,9 @@ class Sales_client(Frame):
 
     def sell(self):
         if self.conn.is_connected():
-            root = Tk()
-            dialogSell(root, conn=self.conn)
+            root = Toplevel()
+            root.conn = self.conn
+            SellDialog(root)
         else:
             tkMessageBox.showwarning("Not connected to server","Please connected to a server first.")
 
