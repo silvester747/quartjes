@@ -92,9 +92,11 @@ def run_server():
     """
     from quartjes.controllers.stock_exchange import StockExchange
     from quartjes.controllers.database import database
+    from quartjes.controllers.random_mixer import run_random_mixer
     
     server = ServerConnector(default_port)
     exchange = StockExchange()
+    run_random_mixer()
     server.register_service(exchange, "stock_exchange")
     server.register_service(database, "database")
     server.start()

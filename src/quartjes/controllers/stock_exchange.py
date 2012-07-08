@@ -13,7 +13,7 @@ __author__ = "Rob van der Most"
 
 debug_mode = False
 
-default_round_time = 20
+default_round_time = 120
 
 @remote_service
 class StockExchange(object):
