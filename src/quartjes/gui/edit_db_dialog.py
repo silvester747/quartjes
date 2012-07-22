@@ -12,6 +12,8 @@ from quartjes.connector.client import tk_event_listener, tk_prepare_instance_for
 
 
 class edit_db_dialog(Frame):
+    font1 = ("Arial", 16, "bold")
+    
     def __init__(self, root):
         root.title('Database editor')
         Frame.__init__(self, root)
@@ -76,20 +78,34 @@ class edit_db_dialog(Frame):
         for d in self.drinks:
             self.lb_drinks.insert(END,d.name)
 
-    def createWidgets(self,type):
-        font16 = ("Arial", 16, "bold")
+    def listbox(self,lbf):
+        vscroll = Scrollbar(lbf)
+        lb = Listbox(lbf, exportselection=0, font = self.font1)
+ 
+        vscroll.config(command=lb.yview)
+        lb.config(yscrollcommand=vscroll.set)
         
-        self.lb_drinks = Listbox(self,font = font16)
-        self.b_add_drink = Button(self, text = "Add drink",command =  self.add_drink, width = 20, height = 2, font = font16)
-        self.b_add_mix = Button(self, text = "Add mix",command =  self.add_mix, width = 20, height = 2, font = font16)
-        self.b_edit_drink = Button(self, text = "Edit drink",command =  self.edit_drink, width = 20, height = 2, font = font16)
-        self.b_remove_drink = Button(self, text = "Remove drink", command = self.remove_drink, width = 20, height = 2, font = font16)
+        lb.pack(side=LEFT,fill=BOTH, expand=1)
+        vscroll.pack(side=LEFT,fill=Y)
+        return (lb)
 
-        self.lb_drinks.grid(row = 0,column=0,rowspan=10,sticky=EW, padx = 20, pady = 20)
-        self.b_add_drink.grid(row = 0,column=1,sticky=EW, padx = 20, pady = 20)
-        self.b_add_mix.grid(row = 1,column=1,sticky=EW, padx = 20, pady = 20)
-        self.b_edit_drink.grid(row = 2,column=1,sticky=EW, padx = 20, pady = 20)
-        self.b_remove_drink.grid(row = 3,column = 1,sticky=EW, padx = 20, pady = 20)
+    def createWidgets(self,type):
+        self.frame1 = Frame(padx = 10,pady = 10)
+        self.frame2 = Frame(padx = 10,pady = 10)
+        
+        self.lb_drinks = self.listbox(self.frame1)
+        self.b_add_drink = Button(self.frame2, text = "Add drink",command =  self.add_drink, width = 20, height = 2, font = self.font1)
+        self.b_add_mix = Button(self.frame2, text = "Add mix",command =  self.add_mix, width = 20, height = 2, font = self.font1)
+        self.b_edit_drink = Button(self.frame2, text = "Edit drink",command =  self.edit_drink, width = 20, height = 2, font = self.font1)
+        self.b_remove_drink = Button(self.frame2, text = "Remove drink", command = self.remove_drink, width = 20, height = 2, font = self.font1)
+
+        self.frame1.pack(side=LEFT,fill=BOTH,expand=1)
+        self.frame2.pack(side=LEFT,fill=BOTH,expand=1)
+
+        self.b_add_drink.pack(fill=BOTH)
+        self.b_add_mix.pack(fill=BOTH)
+        self.b_edit_drink.pack(fill=BOTH)
+        self.b_remove_drink.pack(fill=BOTH)
 
         self.update_listbox()
 
