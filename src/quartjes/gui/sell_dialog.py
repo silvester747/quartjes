@@ -8,19 +8,19 @@ from Tkinter import *
 from quartjes.connector.client import tk_event_listener, tk_prepare_instance_for_events
 
 class SellDialog(Frame):
-    font16 = ("Arial", 26, "bold")
+    font16 = ("Arial", 16, "bold")
     
     def __init__(self, root):
         root.title('Sell Drinks')
         Frame.__init__(self, root)
-                
+
         # keep local drinks db in sync
         self.drinks = self.master.conn.database.get_drinks()        
         tk_prepare_instance_for_events(self)
         self.master.conn.database.on_drinks_updated += self.sell_update_listener
 
         self.createWidgets()
-        self.pack()
+        self.pack(fill=BOTH, expand=1)
 
     @tk_event_listener
     def sell_update_listener(self,drinks):
@@ -46,7 +46,15 @@ class SellDialog(Frame):
     
     def sell_drinks(self):
         (drink, quantity) = self.read_inputs()
-        print self.master.conn.stock_exchange.sell(drink,quantity)
+        price = self.master.conn.stock_exchange.sell(drink,quantity)
+        print price
+        self.lb_history.insert(0, str(quantity) + ' ' + drink.name + ' for ' + str(price) + ' Quartjes')
+        if self.lb_history.size() > 5:
+            self.lb_history.delete ( 100, last=END )
+            
+    def quick_sell(self,quantity):
+        self.sv_amount.set(quantity)
+        self.sell_drinks()
         
     def calc_price(self,eventdata):
         (drink, quantity) = self.read_inputs()        
@@ -58,59 +66,77 @@ class SellDialog(Frame):
         for d in self.drinks:
             self.lb_drinks.insert(END,d.name)
 
-    def listbox(self):
-        lbf = Frame(self)
+    def listbox(self,lbf):
         vscroll = Scrollbar(lbf)
-        lb = Listbox(lbf,height=20, width=20, exportselection=0, font = self.font16)
-        
+        lb = Listbox(lbf, exportselection=0, font = self.font16)
+ 
         vscroll.config(command=lb.yview)
         lb.config(yscrollcommand=vscroll.set)
         
-        lb.grid(row=1,column=1)
-        vscroll.grid(row=1,column=2,sticky=NS)
-        return (lb,lbf)
+        lb.pack(side=LEFT,fill=BOTH, expand=1)
+        vscroll.pack(side=LEFT,fill=Y)
+        return (lb)
 
-    def entry(self,parent,value,command):
+    def stringvar(self,value,command=None):
         sv = StringVar()
         sv.trace("w", command)
         sv.set(value)
-        e = Entry(parent, width = 10, textvariable = sv, font = self.font16, text = 1)        
-        return (e,sv)
-
+        return sv
+    
     def createWidgets(self):
-        self.frame1 = Frame(self)
-        self.l_amount = Label(self.frame1, text = " Amount:", width = 30, height = 0, font = self.font16)
-    
-                
-        (self.lb_drinks,self.lbf) = self.listbox()        
-        (self.e_amount,self.sv_amount) = self.entry(self.frame1,1,self.calc_price)
-    
-        #self.sv_amount = StringVar()
-        #self.sv_amount.trace("w", self.calc_price)
-        #self.sv_amount.set(1)
-        #self.e_amount = Entry(self.frame1, width = 10, textvariable = self.sv_amount, font = self.font16, text = 1)        
+        self.frame1 = Frame(self, padx=10, pady=10)
+        self.frame2 = Frame(self, padx=10, pady=10)
+        self.frame3 = Frame(self.frame2)
+        self.frame4 = Frame(self)
         
-        self.sv_price = StringVar()
-        self.l_price = Label(self.frame1, textvariable = self.sv_price, width = 20, height = 0, font = self.font16)
+        # string variables
+        self.sv_amount = self.stringvar(1,self.calc_price)
+        self.sv_price = self.stringvar("")
+        
+        # frame 1 contents
+        self.lb_drinks = self.listbox(self.frame1)
+        self.lb_history = self.listbox(self.frame3)
+        
+        # frame 2 contents
+        self.l_amount = Label(self.frame2, text = "Amount:", font = self.font16)         
+        self.e_amount = Entry(self.frame2, textvariable = self.sv_amount, font = self.font16, text = 1)        
+        self.l_price  = Label(self.frame2, textvariable = self.sv_price, font = self.font16)
+        self.b_sell = Button(self.frame2, height=2, text = "Sell", bg="#999999", command = self.sell_drinks, activebackground="#ff5555", font = self.font16)
+        
+        # create quicksell buttons
+        self.l_qs  = Label(self.frame4, text="Quick\nSell", font = self.font16)
+        self.l_qs.pack(fill=BOTH, expand=1)
+        self.b_qsell = list()
+        for i in [1,2,5,10,20,50,100]:
+            self.b_qsell.append(Button(self.frame4, text = str(i), bg="#999999", command = lambda x=i: self.quick_sell(x), activebackground="#ff5555", font = self.font16))
 
-        self.b_sell = Button(self.frame1, text = "Sell", bg="#999999", 
-                             command = self.sell_drinks, activebackground="#ff5555", width = 20, height = 2, font = self.font16)
+        for b in self.b_qsell:
+            b.pack(fill=BOTH, expand=1)
         
+        self.l_history  = Label(self.frame2, height=2, text="Sales history", font = self.font16)
+       
         # Position frames
-        self.lbf.grid(row=0, column=0)
-        self.frame1.grid(row = 0, column = 1, sticky = N)
+        self.frame1.pack(side=LEFT,fill=BOTH, expand=1)
+        self.frame4.pack(side=LEFT,fill=Y)
+        self.frame2.pack(side=LEFT,fill=BOTH, expand=1)
         
+
         # Position widgets
-        self.l_amount.grid(row = 0,column=1,sticky=EW, padx = 20, pady = 0)
-        self.e_amount.grid(row = 1,column=1,sticky=EW, padx = 0, pady = 0)
-        self.b_sell.grid(row = 3,column=1,sticky=EW, padx = 20, pady = 20)
-        self.l_price.grid(row = 2,column=1,sticky=EW, padx = 20, pady = 0)
+        self.l_amount.pack(fill=X)
+        self.e_amount.pack(fill=X)
+        self.l_price.pack(fill=X)
+        self.b_sell.pack(fill=X)
+        self.frame4.pack(fill=X)
+        self.l_history.pack(fill=X)
+        self.frame3.pack(fill=BOTH, expand=1)
         
         # bind commands to actions
         self.lb_drinks.bind("<ButtonRelease-1>", self.calc_price)
         self.e_amount.bind("<KeyRelease>", self.calc_price)
         
         self.update_listbox()
+        self.lb_drinks.select_set(0)
+        self.calc_price(None)
 
 if __name__ == "__main__":    
     from quartjes.connector.client import ClientConnector
