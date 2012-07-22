@@ -11,13 +11,13 @@ import tkMessageBox
 from axel import Event
 from quartjes.connector.client import ClientConnector
 
-
-class Sales_client(Frame):    
-    def __init__(self, root):
+class Sales_client(Frame):  
+    f1 = ("Arial", 16, "bold")  
+    def __init__(self, root):        
         root.title('Sales client')
         Frame.__init__(self, root)
         self.root = root
-        self.pack()
+        self.pack(fill=BOTH,expand=1)
         self.createWidgets()
         self.conn = ClientConnector() 
 
@@ -52,29 +52,29 @@ class Sales_client(Frame):
             tkMessageBox.showwarning("Not connected to server","Please connected to a server first.")
 
     def createWidgets(self):
-        font16 = ("Arial", 26, "bold")
-        
+                
         # frame 1
-        self.frame1=Frame(self, width = 20, height = 2)
+        self.frame1 = Frame(self)
+        self.frame2 = Frame(self)
+        self.frame3 = Frame(self)
         
-        Label(self.frame1, text="Server hostname/IP:",font = font16).grid(row=0)
-        Label(self.frame1, text="Server port:",font = font16).grid(row=1)
-
-        self.e_server_hostname = Entry(self.frame1, font = font16)
-        self.e_server_port = Entry(self.frame1, font = font16)       
-        self.b_connect_to_server = Button(self.frame1, text = "Connect to server", bg="#ff0000", activebackground="#ff5555", command =  self.connect_to_server, font = font16)
-        # populate frame
-        self.e_server_hostname.grid(row=0, column=1)
-        self.e_server_port.grid(row=1, column=1)
-        self.b_connect_to_server.grid(row=2,columnspan=2)        
+        Label(self.frame1, text="Server hostname/IP:",font = self.f1).pack(side=LEFT)        
+        self.e_server_hostname = Entry(self.frame1,font = self.f1).pack(side=LEFT)
+        Label(self.frame1, text="Port:",font = self.f1).pack(side=LEFT)
+        self.e_server_port = Entry(self.frame1, font = self.f1).pack(side=LEFT)
+         
+        self.b_connect_to_server = Button(self.frame1, text = "Connect to server", bg="#ff0000", activebackground="#ff5555", command =  self.connect_to_server, font = self.f1)
+        self.b_connect_to_server.pack(side=LEFT,fill=X,expand=1,padx=10)
         # end frame one
 
-        self.b_edit_dialog = Button(self, text = "Edit database",command =  self.edit_db, width = 20, height = 2, font = font16)
-        self.b_sell_dialog = Button(self, text = "Sell dialog", command = self.sell, width = 20, height = 2, font = font16)
+        self.b_edit_dialog = Button(self.frame1, text = "Edit database",command =  self.edit_db, font = self.f1)
+        self.b_sell_dialog = Button(self.frame1, text = "Sell dialog", command = self.sell, font = self.f1)
 
-        self.frame1.grid(row = 0,column=0,sticky=EW, padx = 20, pady = 20)        
-        self.b_edit_dialog.grid(row = 1,column=0,sticky=EW, padx = 20, pady = 20)
-        self.b_sell_dialog.grid(row = 2,column = 0,sticky=EW, padx = 20, pady = 20)
+        self.frame1.pack()
+        self.b_edit_dialog.pack(side=LEFT,fill=X,expand=1,padx=10)
+        self.b_sell_dialog.pack(side=LEFT,fill=X,expand=1,padx=10)
+        self.frame2.pack(side=TOP)
+        self.frame3.pack(fill=BOTH,expand=1)
         
         #return self.e_server_hostname # initial focus
        
