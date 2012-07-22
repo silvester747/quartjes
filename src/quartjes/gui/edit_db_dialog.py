@@ -15,7 +15,6 @@ class edit_db_dialog(Frame):
     font1 = ("Arial", 16, "bold")
     
     def __init__(self, root):
-        root.title('Database editor')
         Frame.__init__(self, root)
 
         # keep local drinks db in sync
@@ -23,8 +22,7 @@ class edit_db_dialog(Frame):
         tk_prepare_instance_for_events(self)
         self.master.conn.database.on_drinks_updated += self.db_update_listener
 
-        self.createWidgets(type)
-        self.pack()
+        self.createWidgets()
 
     @tk_event_listener
     def db_update_listener(self,drinks):
@@ -89,9 +87,9 @@ class edit_db_dialog(Frame):
         vscroll.pack(side=LEFT,fill=Y)
         return (lb)
 
-    def createWidgets(self,type):
-        self.frame1 = Frame(padx = 10,pady = 10)
-        self.frame2 = Frame(padx = 10,pady = 10)
+    def createWidgets(self):
+        self.frame1 = Frame(self,padx = 10,pady = 10)
+        self.frame2 = Frame(self,padx = 10,pady = 10)
         
         self.lb_drinks = self.listbox(self.frame1)
         self.b_add_drink = Button(self.frame2, text = "Add drink",command =  self.add_drink, width = 20, height = 2, font = self.font1)
@@ -115,4 +113,5 @@ if __name__ == "__main__":
     master.conn = ClientConnector()
     master.conn.start()
     app = edit_db_dialog(master)
+    app.pack(fill=BOTH,expand=1)
     app.mainloop()

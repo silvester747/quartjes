@@ -7,11 +7,10 @@ __date__ ="$Jul 3, 2011 3:03:58 PM$"
 from Tkinter import *
 from quartjes.connector.client import tk_event_listener, tk_prepare_instance_for_events
 
-class SellDialog(Frame):
+class sell_dialog(Frame):
     font16 = ("Arial", 16, "bold")
     
     def __init__(self, root):
-        root.title('Sell Drinks')
         Frame.__init__(self, root)
 
         # keep local drinks db in sync
@@ -20,7 +19,6 @@ class SellDialog(Frame):
         self.master.conn.database.on_drinks_updated += self.sell_update_listener
 
         self.createWidgets()
-        self.pack(fill=BOTH, expand=1)
 
     @tk_event_listener
     def sell_update_listener(self,drinks):
@@ -119,16 +117,14 @@ class SellDialog(Frame):
         self.frame1.pack(side=LEFT,fill=BOTH, expand=1)
         self.frame4.pack(side=LEFT,fill=Y)
         self.frame2.pack(side=LEFT,fill=BOTH, expand=1)
-        
+        self.frame3.pack(side=BOTTOM, fill=BOTH, expand=1)
 
         # Position widgets
         self.l_amount.pack(fill=X)
         self.e_amount.pack(fill=X)
         self.l_price.pack(fill=X)
         self.b_sell.pack(fill=X)
-        self.frame4.pack(fill=X)
         self.l_history.pack(fill=X)
-        self.frame3.pack(fill=BOTH, expand=1)
         
         # bind commands to actions
         self.lb_drinks.bind("<ButtonRelease-1>", self.calc_price)
@@ -143,5 +139,6 @@ if __name__ == "__main__":
     master = Tk()
     master.conn = ClientConnector()
     master.conn.start()
-    app = SellDialog(master)
+    app = sell_dialog(master)
+    app.pack(fill=BOTH,expand=1)
     app.mainloop()
