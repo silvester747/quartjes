@@ -81,51 +81,41 @@ class BottomTicker(cocos.layer.Layer):
         """
         super(BottomTicker, self).__init__()
 
-        # Time in pyglet units between each point on the ticker.
-        self._display_time = display_time
-
-        # Y coordinate on the screen where the ticker is shown.
-        self._display_y = display_y
-
+        # Scroll speed in pixels/second
+        self._scroll_speed = 80.0
+        
+        # Y coordinate of the normal ticker. Measured from the bottom of the text labels.
+        self._ticker_y = 0
+        
+        # Y coordinate of the focus ticker. Measured from the bottom of the text labels.
+        self._focus_y = 40
+        
+        # Percentage of the path the drink has focus.
+        self._focus_length = 0.2
+        
+        # Percentage of the path for the center of the focus.
+        self._focus_center = 0.5
+        
+        # Percentage of the path used to ramp up or down to focus.
+        self._focus_ramp = 0.1
+        
         # Width of the screen. This width is used to calculate the path the items
         # in the ticker follow.
         self._screen_width = screen_width
-
-        # Number of segments to divide the visible screen in. Used to create the
-        # path to follow.
-        self._visible_segments = visible_segments
-
-        # Number of segments outside the visible screen at each side.
-        self._margin = margin
-
-        # Number of segments between each item on the ticker.
-        self._interval = interval
-
-        # Number of the segment where the item starts to have focus. This includes
-        # segments outside the visible screen.
-        self._focus_start = focus_start + self._margin
-
-        # Number of segments an item has focus.
-        self._focus_length = focus_length
-
-        # Increase in y position on the screen for items with focus.
-        self._focus_height = focus_height
         
+        # Distance in pixels between drinks
+        self._drink_distance = 40
+
+        # Path followed by the ticker elements. Each item is a tuple containing the coordinates and the time required to reach those
+        # coordinates.
+        self._path = []
+
         # List of _drinks to show on the ticker
         self._drinks = drinks
 
         # Index of the drink last added to the ticker
         self._current_drink_index = 0
         
-        # List of points followed by the ticker
-        self._points = []
-        
-        # Total number of segments
-        self._segment_count = 0
-        
-        # Segment the focus ends
-        self._focus_end = 0
-
         # Drink currently having focus.
         self.focussed_drink = None
 
@@ -136,21 +126,113 @@ class BottomTicker(cocos.layer.Layer):
         # Current round. Used to suppress old actions.
         self._round_number = 0
 
-        self._calculate_points()
+        self._calculate_path()
         self._next_drink()
 
-    def _calculate_points(self):
+    def _calculate_path(self):
         """
         Prepare the ticker by calculating all points on the path.
         """
+        
+        self._path = []
+        
+        # Starting point (time is 0, this needs to be set for each element)
+        x = self._screen_width
+        y = self._ticker_y
+        time = 0
+        self._path.append([(x, y), time]) # this one is a list to be able to change the time
+        
+        # Just before ramp up
+        prev_x = x
+        x = (self._focus_center + (self._focus_length / 2) + self._focus_ramp) * self._screen_width
+        y = self._ticker_y
+        distance = prev_x - x
+        time = distance / self._scroll_speed
+        self._path.append(((x, y), time))
+        
+        # Start of focus
+        prev_x = x
+        x = (self._focus_center + (self._focus_length / 2)) * self._screen_width
+        y = self._focus_y
+        distance = prev_x - x
+        time = distance / self._scroll_speed
+        self._path.append(((x, y), time))
 
-        distance = self._screen_width / self._visible_segments
-        self._points = [(x*distance, self._display_y) for x in range(self._visible_segments + self._margin, -1 - self._margin, -1)]
-        self._segment_count = len(self._points) - 1
+        # End of focus
+        prev_x = x
+        x = (self._focus_center - (self._focus_length / 2)) * self._screen_width
+        y = self._focus_y
+        distance = prev_x - x
+        time = distance / self._scroll_speed
+        self._path.append(((x, y), time))
+        
+        # End of ramp
+        prev_x = x
+        x = (self._focus_center - (self._focus_length / 2) - self._focus_ramp) * self._screen_width
+        y = self._ticker_y
+        distance = prev_x - x
+        time = distance / self._scroll_speed
+        self._path.append(((x, y), time))
+        
+        # End of screen
+        prev_x = x
+        x = 0
+        y = self._ticker_y
+        distance = prev_x - x
+        time = distance / self._scroll_speed
+        self._path.append(((x, y), time))
+        
+    def _add_animation(self, label):
+        """
+        Construct an animation path for the label.
+        """
+        label.scale = 0.5
+        
+        content_offset = (label.scale * label.element.content_width + self._drink_distance) / 2
+        if content_offset < 50:
+            content_offset = 50
+        
+        content_time = float(content_offset) / self._scroll_speed
+        
+        # Set start position
+        label.position = (self._screen_width + content_offset, self._ticker_y)
+        
+        # Construct the path
+        # Move to beginning of screen
+        (coordinates, _) = self._path[0]
+        move_actions = MoveTo(coordinates, content_time)
+        
+         # Move to ramp up    
+        (coordinates, time) = self._path[1]
+        move_actions += MoveTo(coordinates, time)
+        
+        # Do the ramp
+        (coordinates, time) = self._path[2]
+        move_actions += MoveTo(coordinates, time) | (Delay(time / 2) + ScaleTo(1, time / 2))
 
-        self._focus_end = self._focus_start + 2 + self._focus_length
-        for pnt in range(self._focus_start + 1, self._focus_end):
-            self._points[pnt] = (self._points[pnt][0], self._focus_height)
+        # Move in focus
+        (coordinates, time) = self._path[3]
+        move_actions += MoveTo(coordinates, time) 
+        
+        # Ramp down
+        (coordinates, time) = self._path[4]
+        move_actions += MoveTo(coordinates, time) | (ScaleTo(0.5, time / 2))
+        
+        # Move to end of screen
+        (coordinates, time) = self._path[5]
+        move_actions += MoveTo(coordinates, time)
+        
+        # Move out of sight
+        move_actions += MoveTo((0 - content_offset, self._ticker_y), content_time)
+        
+        
+        # Prepare spawn point
+        spawn_actions = Delay(content_time * 2) + CallFunc(self._next_drink)
+        self.do(spawn_actions)
+        
+        # Start animation
+        label.do(move_actions + CallFunc(self._safe_kill, label))
+
 
     def update_drinks(self, drinks):
         """
@@ -199,25 +281,9 @@ class BottomTicker(cocos.layer.Layer):
                                  font_name='Times New Roman',
                                  font_size=64,
                                  anchor_x='center', anchor_y='bottom')
-        next_label.position = self._points[0]
-        next_label.scale = 0.5
         self.add(next_label)
-
-        spawn_actions = Delay(self._display_time * self._interval) + CallFunc(self._next_drink)
-
-        move_actions = MoveTo(self._points[self._focus_start], self._display_time * self._focus_start)
-        move_actions += (MoveTo(self._points[self._focus_start + 1], self._display_time) |
-                         (Delay(self._display_time / 2) +
-                         ScaleTo(1, self._display_time / 2)) |
-                         CallFunc(self._set_focussed_drink, drink, self._round_number))
-        move_actions += (MoveTo(self._points[self._focus_end - 1], self._display_time * self._focus_length))
-        move_actions += (MoveTo(self._points[self._focus_end], self._display_time) |
-                         (ScaleTo(0.5, self._display_time / 2) +
-                         Delay(self._display_time / 2)))
-        move_actions += MoveTo(self._points[-1], self._display_time * (self._segment_count - self._focus_end))
-
-        next_label.do(move_actions + CallFunc(self._safe_kill, next_label))
-        self.do(spawn_actions)
+        
+        self._add_animation(next_label)
         
     def next_round(self):
         self._round_number += 1
