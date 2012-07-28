@@ -72,9 +72,7 @@ class BottomTicker(cocos.layer.Layer):
     middle one of the drinks will gain focus and is shown larger.
     """
 
-    def __init__(self, display_time=1.0, display_y=0, screen_width=1024, drinks=None,
-                 visible_segments=10, margin=2, interval=3, focus_start=3,
-                 focus_length=2, focus_height=40):
+    def __init__(self, screen_width=1024, drinks=None):
         """
         Initialize the ticker.
         """
