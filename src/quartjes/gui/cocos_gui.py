@@ -20,7 +20,6 @@ import pyglet.text
 from pyglet.gl import glPushMatrix, glPopMatrix
 from quartjes.connector.client import ClientConnector
 from quartjes.models.drink import Mix
-import time
 import quartjes.gui.mix_drawer as mix_drawer
 import quartjes.gui.history_graph as history_graph
 import random
@@ -182,7 +181,7 @@ class BottomTicker(cocos.layer.Layer):
         time = distance / self._scroll_speed
         self._path.append(((x, y), time))
         
-    def _add_animation(self, label):
+    def _add_animation(self, label, drink):
         """
         Construct an animation path for the label.
         """
@@ -211,7 +210,8 @@ class BottomTicker(cocos.layer.Layer):
         
         # Do the ramp
         (coordinates, time) = self._path[2]
-        move_actions += MoveTo(coordinates, time) | (Delay(time / 2) + ScaleTo(1, time / 2))
+        move_actions += (MoveTo(coordinates, time) | (Delay(time / 2) + ScaleTo(1, time / 2)) 
+                | CallFunc(self._set_focussed_drink, drink, self._round_number))
 
         # Move in focus
         (coordinates, time) = self._path[3]
@@ -286,7 +286,7 @@ class BottomTicker(cocos.layer.Layer):
                                  anchor_x='center', anchor_y='bottom')
         self.add(next_label)
         
-        self._add_animation(next_label)
+        self._add_animation(next_label, drink)
         
     def next_round(self):
         self._round_number += 1
