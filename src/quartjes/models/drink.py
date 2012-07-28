@@ -48,32 +48,48 @@ class Mix(Drink):
     def __init__(self,name="Unnamed",drinks = None,unit_amount = 200):
         super(Mix, self).__init__(unit_amount = unit_amount, name=name)
         if drinks:
-            self.drinks = drinks
+            self._drinks = drinks
         else:
-            self.drinks = []
+            self._drinks = []
         self.discount = 0.8
 
         self.update_properties()
 
+    @property
+    def drinks(self):
+        """
+        The drinks used to make this mix.
+        """
+        return self._drinks
+    
+    @drinks.setter
+    def drinks(self, value):
+        if value:
+            self._drinks = value
+        else:
+            self._drinks = []
+        
+        self.update_properties()
+
     def insert_drink(self,drink):
         """Add a drink to the mix"""
-        self.drinks.append(drink)
+        self._drinks.append(drink)
         self.update_properties()
 
     def remove_drink(self,index):
         """Remove a drink from the mix"""
-        self.drinks.pop(index)
+        self._drinks.pop(index)
         self.update_properties()
 
     def update_properties(self):
         """Recalculate mix properties"""
-        parts = len(self.drinks)
+        parts = len(self._drinks)
         if parts > 0:
             self.unit_price = 0
             self.alc_perc = 0
             self.price_factor = 0
             color = array([0,0,0])
-            for d in self.drinks:
+            for d in self._drinks:
                 self.alc_perc = self.alc_perc + float(d.alc_perc) / parts
                 color += array(d.color)/parts
                 self.unit_price = self.unit_price + (d.price_per_liter()/parts)*(float(self.unit_amount)/1000)
