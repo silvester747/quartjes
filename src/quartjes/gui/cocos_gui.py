@@ -189,8 +189,11 @@ class BottomTicker(cocos.layer.Layer):
         label.scale = 0.5
         
         content_offset = (label.scale * label.element.content_width + self._drink_distance) / 2
-        if content_offset < 50:
-            content_offset = 50
+        
+        # Make sure only one item has focus
+        minimum_offset = ((self._focus_length + self._focus_ramp) * self._screen_width) / 2
+        if content_offset < minimum_offset:
+            content_offset = minimum_offset
         
         content_time = float(content_offset) / self._scroll_speed
         
