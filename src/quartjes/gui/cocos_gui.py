@@ -204,7 +204,7 @@ class BottomTicker(cocos.layer.Layer):
         (coordinates, _) = self._path[0]
         move_actions = MoveTo(coordinates, content_time)
         
-         # Move to ramp up    
+        # Move to ramp up    
         (coordinates, time) = self._path[1]
         move_actions += MoveTo(coordinates, time)
         
