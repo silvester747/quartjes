@@ -7,6 +7,13 @@ __date__ ="$5-jun-2011 12:34:35$"
 from quartjes.util.classtools import QuartjesBaseClass
 from numpy import array
 
+def to_quartjes(price):
+    """
+    Convert price in euro to price in quartjes.
+    """
+    return int(round(price * 10))
+
+
 class Drink(QuartjesBaseClass):
     """
     Base class to model all drinks.
@@ -68,6 +75,7 @@ class Drink(QuartjesBaseClass):
     def price_history(self):
         """
         Historic prices of this drink. Tuple of tuples. Each tuple is (timestamp, price).
+        Timestamp is time in seconds since epoch. Price is in euro.
         You should not modify this property directly.
         """
         return tuple(self._price_history)
@@ -76,9 +84,24 @@ class Drink(QuartjesBaseClass):
     def sales_history(self):
         """
         History of sales for this drink. Tuple of tuples. Each tuple is (timestamp, amount, price).
+        Timestamp is time in seconds since epoch. Price is in euro.
         You should not modify this property directly.
         """
         return tuple(self._sales_history)
+    
+    @property
+    def current_price(self):
+        """
+        Current price in euro
+        """
+        return self.unit_price * self._price_factor
+    
+    @property
+    def current_price_quartjes(self):
+        """
+        Current price in quartjes.
+        """
+        return to_quartjes(self.current_price)
     
     def clear_price_history(self):
         """
@@ -95,6 +118,13 @@ class Drink(QuartjesBaseClass):
     def add_price_history(self, timestamp, price):
         """
         Add a new historic price.
+        
+        Parameters
+        ----------
+        timestamp : float
+            Time in seconds since epoch (time.time())
+        price : float
+            Price in euro.
         """
         self._price_history.append((timestamp, price))
         if len(self._price_history) > self.MAX_PRICE_HISTORY:
@@ -103,6 +133,15 @@ class Drink(QuartjesBaseClass):
     def add_sales_history(self, timestamp, amount, price):
         """
         Add sales to the history.
+        
+        Parameters
+        ----------
+        timestamp : float
+            Time in seconds since epoch (time.time())
+        amount : int
+            Number of units sold.
+        price : float
+            Price in euro.
         """
         self._sales_history.append((timestamp, amount, price))
         if len(self._sales_history) > self.MAX_SALES_HISTORY:
@@ -112,10 +151,10 @@ class Drink(QuartjesBaseClass):
         return self.unit_price / (float(self.unit_amount) / 1000)
 
     def sellprice(self):
-        return self.unit_price * self.price_factor
+        assert False, "Please do not call this function anymore"
 
     def sellprice_quartjes(self):
-        return int(round(self.sellprice()*10))
+        assert False, "Please do not call this function anymore"
 
     def __eq__(self, other):
         if other == None:

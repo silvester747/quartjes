@@ -76,7 +76,7 @@ class StockExchange(object):
         if not local_drink:
             return None
         
-        total_price = amount * local_drink.sellprice_quartjes()
+        total_price = amount * local_drink.current_price_quartjes
         self._transactions.append((local_drink, amount))
         return total_price
     
@@ -190,7 +190,7 @@ class StockExchange(object):
                 drink.discount = (self._min_mix_discount + 
                                   random.random() * (self._max_mix_discount - self._min_mix_discount))
             
-            drink.add_price_history(t, drink.sellprice_quartjes())
+            drink.add_price_history(t, drink.current_price)
 
         self._transactions = []
 

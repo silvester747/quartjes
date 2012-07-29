@@ -47,7 +47,7 @@ class Test(unittest.TestCase):
 
         amount = 1
         price = self.exchange.sell(drink, amount)
-        self.assertEqual(price, drink.sellprice_quartjes() * amount, "Resulting price does not match.")
+        self.assertEqual(price, drink.current_price_quartjes * amount, "Resulting price does not match.")
         
         prices_before = self._get_drink_prices()
         self.exchange._recalculate_factors()
@@ -86,11 +86,11 @@ class Test(unittest.TestCase):
 
         amount1 = 1
         price = self.exchange.sell(drink1, amount1)
-        self.assertEqual(price, drink1.sellprice_quartjes() * amount1, "Resulting price does not match.")
+        self.assertEqual(price, drink1.current_price_quartjes * amount1, "Resulting price does not match.")
         
         amount2 = 10
         price = self.exchange.sell(drink2, amount2)
-        self.assertEqual(price, drink2.sellprice_quartjes() * amount2, "Resulting price does not match.")
+        self.assertEqual(price, drink2.current_price_quartjes * amount2, "Resulting price does not match.")
         
         prices_before = self._get_drink_prices()
         self.exchange._recalculate_factors()
@@ -134,7 +134,7 @@ class Test(unittest.TestCase):
         drinks = self.exchange._db.get_drinks()
         for drink in drinks:
             if not isinstance(drink, Mix):
-                prices[drink.id] = drink.sellprice_quartjes()
+                prices[drink.id] = drink.current_price_quartjes
         return prices
 
 if __name__ == "__main__":

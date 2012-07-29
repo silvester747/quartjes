@@ -276,7 +276,7 @@ class BottomTicker(cocos.layer.Layer):
             if self._current_drink_index >= len(self._drinks):
                 self._current_drink_index = 0
             drink = self._drinks[self._current_drink_index]
-            text = "%s - %d" % (drink.name, drink.sellprice_quartjes())
+            text = "%s - %d" % (drink.name, drink.current_price_quartjes)
 
         next_label = cocos.text.Label(text,
                                  font_name='Times New Roman',
@@ -477,7 +477,7 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
                             position = (center_x, y))
             y -= y_spacing
 
-        labels.add_text("%d" % mix.sellprice_quartjes(),
+        labels.add_text("%d" % mix.current_price_quartjes,
                         font_name=font,
                         font_size=150,
                         anchor_x='center', anchor_y='center',

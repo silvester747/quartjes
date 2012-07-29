@@ -9,7 +9,7 @@ import ImageDraw
 import datetime
 import math
 
-from quartjes.models.drink import Drink
+from quartjes.models.drink import Drink, to_quartjes
 from quartjes.gui.mix_drawer import get_image_data
 
 grid_color = (127, 127, 127, 255)
@@ -48,16 +48,25 @@ def create_image(drink, width, height):
     draw.line(((margin_x, 0), (margin_x, height - margin_y)), fill=axis_color, width=2)
     draw.line(((margin_x, height - margin_y), (width, height - margin_y)), fill=axis_color, width=2)
     
-    # draw x axis marks
+    # Determine min and max values
     max_x = 0
+    max_y = 0
     for (x, y) in data:
         if x > max_x:
             max_x = x
+        y = to_quartjes(y)
+        if y > max_y:
+            max_y = y
     min_x = max_x
+    min_y = max_y
     for (x, y) in data:
         if x < min_x:
             min_x = x
+        y = to_quartjes(y)
+        if y < min_y:
+            min_y = y
 
+    # draw x axis marks
     x_count = len(data)
     x_spacing = (width - 2 * margin_x) / (x_count - 1)
     x_label_interval = 1
@@ -75,15 +84,6 @@ def create_image(drink, width, height):
         draw.text((x - (txt_size[0] / 2), height - (margin_y * 3/4)), txt)
         
     # draw y axis marks
-    max_y = 0
-    for (x, y) in data:
-        if y > max_y:
-            max_y = y
-    min_y = max_y
-    for (x, y) in data:
-        if y < min_y:
-            min_y = y
-
     max_y = int(math.ceil(max_y))
     min_y = int(math.floor(min_y))
 
@@ -110,7 +110,8 @@ def create_image(drink, width, height):
     # draw the graph
     line = []
     x = margin_x
-    for (_, y_val) in data:
+    for (_, price) in data:
+        y_val = to_quartjes(price)
         y = height - (margin_y + (y_val - min_y) * y_spacing)
         line.append((x, y))
         x += x_spacing
@@ -134,19 +135,15 @@ def self_test():
     import subprocess
     import random
     t = time.time()
-    val = 10
-    
-    history = []
+    val = 1.5
     
     for _ in range(0, 100):
-        history.append((t, val))
+        drink.add_price_history(t, val)
         t += 60
-        val += random.randint(-5, 5)
+        val += float(random.randint(-5, 5))/10
         if val < 0:
             val = 0 - val
         
-    drink.history = history
-    
     image = create_image(drink, 800, 600)
     
     image.save('test.png')

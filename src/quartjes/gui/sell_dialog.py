@@ -56,7 +56,7 @@ class sell_dialog(Frame):
         
     def calc_price(self,eventdata):
         (drink, quantity) = self.read_inputs()        
-        newprice = quantity * int(drink.sellprice_quartjes())
+        newprice = quantity * int(drink.current_price_quartjes)
         self.sv_price.set("Estimate: " + str(newprice) + " Quartjes")
 
     def update_listbox(self):
