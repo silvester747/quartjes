@@ -62,6 +62,12 @@ class Database:
         drink to find the object to update. If the id is unknown, the drink
         will be added as a new drink.
         
+        Please note that this method does not update the 
+        :attr:`quartjes.models.drink.Drink.price_factor` and
+        :attr:`quartjes.models.drink.Drink.history` of the drink. These attributes
+        are protected by the server. You can however clear those using
+        :meth:`clear_history` or :meth:`clear_price_factor`.
+        
         Parameters
         ----------
         drink : :class:`quartjes.models.drink.Drink`
@@ -86,6 +92,50 @@ class Database:
                 local_drink.unit_price = drink.unit_price
 
             self._drink_dirty = True
+
+    @remote_method
+    def clear_history(self, drink):
+        """
+        Remove all history from the drink.
+        
+        Parameters
+        ----------
+        drink : :class:`quartjes.models.drink.Drink`
+            The drink clear history for. Can be a copy.
+        
+        Raises
+        ------
+        KeyError
+            The drink does not exist in the database.
+        """
+        local_drink = self.get(drink.id)
+        if not local_drink:
+            raise KeyError
+        
+        local_drink.clear_price_history()
+        self._drink_dirty = True
+
+    @remote_method
+    def clear_price_factor(self, drink):
+        """
+        Reset the price factor of the drink.
+        
+        Parameters
+        ----------
+        drink : :class:`quartjes.models.drink.Drink`
+            The drink to reset. Can be a copy.
+        
+        Raises
+        ------
+        KeyError
+            The drink does not exist in the database.
+        """
+        local_drink = self.get(drink.id)
+        if not local_drink:
+            raise KeyError
+        
+        local_drink.price_factor = 1.0
+        self._drink_dirty = True
 
     @remote_method
     def add(self, drink):

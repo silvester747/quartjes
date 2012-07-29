@@ -36,20 +36,18 @@ def create_image(drink, width, height):
     image = Image.new("RGBA", (width, height))
     draw = ImageDraw.Draw(image)    
     
+    data = drink.price_history
+
+    if len(data) < 5:
+        txt = "Not enough data"
+        txt_size = draw.textsize(txt)
+        draw.text((width / 2 - txt_size[0] / 2, height / 2 - txt_size[1] / 2), txt)
+        return image
+
     # Draw axis
     draw.line(((margin_x, 0), (margin_x, height - margin_y)), fill=axis_color, width=2)
     draw.line(((margin_x, height - margin_y), (width, height - margin_y)), fill=axis_color, width=2)
     
-    data = drink.history
-    
-
-    if data == None:
-        #print("No data")
-        return image
-    if len(data) < 2:
-        #print("Not enough data")
-        return image
-
     # draw x axis marks
     max_x = 0
     for (x, y) in data:

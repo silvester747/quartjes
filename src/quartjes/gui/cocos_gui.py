@@ -435,10 +435,6 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
         Construct a node to display the historic price graph for a drink.
         """
 
-        if drink.history == None:
-            print("No history")
-            return
-
         graph = history_graph.create_pyglet_image(drink, self._graph_width, self._graph_height)
 
         node = cocos.sprite.Sprite(image = graph,

@@ -9,7 +9,33 @@ from numpy import array
 
 class Drink(QuartjesBaseClass):
     """
-    Drink class
+    Base class to model all drinks.
+    
+    Attributes
+    ----------
+    name : string
+        Name of the drink.
+    alc_perc : float
+        Alcohol percentage of the drink. Value between 0.0 and 100.0
+    color : tuple (r, g, b)
+        Color of the drink.
+    unit_price: float
+        Price in euro per unit.
+    price_factor
+    unit_amount : int
+        Size of the drink per unit in milliliters.
+    price_history
+    sales_history
+    """
+
+    MAX_PRICE_HISTORY = 120
+    """
+    Maximum number of entries in the price history.
+    """
+
+    MAX_SALES_HISTORY = 120
+    """
+    Maximum number entries in the sales history.
     """
 
     def __init__(self, name="Unnamed", alc_perc = 0.0,color = (255,255,255),unit_price = 0.70,price_factor = 1.0,unit_amount = 200):
@@ -19,8 +45,68 @@ class Drink(QuartjesBaseClass):
         self.color = color
         self.unit_price = unit_price
         self.unit_amount = unit_amount
-        self.price_factor = price_factor        
-        self.history = None
+        self._price_factor = price_factor        
+        self._price_history = []
+        self._sales_history = []
+        
+    @property
+    def price_factor(self):
+        """
+        Factor used to determine the price in the stock exchange.
+        Must be > 0 or a ValueError will be raised.
+        """
+        return self._price_factor
+    
+    @price_factor.setter
+    def price_factor(self, value):
+        if value <= 0:
+            raise ValueError
+        # Make sure this is a float
+        self._price_factor = float(value)
+    
+    @property
+    def price_history(self):
+        """
+        Historic prices of this drink. Tuple of tuples. Each tuple is (timestamp, price).
+        You should not modify this property directly.
+        """
+        return tuple(self._price_history)
+    
+    @property
+    def sales_history(self):
+        """
+        History of sales for this drink. Tuple of tuples. Each tuple is (timestamp, amount, price).
+        You should not modify this property directly.
+        """
+        return tuple(self._sales_history)
+    
+    def clear_price_history(self):
+        """
+        Remove all historic prices of this drink.
+        """
+        self._price_history = []
+        
+    def clear_sales_history(self):
+        """
+        Remove all sales history.
+        """
+        self._sales_history = []
+    
+    def add_price_history(self, timestamp, price):
+        """
+        Add a new historic price.
+        """
+        self._price_history.append((timestamp, price))
+        if len(self._price_history) > self.MAX_PRICE_HISTORY:
+            self._price_history = self._price_history[-self.MAX_PRICE_HISTORY:]
+
+    def add_sales_history(self, timestamp, amount, price):
+        """
+        Add sales to the history.
+        """
+        self._sales_history.append((timestamp, amount, price))
+        if len(self._sales_history) > self.MAX_SALES_HISTORY:
+            self._sales_history = self._sales_history[-self.MAX_SALES_HISTORY:]
 
     def price_per_liter(self):
         return self.unit_price / (float(self.unit_amount) / 1000)
@@ -87,13 +173,13 @@ class Mix(Drink):
         if parts > 0:
             self.unit_price = 0
             self.alc_perc = 0
-            self.price_factor = 0
+            self._price_factor = 0
             color = array([0,0,0])
             for d in self._drinks:
                 self.alc_perc = self.alc_perc + float(d.alc_perc) / parts
                 color += array(d.color)/parts
                 self.unit_price = self.unit_price + (d.price_per_liter()/parts)*(float(self.unit_amount)/1000)
-                self.price_factor = self.price_factor + float(d.price_factor)/parts
+                self._price_factor = self._price_factor + float(d.price_factor)/parts
             self.color = tuple(color)
             self.price_factor *= self.discount
 

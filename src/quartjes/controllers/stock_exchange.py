@@ -189,11 +189,8 @@ class StockExchange(object):
                 drink.update_properties()
                 drink.discount = (self._min_mix_discount + 
                                   random.random() * (self._max_mix_discount - self._min_mix_discount))
-            if not drink.history:
-                drink.history = []
-            drink.history.append((t, drink.sellprice_quartjes()))
-            if len(drink.history) > self._max_history:
-                drink.history = drink.history[-self._max_history:]
+            
+            drink.add_price_history(t, drink.sellprice_quartjes())
 
         self._transactions = []
 
