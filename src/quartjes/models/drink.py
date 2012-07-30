@@ -6,6 +6,7 @@ __date__ ="$5-jun-2011 12:34:35$"
 
 from quartjes.util.classtools import QuartjesBaseClass
 from numpy import array
+import time
 
 def to_quartjes(price):
     """
@@ -115,7 +116,7 @@ class Drink(QuartjesBaseClass):
         """
         self._sales_history = []
     
-    def add_price_history(self, timestamp, price):
+    def add_price_history(self, timestamp=None, price=None):
         """
         Add a new historic price.
         
@@ -126,11 +127,16 @@ class Drink(QuartjesBaseClass):
         price : float
             Price in euro.
         """
+        if not timestamp:
+            timestamp = time.time()
+        if not price:
+            price = self.current_price
+        
         self._price_history.append((timestamp, price))
         if len(self._price_history) > self.MAX_PRICE_HISTORY:
             self._price_history = self._price_history[-self.MAX_PRICE_HISTORY:]
 
-    def add_sales_history(self, timestamp, amount, price):
+    def add_sales_history(self, amount, timestamp=None, price=None):
         """
         Add sales to the history.
         
@@ -143,6 +149,11 @@ class Drink(QuartjesBaseClass):
         price : float
             Price in euro.
         """
+        if not timestamp:
+            timestamp = time.time()
+        if not price:
+            price = self.current_price
+        
         self._sales_history.append((timestamp, amount, price))
         if len(self._sales_history) > self.MAX_SALES_HISTORY:
             self._sales_history = self._sales_history[-self.MAX_SALES_HISTORY:]
