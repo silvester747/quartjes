@@ -9,7 +9,14 @@ Now uses the sales history to determine price fluctuations.
 import quartjes.controllers.database
 from quartjes.connector.services import remote_method, remote_event
 
-class stock_exchange2(object):
+debug_mode = False
+
+max_sales_age = 30 * 60 * 1000
+"""
+Maximum age of sales information in milliseconds.
+"""
+
+class StockExchange2(object):
     """
     Version 2 of the stock exchange.
     
