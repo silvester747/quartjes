@@ -8,7 +8,7 @@ import random
 import time
 
 import quartjes
-from quartjes.controllers.stock_exchange2 import StockExchange2
+from quartjes.controllers.stock_exchange2 import StockExchange2, linear_demand_time_correction
 from quartjes.models.drink import Mix
 
 class StockExchange2Test(unittest.TestCase):
@@ -55,13 +55,15 @@ class StockExchange2Test(unittest.TestCase):
         self.assertEqual(history_item[1], amount, "Correct amount should be stored")
         self.assertEqual(history_item[2], price, "Expecting correcty price to be stored")
     
-    def test_02_demand_calculation(self):
+    def test_02a_demand_calculation_linear(self):
         """
         Test the demand calculation function.
         """
         drink = self.get_random_drink()
         self.assertEqual(len(drink.sales_history), 0, "Expecting no sales history yet")
 
+        self.exchange._demand_time_correction = linear_demand_time_correction
+        
         
 
     def get_random_drink(self):

@@ -1,3 +1,4 @@
+from __future__ import print_function
 '''
 New version of the stock exchange.
 
@@ -5,6 +6,9 @@ Now uses the sales history to determine price fluctuations.
 
 @author: rob
 '''
+
+import math
+import time
 
 import quartjes.controllers.database
 from quartjes.connector.services import remote_method, remote_event
@@ -14,6 +18,38 @@ debug_mode = False
 max_sales_age = 30 * 60 * 1000
 """
 Maximum age of sales information in milliseconds.
+"""
+
+def linear_demand_time_correction(value, age):
+    """
+    Linear function to correct demand for age.
+    """
+    if (age >= max_sales_age):
+        return 0.0
+    
+    return float(value) * (1 - age / max_sales_age)
+
+def sqrt_demand_time_correction(value, age):
+    """
+    Demand correction based on square root
+    """
+    if (age >= max_sales_age):
+        return 0.0
+    
+    return float(value) * math.sqrt(1 - age / max_sales_age)
+    
+def square_demand_time_correction(value, age):
+    """
+    Demand correction based on square
+    """
+    if (age >= max_sales_age):
+        return 0.0
+    
+    return float(value) * math.pow(1 - age / max_sales_age, 2)
+
+default_demand_time_correction = linear_demand_time_correction
+"""
+Default function used to for correction of demand over time. Change this if you do not like the default.
 """
 
 class StockExchange2(object):
@@ -29,6 +65,9 @@ class StockExchange2(object):
         
         # Reference to the database
         self._db = quartjes.controllers.database.database
+        
+        # Function used to change weight of demand over time.
+        self._demand_time_correction = default_demand_time_correction
     
     @remote_method
     def sell(self, drink, amount):
@@ -96,7 +135,7 @@ class StockExchange2(object):
         """
         Calculate the total demand for the given drink. Takes in account a 
         limited amount of history. Each sale is weighted for the amount of
-        time passed since the sale.
+        time passed since the sale. Also the sale price is taken into account.
         
         Parameters
         ----------
@@ -108,6 +147,17 @@ class StockExchange2(object):
         demand : float
             Total demand over a limited period weighed for time passed.
         """
+        current_time = time.time()
+        demand = 0.0
+        
+        for (sales_time, amount, price) in drink.sales_history:
+            age = current_time - sales_time
+            if age < 0: 
+                age = 0
+            
+            demand += self._demand_time_correction(amount, age) * price
+        
+        return demand
         
     def _process_mix_sales(self, mix):
         """
