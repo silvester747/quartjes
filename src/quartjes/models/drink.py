@@ -187,7 +187,9 @@ class Mix(Drink):
             self._drinks = drinks
         else:
             self._drinks = []
-        self.discount = 0.8
+        self._discount = 0.8
+        
+        self._last_component_sales_update = 0
 
         self.update_properties()
 
@@ -206,6 +208,29 @@ class Mix(Drink):
             self._drinks = []
         
         self.update_properties()
+    
+    @property
+    def last_component_sales_update(self):
+        """
+        Last time the sales were updated to the components making up the mix.
+        """
+        return self._last_component_sales_update
+    
+    @last_component_sales_update.setter
+    def last_component_sales_update(self, value):
+        self._last_component_sales_update = value
+
+    @property
+    def discount(self):
+        """
+        Percentage of the normal added prices of the components that will be
+        the actual price of the mix. Makes mixes cheaper than their components.
+        """
+        return self._discount
+    
+    @discount.setter
+    def discount(self, value):
+        self._discount = value
 
     def insert_drink(self,drink):
         """Add a drink to the mix"""
@@ -216,6 +241,24 @@ class Mix(Drink):
         """Remove a drink from the mix"""
         self._drinks.pop(index)
         self.update_properties()
+
+    def update_components_sale(self):
+        """
+        Update the sales of the components using the sales of this mix.
+        Internally the timestamp of the last sales updated to the components
+        is stored to make sure each sale is only processed once.
+        """
+        new_last_update_time = 0
+        parts = len(self._drinks)
+        for (timestamp, amount, price) in self._sales_history:
+            if timestamp > self._last_component_sales_update:
+                for component in self._drinks:
+                    component.add_sales_history(amount / parts, timestamp, price / parts)
+                if timestamp > new_last_update_time:
+                    new_last_update_time = timestamp
+        
+        if new_last_update_time > self._last_component_sales_update:
+            self._last_component_sales_update = new_last_update_time
 
     def update_properties(self):
         """Recalculate mix properties"""

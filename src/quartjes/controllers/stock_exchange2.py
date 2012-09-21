@@ -4,6 +4,12 @@ New version of the stock exchange.
 
 Now uses the sales history to determine price fluctuations.
 
+Possible todos
+--------------
+* Only consider sales within 2 standard deviations
+* Merge sales per unit of time and do the above
+* Keep record of sales for mixes
+
 @author: rob
 '''
 
@@ -12,6 +18,7 @@ import time
 
 import quartjes.controllers.database
 from quartjes.connector.services import remote_method, remote_event
+from quartjes.models.drink import Mix
 
 debug_mode = False
 
@@ -68,7 +75,7 @@ class StockExchange2(object):
         
         # Function used to change weight of demand over time.
         self._demand_time_correction = default_demand_time_correction
-    
+        
     @remote_method
     def sell(self, drink, amount):
         """
@@ -129,7 +136,40 @@ class StockExchange2(object):
     def _recalculate_prices(self):
         """
         Recalculate prices based on the demand for each drink.
+        
+        Price factor is directly related to a demand factor. This already
+        includes history.
         """
+        
+        drinks = self._db.get_drinks()
+        
+        for drink in drinks:
+            if isinstance(drink, Mix):
+                drink.update_components_sale()
+        
+        total_demand = 0
+        demands = [] # Will contain tuples of (drink, demand)
+        
+        for drink in drinks:
+            if not isinstance(drink, Mix):
+                demand = self._calculate_demand(drink)
+                total_demand += demand
+                demands.append(drink, demand)
+        
+        average_demand = total_demand / len(demands)
+        
+        for (drink, demand) in demands:
+            if not isinstance(drink, Mix):
+                drink.price_factor = demand / average_demand
+        
+        for drink in drinks:
+            if isinstance(drink, Mix):
+                drink.update_properties()
+            drink.add_price_history()
+        
+        self._db.force_save()
+        self._notify_next_round()
+        
         
     def _calculate_demand(self, drink):
         """
@@ -159,17 +199,6 @@ class StockExchange2(object):
         
         return demand
         
-    def _process_mix_sales(self, mix):
-        """
-        Process sales history for a mix. Counts the sales towards the 
-        components making up the mix.
-        
-        Parameters
-        ----------
-        mix : :class:`quartjes.models.drink.Mix`
-            Mix to process
-        """
-    
     def _notify_next_round(self):
         """
         Fire the on_next_round event.
