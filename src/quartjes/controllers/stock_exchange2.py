@@ -8,13 +8,15 @@ Possible todos
 --------------
 * Only consider sales within 2 standard deviations
 * Merge sales per unit of time and do the above
-* Keep record of sales for mixes
+* Add a twist to mix prices, e.g. first decrease price of popular mixes and
+  then suddenly invert price again
 
 @author: rob
 '''
 
 import math
 import time
+import numpy
 
 import quartjes.controllers.database
 from quartjes.connector.services import remote_method, remote_event
@@ -101,6 +103,10 @@ class StockExchange2(object):
         
         total_price = amount * local_drink.current_price_quartjes
         local_drink.add_sales_history(amount)
+        
+        if debug_mode:
+            print("Sold %d x %s for %d" % (amount, drink.name, total_price))
+        
         return total_price
 
     @remote_method
@@ -139,26 +145,23 @@ class StockExchange2(object):
         
         Price factor is directly related to a demand factor. This already
         includes history.
+        
+        Todo
+        ----
+        Remove values outside x standard deviations
+        Make sure prices are not below a treshold
         """
         
+        if debug_mode:
+            print("\n*** Recalculating Prices ***")
+        
         drinks = self._db.get_drinks()
+        if len(drinks) == 0:
+            return # Nothing to do here
         
-        for drink in drinks:
-            if isinstance(drink, Mix):
-                drink.update_components_sale()
+        average_demand, demand_per_drink = self._calculate_demands(drinks)
         
-        total_demand = 0
-        demands = [] # Will contain tuples of (drink, demand)
-        
-        for drink in drinks:
-            if not isinstance(drink, Mix):
-                demand = self._calculate_demand(drink)
-                total_demand += demand
-                demands.append(drink, demand)
-        
-        average_demand = total_demand / len(demands)
-        
-        for (drink, demand) in demands:
+        for (drink, demand) in demand_per_drink:
             if not isinstance(drink, Mix):
                 drink.price_factor = demand / average_demand
         
@@ -166,11 +169,71 @@ class StockExchange2(object):
             if isinstance(drink, Mix):
                 drink.update_properties()
             drink.add_price_history()
+            
+            if debug_mode:
+                print("%s : Factor = %f, Price = %d" % (drink.name, drink.price_factor, drink.current_price_quartjes))
         
         self._db.force_save()
         self._notify_next_round()
         
+        if debug_mode:
+            print()
+    
+    def _calculate_demands(self, drinks):
+        """
+        Calculate the demands of all drinks.
+        * Make sure mix sales are processed
+        * If demand = 0 (e.g. no sales at all or only old sales) use the
+          average demand (calculated without the 0s)
         
+        Parameters
+        ----------
+        drinks : iterable of :class:`quartjes.models.drink.Drink`
+            Drinks to calculate demand for.
+        
+        Returns
+        -------
+        average_demand : float
+            The average demand after all calculations and corrections.
+        demand_per_drink : list of tuples
+            A list of tuples where each tuple is (drink, demand)
+        
+        """
+        
+        for drink in drinks:
+            if isinstance(drink, Mix):
+                drink.update_components_sale()
+        
+        total_demand = 0.0
+        demand_per_drink = [] # Will contain tuples of (drink, demand)
+        demand_values = [] # Only the demand values for standard deviation calculation
+        drinks_without_sales = []
+        
+        for drink in drinks:
+            if not isinstance(drink, Mix):
+                demand = self._calculate_demand(drink)
+                total_demand += demand
+                if demand > 0:
+                    demand_per_drink.append((drink, demand))
+                    demand_values.append(demand)
+                else:
+                    drinks_without_sales.append(drink)
+        
+        average_demand = total_demand / len(demand_per_drink)
+        std_deviation = numpy.std(demand_values)
+
+        for drink in drinks_without_sales:
+            demand_per_drink.append((drink, average_demand))
+
+        if debug_mode:
+            print("Average demand: %f" % average_demand)
+            print("Std deviation: %f" % std_deviation)
+            print("Nr of drinks without sales: %d" % len(drinks_without_sales))
+        
+        
+        return average_demand, demand_per_drink
+        
+    
     def _calculate_demand(self, drink):
         """
         Calculate the total demand for the given drink. Takes in account a 
@@ -204,3 +267,27 @@ class StockExchange2(object):
         Fire the on_next_round event.
         """
         self.on_next_round()
+
+if __name__ == "__main__":
+    # Do a self test
+    # TODO: use simulated time: replace imported time with manually ticking clock
+    import random
+    
+    debug_mode = True
+    
+    exchange = StockExchange2()
+    
+    drinks = exchange._db.get_drinks()
+    
+    rng = random.Random()
+    
+    while True:
+        for _ in range(0, 10):
+            exchange.sell(rng.choice(drinks), rng.randint(1, 10))
+            time.sleep(1)
+        exchange._recalculate_prices()
+    
+    
+    
+    
+    
