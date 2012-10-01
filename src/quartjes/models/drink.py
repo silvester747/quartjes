@@ -84,7 +84,7 @@ class Drink(QuartjesBaseClass):
     @property
     def sales_history(self):
         """
-        History of sales for this drink. Tuple of tuples. Each tuple is (timestamp, amount, price).
+        History of sales for this drink. Tuple of tuples. Each tuple is (timestamp, amount, price, price_factor).
         Timestamp is time in seconds since epoch. Price is in euro.
         You should not modify this property directly.
         """
@@ -136,7 +136,7 @@ class Drink(QuartjesBaseClass):
         if len(self._price_history) > self.MAX_PRICE_HISTORY:
             self._price_history = self._price_history[-self.MAX_PRICE_HISTORY:]
 
-    def add_sales_history(self, amount, timestamp=None, price=None):
+    def add_sales_history(self, amount, timestamp=None, price=None, price_factor=None):
         """
         Add sales to the history.
         
@@ -153,8 +153,10 @@ class Drink(QuartjesBaseClass):
             timestamp = time.time()
         if not price:
             price = self.current_price
+        if not price_factor:
+            price_factor = self.price_factor
         
-        self._sales_history.append((timestamp, amount, price))
+        self._sales_history.append((timestamp, amount, price, price_factor))
         if len(self._sales_history) > self.MAX_SALES_HISTORY:
             self._sales_history = self._sales_history[-self.MAX_SALES_HISTORY:]
 
@@ -250,10 +252,10 @@ class Mix(Drink):
         """
         new_last_update_time = 0
         parts = len(self._drinks)
-        for (timestamp, amount, price) in self._sales_history:
+        for (timestamp, amount, price, price_factor) in self._sales_history:
             if timestamp > self._last_component_sales_update:
                 for component in self._drinks:
-                    component.add_sales_history(amount / parts, timestamp, price / parts)
+                    component.add_sales_history(amount / parts, timestamp, price / parts, price_factor)
                 if timestamp > new_last_update_time:
                     new_last_update_time = timestamp
         
