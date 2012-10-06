@@ -21,17 +21,12 @@ class Drink(QuartjesBaseClass):
     
     Attributes
     ----------
-    name : string
-        Name of the drink.
-    alc_perc : float
-        Alcohol percentage of the drink. Value between 0.0 and 100.0
-    color : tuple (r, g, b)
-        Color of the drink.
-    unit_price: float
-        Price in euro per unit.
+    name
+    alc_perc
+    color
+    unit_price
     price_factor
-    unit_amount : int
-        Size of the drink per unit in milliliters.
+    unit_amount
     price_history
     sales_history
     """
@@ -45,18 +40,109 @@ class Drink(QuartjesBaseClass):
     """
     Maximum number entries in the sales history.
     """
+    
+    DEFAULT_COLOR = (255, 255, 255)
+    """
+    Default color for drinks.
+    """
 
-    def __init__(self, name="Unnamed", alc_perc = 0.0,color = (255,255,255),unit_price = 0.70,price_factor = 1.0,unit_amount = 200):
+    def __init__(self, name="Unnamed", alc_perc = 0.0, color = None, unit_price = 0.70, price_factor = 1.0, unit_amount = 200):
         super(Drink, self).__init__()
         self.name = name
         self.alc_perc = alc_perc
         self.color = color
         self.unit_price = unit_price
         self.unit_amount = unit_amount
-        self._price_factor = price_factor        
+        self.price_factor = price_factor        
         self._price_history = []
         self._sales_history = []
-        
+    
+    @property
+    def name(self):
+        """
+        Name of the drink.
+        """
+        return self._name
+    
+    @name.setter
+    def name(self, value):
+        if value is None:
+            raise TypeError("Drink.name is not allowed to be None")
+        value = str(value)
+        if value == "":
+            raise ValueError("Drink.name should be a proper, non-empty string")
+        self._name = value
+    
+    @property
+    def alc_perc(self):
+        """
+        Alcohol percentage of the drink. Value between 0.0 and 100.0
+        """
+        return self._alc_perc
+    
+    @alc_perc.setter
+    def alc_perc(self, value):
+        if value is None:
+            raise TypeError("Drink.alc_perc is not allowed to be None")
+        if value < 0 or value > 100:
+            raise ValueError("Drink.alc_perc must be [0.0-100.0]")
+        self._alc_perc = float(value)
+    
+    @property
+    def color(self):
+        """
+        Color of the drink.
+        Must be an iterable of either (r, g, b) or (r, g, b, a).
+        """
+        return self._color
+    
+    @color.setter
+    def color(self, value):
+        if value is None:
+            self._color = self.DEFAULT_COLOR
+            return # No need to check
+        if len(value) < 3 or len(value) > 4:
+            raise ValueError("Drink.color must be either (r, g, b) or (r, g, b, a)")
+        proper_color = []
+        for part in value:
+            part = int(part)
+            if part < 0 or part > 255:
+                raise ValueError("Values in Drink.color must be [0-255]")
+            proper_color.append(part)
+        self._color = tuple(proper_color)
+              
+    @property
+    def unit_price(self):
+        """
+        Price in euro per unit.
+        """
+        return self._unit_price
+    
+    @unit_price.setter
+    def unit_price(self, value):
+        if value is None:
+            raise TypeError("Drink.unit_price is not allowed to be None")
+        value = float(value)
+        if value < 0.0:
+            raise ValueError("Drink.unit price must be > 0.0")
+        self._unit_price = value
+    
+    @property
+    def unit_amount(self):
+        """
+        Size of the drink per unit in milliliters.
+        """
+        return self._unit_amount
+    
+    @unit_amount.setter
+    def unit_amount(self, value):
+        if value is None:
+            raise TypeError("Drink.unit_amount is not allowed to be None")
+        value = float(value)
+        if value < 0.0:
+            raise ValueError("Drink.unit_amount must be > 0.0")
+        self._unit_amount = value
+    
     @property
     def price_factor(self):
         """
@@ -291,4 +377,4 @@ if __name__ == "__main__":
     
     print m
     print "Liter price = " + str(m.price_per_liter()) + " euro"
-    print "Selling price = " + str(m.sellprice()) + " euro"
+    print "Selling price = " + str(m.current_price) + " euro"
