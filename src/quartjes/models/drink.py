@@ -36,7 +36,7 @@ class Drink(QuartjesBaseClass):
     Maximum number of entries in the price history.
     """
 
-    MAX_SALES_HISTORY = 120
+    MAX_SALES_HISTORY = 1200
     """
     Maximum number entries in the sales history.
     """

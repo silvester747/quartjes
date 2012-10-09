@@ -16,7 +16,9 @@ Possible todos
 * Merge sales per unit of time and do the above
 * Add a twist to mix prices, e.g. first decrease price of popular mixes and
   then suddenly invert price again
-* In simulation use alcohol percentage to favor certain drinks
+* Automatically adapt max sales age for sales volume.
+* Correct demand for new drinks with limited sales history.
+* Maximum sales history in Drink should match max_sales_age
 
 @author: Rob
 '''
@@ -63,7 +65,7 @@ def square_demand_time_correction(value, age):
     
     return float(value) * math.pow(1 - age / max_sales_age, 2)
 
-default_demand_time_correction = sqrt_demand_time_correction
+default_demand_time_correction = linear_demand_time_correction
 """
 Default function used to for correction of demand over time. Change this if you do not like the default.
 """
@@ -84,6 +86,9 @@ class StockExchange2(object):
         
         # Function used to change weight of demand over time.
         self._demand_time_correction = default_demand_time_correction
+        
+        # Maximum number of standard deviations allowed for demand values
+        self._maximum_deviation = 2
         
     @remote_method
     def sell(self, drink, amount):
@@ -166,11 +171,25 @@ class StockExchange2(object):
         if len(drinks) == 0:
             return # Nothing to do here
         
-        average_demand, demand_per_drink = self._calculate_demands(drinks)
+        average_demand, demand_std, demand_per_drink = self._calculate_demands(drinks)
+        min_demand = average_demand - self._maximum_deviation * demand_std
+        max_demand = average_demand + self._maximum_deviation * demand_std
         
         for (drink, demand) in demand_per_drink:
+            
             if not isinstance(drink, Mix):
+                if demand < min_demand:
+                    demand = min_demand
+                    if debug_mode:
+                        print("%s : Deviates more than %d std" % (drink.name, self._maximum_deviation))
+                if demand > max_demand:
+                    demand = max_demand
+                    if debug_mode:
+                        print("%s : Deviates more than %d std" % (drink.name, self._maximum_deviation))
+                
                 drink.price_factor = average_demand / demand
+                if debug_mode:
+                    print("%s : Demand = %f" % (drink.name, demand))
         
         for drink in drinks:
             if isinstance(drink, Mix):
@@ -179,6 +198,9 @@ class StockExchange2(object):
             
             if debug_mode:
                 print("%s : Factor = %f, Price = %d" % (drink.name, drink.price_factor, drink.current_price_quartjes))
+                if drink.price_factor > 3:
+                    print(drink.sales_history)
+                    #assert False
         
         self._db.force_save()
         self._notify_next_round()
@@ -202,6 +224,8 @@ class StockExchange2(object):
         -------
         average_demand : float
             The average demand after all calculations and corrections.
+        std_deviation : float
+            Standard deviation of the demands.
         demand_per_drink : list of tuples
             A list of tuples where each tuple is (drink, demand)
         
@@ -238,7 +262,7 @@ class StockExchange2(object):
             print("Nr of drinks without sales: %d" % len(drinks_without_sales))
         
         
-        return average_demand, demand_per_drink
+        return average_demand, std_deviation, demand_per_drink
         
     
     def _calculate_demand(self, drink):
@@ -358,7 +382,8 @@ if __name__ == "__main__":
         runs = run_time / exchange.get_round_time()
         for _ in range(0, runs):
             for _ in range(0, exchange.get_round_time()):
-                exchange.sell(randomizer.get_random_drink(), rng.randint(1, 10))
+                if rng.randint(0, 5) < 2:
+                    exchange.sell(randomizer.get_random_drink(), rng.randint(1, 3) * (1 + drink.alc_perc / 10))
                 time.do_tick()
             exchange._recalculate_prices()
             randomizer.update()
