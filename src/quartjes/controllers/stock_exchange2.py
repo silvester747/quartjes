@@ -7,8 +7,7 @@ Now uses the sales history to determine price fluctuations.
 
 Current issues
 --------------
-* At the start a few drinks have enormous prices
-* Pricefactor mostly varies between 0.6 - 1.7 (square) / 0.7 - 2.0 (linear & sqrt), should be more between 0.3 - 3.0
+* 
 
 Possible todos
 --------------
@@ -17,7 +16,7 @@ Possible todos
 * Add a twist to mix prices, e.g. first decrease price of popular mixes and
   then suddenly invert price again
 * Automatically adapt max sales age for sales volume.
-* Correct demand for new drinks with limited sales history.
+* Correct demand for new drinks with limited sales history (use price history to determine age).
 * Maximum sales history in Drink should match max_sales_age
 
 @author: Rob
@@ -78,7 +77,8 @@ class StockExchange2(object):
     """
     
     def __init__(self):
-        # Time between recalculations
+        # Time between recalculations (seconds)
+        # For not let's not support changing this value while running, limiting complexity of calculations.
         self._round_time = 20
         
         # Reference to the database
@@ -89,6 +89,12 @@ class StockExchange2(object):
         
         # Maximum number of standard deviations allowed for demand values
         self._maximum_deviation = 2
+        
+        # Maximum value the price factor may attain
+        self._maximum_price_factor = 3.0
+        
+        # Minimum value the price factor may attain
+        self._minimum_price_factor = 0.3
         
     @remote_method
     def sell(self, drink, amount):
@@ -132,7 +138,8 @@ class StockExchange2(object):
         time : integer
             New round time in seconds.
         """
-        self._round_time = time
+        #self._round_time = time
+        print("Changing the round time is not supported anymore")
 
     @remote_method
     def get_round_time(self):
@@ -158,10 +165,6 @@ class StockExchange2(object):
         Price factor is directly related to a demand factor. This already
         includes history.
         
-        Todo
-        ----
-        Remove values outside x standard deviations
-        Make sure prices are not below a treshold
         """
         
         if debug_mode:
@@ -171,22 +174,48 @@ class StockExchange2(object):
         if len(drinks) == 0:
             return # Nothing to do here
         
+        # Determine demand values
         average_demand, demand_std, demand_per_drink = self._calculate_demands(drinks)
-        min_demand = average_demand - self._maximum_deviation * demand_std
-        max_demand = average_demand + self._maximum_deviation * demand_std
+        min_demand = max(average_demand - self._maximum_deviation * demand_std, average_demand / self._maximum_price_factor)
+        max_demand = min(average_demand + self._maximum_deviation * demand_std, average_demand / self._minimum_price_factor)
         
+        demand_too_high = []
+        demand_too_low = []
+        
+        # Do a first check for demands that are too high or too low
         for (drink, demand) in demand_per_drink:
             
             if not isinstance(drink, Mix):
                 if demand < min_demand:
-                    demand = min_demand
+                    demand_too_low.append(drink)
+                    drinks.remove(drink)
                     if debug_mode:
-                        print("%s : Deviates more than %d std" % (drink.name, self._maximum_deviation))
+                        print("%s : Deviates more than %d std or price factor below %f" % (drink.name, self._maximum_deviation, self._minimum_price_factor))
                 if demand > max_demand:
-                    demand = max_demand
+                    demand_too_high.append(drink)
+                    drinks.remove(drink)
                     if debug_mode:
-                        print("%s : Deviates more than %d std" % (drink.name, self._maximum_deviation))
+                        print("%s : Deviates more than %d std or price factor above %f" % (drink.name, self._maximum_deviation, self._maximum_price_factor))
+        
+        # Recalculate ignoring the demands that are too high or too low
+        assert len(drinks) > 0, "All drinks are out of bounds, how could that happen??"
+        if len(demand_too_high) > 0 or len(demand_too_low) > 0:
+            
+            if debug_mode:
+                print("New calculation of demands required")
                 
+            average_demand, demand_std, demand_per_drink = self._calculate_demands(drinks)
+            min_demand = max(average_demand - self._maximum_deviation * demand_std, average_demand / self._maximum_price_factor)
+            max_demand = min(average_demand + self._maximum_deviation * demand_std, average_demand / self._minimum_price_factor)
+            
+            for drink in demand_too_high:
+                demand_per_drink.append((drink, max_demand))
+            for drink in demand_too_low:
+                demand_per_drink.append((drink, min_demand))
+        
+        # Calculate the new prices
+        for (drink, demand) in demand_per_drink:
+            
                 drink.price_factor = average_demand / demand
                 if debug_mode:
                     print("%s : Demand = %f" % (drink.name, demand))
