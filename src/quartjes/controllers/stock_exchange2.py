@@ -321,6 +321,36 @@ class StockExchange2(object):
             demand += self._demand_time_correction(amount, age) * price_factor
         
         return demand
+    
+    def _normalize_sales(self, drinks):
+        """
+        Group the sales together for each round. If a drink has less history than others, use the average sales
+        for each round it did not have price history yet.
+        
+        This method expects the round times for all drinks to be equal. That should always be the case in the
+        current implementation, but it is something to keep in mind in later additions that might influence round
+        times.
+        
+        Parameters
+        ----------
+        drinks
+            The drinks to normalize sales for.
+        
+        Returns
+        -------
+        normalized_sales
+            Iterable of tuples (drink, normalized_sales_history)
+        """
+        
+        # Group sales per round for each drink
+        grouped_sales = {}
+        for drink in drinks:
+            pass
+        
+        # Find the drink with the longest history
+        
+        # Normalize all drinks to match the longest history (discard everything after max age)
+        
         
     def _notify_next_round(self):
         """
