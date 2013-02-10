@@ -1,6 +1,7 @@
-# To change this template, choose Tools | Templates
-# and open the template in the editor.
-
+"""
+To do:
+- Use History class for sales/price history
+"""
 __author__="piet"
 __date__ ="$5-jun-2011 12:34:35$"
 
@@ -363,6 +364,52 @@ class Mix(Drink):
                 self._price_factor = self._price_factor + float(d.price_factor)/parts
             self.color = tuple(color)
             self.price_factor *= self.discount
+
+class History(object):
+    """
+    Class for encapsulating a single entry of price and/or sales history.
+    
+    Attributes
+    ----------
+    amount
+    timestamp
+    price
+    price_factor
+    """
+    
+    def __init__(self, amount=None, timestamp=None, price=None, price_factor=None):
+        self._amount = amount
+        self._timestamp = timestamp
+        self._price = price
+        self._price_factor = price_factor
+    
+    @property
+    def amount(self):
+        """
+        Amount of units sold.
+        """
+        return self._amount
+    
+    @property
+    def timestamp(self):
+        """
+        Time this history record describes.
+        """
+        return self._timestamp
+    
+    @property
+    def price(self):
+        """
+        Price at the moment.
+        """
+        return self._price_factor
+    
+    @property
+    def price_factor(self):
+        """
+        Price factor at the moment.
+        """
+        return self._price_factor
 
 if __name__ == "__main__":
     d1 = Drink('cola',color = (0,0,0),alc_perc = 0,unit_price = 0.70, unit_amount = 200)

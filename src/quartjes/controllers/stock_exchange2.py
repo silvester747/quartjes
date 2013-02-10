@@ -7,7 +7,7 @@ Now uses the sales history to determine price fluctuations.
 
 Current issues
 --------------
-* 
+* Sales history needs to be extracted into a separate class
 
 Possible todos
 --------------
