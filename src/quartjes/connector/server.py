@@ -18,6 +18,11 @@ default_port = 1234
 Default port number the server runs on.
 """
 
+stock_exchange_version = 1
+"""
+Version of the stock exchange to use.
+"""
+
 class ServerConnector(object):
     """
     Server side endpoint of the quartjes connector.
@@ -91,14 +96,20 @@ def run_server():
     Run the default quartjes server.
     """
     from quartjes.controllers.stock_exchange import StockExchange
+    from quartjes.controllers.stock_exchange2 import StockExchange2
     from quartjes.controllers.database import database
     from quartjes.controllers.random_mixer import run_random_mixer
     
     server = ServerConnector(default_port)
-    exchange = StockExchange()
-    run_random_mixer()
-    server.register_service(exchange, "stock_exchange")
+    print("Using stock exchange version %i" % stock_exchange_version)
+    if stock_exchange_version == 1:
+        exchange = StockExchange()
+        server.register_service(exchange, "stock_exchange")
+    else:
+        exchange = StockExchange2()
+        server.register_service(exchange, "stock_exchange")
     server.register_service(database, "database")
+    run_random_mixer()
     server.start()
     print("Server started on port %i" % default_port)
     print("Press enter to stop")

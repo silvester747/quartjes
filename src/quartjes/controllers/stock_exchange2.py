@@ -5,9 +5,13 @@ New version of the stock exchange
 
 Now uses the sales history to determine price fluctuations.
 
+Todo
+----
+* Add update thread
+
 Current issues
 --------------
-* Sales history needs to be extracted into a separate class
+* 
 
 Possible todos
 --------------
@@ -27,7 +31,7 @@ import time
 import numpy
 
 import quartjes.controllers.database
-from quartjes.connector.services import remote_method, remote_event
+from quartjes.connector.services import remote_service, remote_method, remote_event
 from quartjes.models.drink import Mix
 
 debug_mode = False
@@ -69,6 +73,7 @@ default_demand_time_correction = linear_demand_time_correction
 Default function used to for correction of demand over time. Change this if you do not like the default.
 """
 
+@remote_service
 class StockExchange2(object):
     """
     Version 2 of the stock exchange.
