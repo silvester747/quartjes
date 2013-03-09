@@ -1,6 +1,5 @@
 """
 To do:
-- Use History class for sales/price history
 """
 __author__="piet"
 __date__ ="$5-jun-2011 12:34:35$"
@@ -162,8 +161,7 @@ class Drink(QuartjesBaseClass):
     @property
     def price_history(self):
         """
-        Historic prices of this drink. Tuple of tuples. Each tuple is (timestamp, price).
-        Timestamp is time in seconds since epoch. Price is in euro.
+        Historic prices of this drink. Tuple of :class:`History`.
         You should not modify this property directly.
         """
         return tuple(self._price_history)
@@ -171,8 +169,7 @@ class Drink(QuartjesBaseClass):
     @property
     def sales_history(self):
         """
-        History of sales for this drink. Tuple of tuples. Each tuple is (timestamp, amount, price, price_factor).
-        Timestamp is time in seconds since epoch. Price is in euro.
+        History of sales for this drink. Tuple of :class:`History`.
         You should not modify this property directly.
         """
         return tuple(self._sales_history)
@@ -180,14 +177,14 @@ class Drink(QuartjesBaseClass):
     @property
     def current_price(self):
         """
-        Current price in euro
+        Current price in Euro
         """
         return self.unit_price * self._price_factor
     
     @property
     def current_price_quartjes(self):
         """
-        Current price in quartjes.
+        Current price in Quartjes.
         """
         return to_quartjes(self.current_price)
     
@@ -212,14 +209,15 @@ class Drink(QuartjesBaseClass):
         timestamp : float
             Time in seconds since epoch (time.time())
         price : float
-            Price in euro.
+            Price in Euro.
         """
         if not timestamp:
             timestamp = time.time()
         if not price:
             price = self.current_price
         
-        self._price_history.append((timestamp, price))
+        History(timestamp=timestamp, price=price)
+        self._price_history.append(History(timestamp=timestamp, price=price))
         if len(self._price_history) > self.MAX_PRICE_HISTORY:
             self._price_history = self._price_history[-self.MAX_PRICE_HISTORY:]
 
@@ -243,7 +241,7 @@ class Drink(QuartjesBaseClass):
         if not price_factor:
             price_factor = self.price_factor
         
-        self._sales_history.append((timestamp, amount, price, price_factor))
+        self._sales_history.append(History(amount, timestamp, price, price_factor))
         if len(self._sales_history) > self.MAX_SALES_HISTORY:
             self._sales_history = self._sales_history[-self.MAX_SALES_HISTORY:]
 
@@ -339,12 +337,12 @@ class Mix(Drink):
         """
         new_last_update_time = 0
         parts = len(self._drinks)
-        for (timestamp, amount, price, price_factor) in self._sales_history:
-            if timestamp > self._last_component_sales_update:
+        for history_item in self._sales_history:
+            if history_item.timestamp > self._last_component_sales_update:
                 for component in self._drinks:
-                    component.add_sales_history(amount / parts, timestamp, price / parts, price_factor)
-                if timestamp > new_last_update_time:
-                    new_last_update_time = timestamp
+                    component.add_sales_history(history_item.amount / parts, history_item.timestamp, history_item.price / parts, history_item.price_factor)
+                if history_item.timestamp > new_last_update_time:
+                    new_last_update_time = history_item.timestamp
         
         if new_last_update_time > self._last_component_sales_update:
             self._last_component_sales_update = new_last_update_time
@@ -393,16 +391,16 @@ class History(object):
     @property
     def timestamp(self):
         """
-        Time this history record describes.
+        Time this history record describes. Time in seconds since epoch.
         """
         return self._timestamp
     
     @property
     def price(self):
         """
-        Price at the moment.
+        Price in euro at the moment.
         """
-        return self._price_factor
+        return self._price
     
     @property
     def price_factor(self):

@@ -52,9 +52,9 @@ class StockExchange2Test(unittest.TestCase):
         
         self.assertEqual(len(drink.sales_history), 1, "Expecting one entry in sales history")
         history_item = drink.sales_history[0]
-        self.assertAlmostEqual(history_item[0], current_time, msg="Expecting correct time to be stored", delta=1000)
-        self.assertEqual(history_item[1], amount, "Correct amount should be stored")
-        self.assertEqual(history_item[2], price, "Expecting correcty price to be stored")
+        self.assertAlmostEqual(history_item.timestamp, current_time, msg="Expecting correct time to be stored", delta=1000)
+        self.assertEqual(history_item.amount, amount, "Correct amount should be stored")
+        self.assertEqual(history_item.price, price, "Expecting correct price to be stored")
     
     def test_02_demand_calculation_comparison(self):
         """

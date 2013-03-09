@@ -51,18 +51,18 @@ def create_image(drink, width, height):
     # Determine min and max values
     max_x = 0
     max_y = 0
-    for (x, y) in data:
-        if x > max_x:
-            max_x = x
-        y = to_quartjes(y)
+    for history_item in data:
+        if history_item.timestamp > max_x:
+            max_x = history_item.timestamp
+        y = to_quartjes(history_item.price)
         if y > max_y:
             max_y = y
     min_x = max_x
     min_y = max_y
-    for (x, y) in data:
-        if x < min_x:
-            min_x = x
-        y = to_quartjes(y)
+    for history_item in data:
+        if history_item.timestamp < min_x:
+            min_x = history_item.timestamp
+        y = to_quartjes(history_item.price)
         if y < min_y:
             min_y = y
 
@@ -78,7 +78,7 @@ def create_image(drink, width, height):
         draw.line(((x, height - margin_y), (x, height - (margin_y * 3/4))), fill=axis_color, width=1)
         draw.line(((x, height - margin_y), (x, 0)), fill=grid_color, width=1)
 
-        txt = datetime.datetime.fromtimestamp(data[i][0]).strftime("%H:%M")
+        txt = datetime.datetime.fromtimestamp(data[i].timestamp).strftime("%H:%M")
         txt_size = draw.textsize(txt)
 
         draw.text((x - (txt_size[0] / 2), height - (margin_y * 3/4)), txt)
@@ -110,8 +110,8 @@ def create_image(drink, width, height):
     # draw the graph
     line = []
     x = margin_x
-    for (_, price) in data:
-        y_val = to_quartjes(price)
+    for history_item in data:
+        y_val = to_quartjes(history_item.price)
         y = height - (margin_y + (y_val - min_y) * y_spacing)
         line.append((x, y))
         x += x_spacing

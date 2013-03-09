@@ -313,12 +313,12 @@ class StockExchange2(object):
         current_time = time.time()
         demand = 0.0
         
-        for (sales_time, amount, _, price_factor) in drink.sales_history:
-            age = current_time - sales_time
+        for sales_item in drink.sales_history:
+            age = current_time - sales_item.timestamp
             if age < 0: 
                 age = 0
             
-            demand += self._demand_time_correction(amount, age) * price_factor
+            demand += self._demand_time_correction(sales_item.amount, age) * sales_item.price_factor
         
         return demand
     

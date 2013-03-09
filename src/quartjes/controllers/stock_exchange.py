@@ -5,7 +5,7 @@ Stock exchange controller. Changes prices of drinks according to sales.
 import threading
 import time
 import quartjes.controllers.database
-from quartjes.models.drink import Mix, Drink
+from quartjes.models.drink import Mix
 from quartjes.connector.services import remote_service, remote_method, remote_event
 import random
 
@@ -14,6 +14,7 @@ __author__ = "Rob van der Most"
 debug_mode = False
 
 default_round_time = 120
+#default_round_time = 10
 
 @remote_service
 class StockExchange(object):
