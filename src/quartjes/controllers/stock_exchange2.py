@@ -33,9 +33,10 @@ import time
 
 import quartjes.controllers.database
 from quartjes.connector.services import remote_service, remote_method, remote_event
-from quartjes.models.drink import Mix
+from quartjes.models.drink import Mix, History
 
 debug_mode = False
+unit_test_mode = False
 
 max_sales_age = 30 * 60
 """
@@ -103,12 +104,16 @@ class StockExchange2(Thread):
         
         # Minimum value the price factor may attain
         self._minimum_price_factor = 0.3
+
+        # Internal cache of normalized sales history. drink:[sales history]        
+        self._normalized_sales_history = {}
         
         # Event triggered when the stock exchange needs to shut down
         self._shutdown_event = Event()
         
         # Start ourselves
-        self.start()
+        if not unit_test_mode:
+            self.start()
         
     @remote_method
     def sell(self, drink, amount):
@@ -361,26 +366,68 @@ class StockExchange2(Thread):
         current implementation, but it is something to keep in mind in later additions that might influence round
         times.
         
+        An internal cache of the normalized history is kept. It is rebuild at the first run, and kept up to date
+        at the end of each round.
+        
         Parameters
         ----------
         drinks
             The drinks to normalize sales for.
-        
-        Returns
-        -------
-        normalized_sales
-            Iterable of tuples (drink, normalized_sales_history)
         """
+        # Remove drinks that are no longer present
+        for drink in self._normalized_sales_history.keys():
+            if not drink in drinks:
+                del self._normalized_sales_history[drink]
         
         # Group sales per round for each drink
-        grouped_sales = {}
+        now = time.time()
         for drink in drinks:
-            pass
+            norm_sales = self._normalized_sales_history.get(drink, None)
+            if norm_sales is None:
+                # No normalized history yet, need to get full history
+                norm_sales = []
+                self._normalized_sales_history[drink] = norm_sales
+                need_full_history = True
+                start_of_round = now - self._round_time
+            else:
+                # Expect normalization also occurred during previous round
+                need_full_history = False
+                start_of_round = norm_sales[-1].timestamp
+            
+            # Go over the drink history
+            norm_sales_item = History(amount=0, timestamp=now, price=0, price_factor=0)
+            norm_sales.append(norm_sales_item)
+            for history_item in reversed(drink.sales_history):
+                if history_item.timestamp < start_of_round:
+                    if need_full_history:
+                        norm_sales_item = History(amount=0, timestamp=start_of_round, price=0, price_factor=0)
+                        norm_sales.insert(0, norm_sales_item)
+                        start_of_round -= self._round_time
+                    else:
+                        break
+                
+                norm_sales_item._amount += history_item._amount
+                norm_sales_item._price = history_item._price
+                norm_sales_item._price_factor = history_item._price_factor
+                        
         
         # Find the drink with the longest history
+        max_length = 0
+        oldest_drink = None
+        for drink, history in self._normalized_sales_history.items():
+            if len(history) > max_length:
+                max_length = len(history)
+                oldest_drink = drink
         
         # Normalize all drinks to match the longest history (discard everything after max age)
         
+        # Output for debug purposes
+        if debug_mode:
+            for drink, history in self._normalized_sales_history.items():
+                print(drink.name)
+                for h in history:
+                    print(vars(h))
+
         
     def _notify_next_round(self):
         """

@@ -21,6 +21,7 @@ class StockExchange2Test(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         quartjes.controllers.stock_exchange2.debug_mode=True
+        quartjes.controllers.stock_exchange2.unit_test_mode=True
         cls.exchange = StockExchange2()
         cls.random = random.Random()
 
@@ -103,6 +104,54 @@ class StockExchange2Test(unittest.TestCase):
         print("Recent_demand : %r" % recent_demand)
         print("Old_demand : %r" % old_demand)
         print("Very_old_demand : %r" % very_old_demand)
+
+    def test_03a_normalize_sales_basic(self):
+        """
+        Test the normalization of sales.
+        
+        Basic check for random sales.
+        """
+        
+        # Build random sales history
+        now = int(time.time())
+        min_time = int(now - 10 * self.exchange.get_round_time())
+        price = 10
+        price_factor = 1.0
+        drinks = self.exchange._db.get_drinks()
+        for _ in range(100):
+            rnd_time = float(self.random.randint(min_time, now))
+            rnd_amount = self.random.randint(1, 5)
+            drink = self.random.choice(drinks)
+            drink.add_sales_history(rnd_amount, rnd_time, price, price_factor)
+        
+        # Force normalization
+        self.exchange._normalize_sales(drinks)
+        result = self.exchange._normalized_sales_history
+        
+        # All drinks should be present
+        for d in drinks:
+            self.assertIn(d, result, "Drink missing from normalized history")
+        
+        # Validate data
+        for sales_history in result.values():
+            previous_timestamp = None
+            for history_item in sales_history:
+                # If sales are present, price and price factor must match
+                if history_item.amount > 0:
+                    self.assertEquals(history_item.price, price, "Price must match")
+                    self.assertEquals(history_item.price_factor, price_factor, "Price factor must match")
+                
+                # Interval between items must equal round time
+                if not previous_timestamp is None:
+                    self.assertAlmostEqual(history_item.timestamp - previous_timestamp, 
+                                           self.exchange.get_round_time(), 
+                                           1, 
+                                           "Interval between items must match round time")
+                previous_timestamp = history_item.timestamp
+                
+            # Last item must be for current time
+            self.assertEqual(int(sales_history[-1].timestamp), now, "Last item must be for current time")
+        
 
     def get_random_drink(self):
         drinks = self.exchange._db.get_drinks()

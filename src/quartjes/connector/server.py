@@ -21,6 +21,8 @@ Default port number the server runs on.
 stock_exchange_version = 1
 """
 Version of the stock exchange to use.
+Both version of the stock exchange should work fine. But it might be necessary
+to clear the database when switching.
 """
 
 class ServerConnector(object):
