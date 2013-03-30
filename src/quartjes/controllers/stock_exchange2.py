@@ -7,7 +7,7 @@ Now uses the sales history to determine price fluctuations.
 
 Todo
 ----
-* Add update thread
+* 
 
 Current issues
 --------------
@@ -27,8 +27,9 @@ Possible todos
 '''
 
 import math
-import time
 import numpy
+from threading import Thread, Event
+import time
 
 import quartjes.controllers.database
 from quartjes.connector.services import remote_service, remote_method, remote_event
@@ -74,7 +75,7 @@ Default function used to for correction of demand over time. Change this if you 
 """
 
 @remote_service
-class StockExchange2(object):
+class StockExchange2(Thread):
     """
     Version 2 of the stock exchange.
     
@@ -82,8 +83,10 @@ class StockExchange2(object):
     """
     
     def __init__(self):
+        Thread.__init__(self)
+        
         # Time between recalculations (seconds)
-        # For not let's not support changing this value while running, limiting complexity of calculations.
+        # For now let's not support changing this value while running, limiting complexity of calculations.
         self._round_time = 20
         
         # Reference to the database
@@ -100,6 +103,12 @@ class StockExchange2(object):
         
         # Minimum value the price factor may attain
         self._minimum_price_factor = 0.3
+        
+        # Event triggered when the stock exchange needs to shut down
+        self._shutdown_event = Event()
+        
+        # Start ourselves
+        self.start()
         
     @remote_method
     def sell(self, drink, amount):
@@ -162,6 +171,22 @@ class StockExchange2(object):
     """
     Event triggered when prices have been recalculated.
     """
+    
+    def run(self):
+        """
+        Update loop for the stock exchange.
+        """
+        while True:
+            shutdown = self._shutdown_event.wait(self._round_time)
+            if shutdown:
+                return
+            self._recalculate_prices()
+    
+    def stop(self):
+        """
+        Stop running the stock exchange.
+        """
+        self._shutdown_event.set()
     
     def _recalculate_prices(self):
         """

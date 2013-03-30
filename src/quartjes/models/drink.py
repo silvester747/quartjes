@@ -48,12 +48,12 @@ class Drink(QuartjesBaseClass):
 
     def __init__(self, name="Unnamed", alc_perc = 0.0, color = None, unit_price = 0.70, price_factor = 1.0, unit_amount = 200):
         super(Drink, self).__init__()
-        self.name = name
-        self.alc_perc = alc_perc
-        self.color = color
-        self.unit_price = unit_price
-        self.unit_amount = unit_amount
-        self.price_factor = price_factor        
+        self._name = name
+        self._alc_perc = alc_perc
+        self._color = color
+        self._unit_price = unit_price
+        self._unit_amount = unit_amount
+        self._price_factor = price_factor        
         self._price_history = []
         self._sales_history = []
     
