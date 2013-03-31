@@ -7,8 +7,6 @@ Now uses the sales history to determine price fluctuations.
 
 Todo
 ----
-* What to do if there is no demand yet 
- * Extend normalized history to max_sales_age
 * Trigger updates to clients
 * Extend simulator with add/remove drinks
 
@@ -39,6 +37,24 @@ from quartjes.models.drink import Mix, History
 
 debug_mode = False
 unit_test_mode = False
+timed_mode = False
+
+def timed(F):
+    """
+    Measure time spent in function.
+    """
+    def timed_func(*pargs, **kwargs):
+        import time as t
+        start_time = t.time()
+        ret = F(*pargs, **kwargs)
+        print("Time spent in %s: %fs" % (F.__name__, t.time() - start_time))
+        return ret
+    
+    if timed_mode:
+        return timed_func
+    else:
+        return F
+    
 
 max_sales_age = 30 * 60
 """
@@ -195,6 +211,7 @@ class StockExchange2(Thread):
         """
         self._shutdown_event.set()
     
+    @timed
     def _recalculate_prices(self):
         """
         Recalculate prices based on the demand for each drink.
@@ -285,6 +302,7 @@ class StockExchange2(Thread):
         if debug_mode:
             print()
     
+    @timed
     def _calculate_demands(self, drinks):
         """
         Calculate the demands of all drinks.
@@ -362,7 +380,7 @@ class StockExchange2(Thread):
         
         sales_history = self._normalized_sales_history.get(drink)
         if sales_history is None:
-            if debug_mode:
+            if debug_mode and not unit_test_mode:
                 print(drink)
                 assert False, "Not present in normalized history!"
             sales_history = drink.sales_history
@@ -376,6 +394,7 @@ class StockExchange2(Thread):
         
         return demand
     
+    @timed
     def _normalize_sales(self, drinks):
         """
         Group the sales together for each round. If a drink has less history than others, use the average sales
@@ -441,6 +460,7 @@ class StockExchange2(Thread):
         
         # Normalize all drinks to match the longest history (discard everything after max age)
         # Expect the normalized history is kept in sync, so each round has an entry
+        age = 0
         if min_length < max_length:
             history_to_extend = {}
             for age in range(min_length + 1, max_length + 1):
@@ -462,6 +482,19 @@ class StockExchange2(Thread):
                 average /= count
                 for drink, history in history_to_extend.items():
                     history.insert(0, History(average, timestamp, drink.unit_price, 1.0))
+        
+        # Extend or trim to max size
+        if age < max_length:
+            # Use timestamp of oldest item in first history
+            timestamp = self._normalized_sales_history.values()[0][0].timestamp
+            
+            for _ in range(age, max_length):
+                timestamp -= self._round_time
+                for drink, history in self._normalized_sales_history.items():
+                    history.insert(0, History(1.0, timestamp, drink.unit_price, 1.0))
+                    
+        else:
+            pass
         
         # Output for debug purposes
         if debug_mode:
