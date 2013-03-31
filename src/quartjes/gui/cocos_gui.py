@@ -3,6 +3,11 @@ Graphical user interface using Cocos2D.
 Displays the current prices of all _drinks in a ticker at the bottom. As each
 drink passes the center of the ticker, related information is shown in the
 center of the screen.
+
+TODO
+* Directly update ticker when update is received
+* Create trend overview
+* Make screen look like financial TV show, with nice bar for ticker, channel logo, etc
 """
 from __future__ import print_function
 
