@@ -115,8 +115,8 @@ class StockExchange2Test(unittest.TestCase):
         # Build random sales history
         now = int(time.time())
         min_time = int(now - 10 * self.exchange.get_round_time())
-        price = 10
-        price_factor = 1.0
+        price = 10.0
+        price_factor = 1.2
         drinks = self.exchange._db.get_drinks()
         for _ in range(100):
             rnd_time = float(self.random.randint(min_time, now))
@@ -133,13 +133,16 @@ class StockExchange2Test(unittest.TestCase):
             self.assertIn(d, result, "Drink missing from normalized history")
         
         # Validate data
-        for sales_history in result.values():
+        history_length = None
+        for drink, sales_history in result.items():
             previous_timestamp = None
             for history_item in sales_history:
                 # If sales are present, price and price factor must match
                 if history_item.amount > 0:
-                    self.assertEquals(history_item.price, price, "Price must match")
-                    self.assertEquals(history_item.price_factor, price_factor, "Price factor must match")
+                    self.assertTrue(history_item.price == price or history_item.price == drink.unit_price, 
+                                    "Price must match either drink price or sales price")
+                    self.assertTrue(history_item.price_factor == price_factor or history_item.price_factor == 1.0, 
+                                    "Price factor must match either default price factor or sales price factor")
                 
                 # Interval between items must equal round time
                 if not previous_timestamp is None:
@@ -151,7 +154,11 @@ class StockExchange2Test(unittest.TestCase):
                 
             # Last item must be for current time
             self.assertEqual(int(sales_history[-1].timestamp), now, "Last item must be for current time")
-        
+            
+            # All history should have the same length
+            if not history_length is None:
+                self.assertEqual(len(sales_history), history_length, "All history should have same length")
+            history_length = len(sales_history)
 
     def get_random_drink(self):
         drinks = self.exchange._db.get_drinks()

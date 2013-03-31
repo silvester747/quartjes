@@ -7,7 +7,8 @@ Now uses the sales history to determine price fluctuations.
 
 Todo
 ----
-* 
+* What to do if there is no demand yet 
+* Trigger updates to clients
 
 Current issues
 --------------
@@ -20,7 +21,6 @@ Possible todos
 * Add a twist to mix prices, e.g. first decrease price of popular mixes and
   then suddenly invert price again
 * Automatically adapt max sales age for sales volume.
-* Correct demand for new drinks with limited sales history (use price history to determine age).
 * Maximum sales history in Drink should match max_sales_age
 
 @author: Rob
@@ -211,6 +211,10 @@ class StockExchange2(Thread):
         
         # Determine demand values
         average_demand, demand_std, demand_per_drink = self._calculate_demands(drinks)
+        
+        if demand_per_drink is None:
+            return # No activity, stop for now
+        
         min_demand = max(average_demand - self._maximum_deviation * demand_std, average_demand / self._maximum_price_factor)
         max_demand = min(average_demand + self._maximum_deviation * demand_std, average_demand / self._minimum_price_factor)
         
@@ -299,6 +303,8 @@ class StockExchange2(Thread):
             if isinstance(drink, Mix):
                 drink.update_components_sale()
         
+        self._normalize_sales(drinks)
+        
         total_demand = 0.0
         demand_per_drink = [] # Will contain tuples of (drink, demand)
         demand_values = [] # Only the demand values for standard deviation calculation
@@ -314,8 +320,11 @@ class StockExchange2(Thread):
                 else:
                     drinks_without_sales.append(drink)
         
-        average_demand = total_demand / len(demand_per_drink)
-        std_deviation = numpy.std(demand_values)
+        if len(demand_per_drink) > 0:
+            average_demand = total_demand / len(demand_per_drink)
+            std_deviation = numpy.std(demand_values)
+        else:
+            return 0.0, 0.0, None
 
         for drink in drinks_without_sales:
             demand_per_drink.append((drink, average_demand))
@@ -348,7 +357,9 @@ class StockExchange2(Thread):
         current_time = time.time()
         demand = 0.0
         
-        for sales_item in drink.sales_history:
+        sales_history = self._normalized_sales_history.get(drink)
+        
+        for sales_item in sales_history:
             age = current_time - sales_item.timestamp
             if age < 0: 
                 age = 0
@@ -368,6 +379,8 @@ class StockExchange2(Thread):
         
         An internal cache of the normalized history is kept. It is rebuild at the first run, and kept up to date
         at the end of each round.
+        
+        Mix sales should already be propagated to the components.
         
         Parameters
         ----------
@@ -411,15 +424,36 @@ class StockExchange2(Thread):
                 norm_sales_item._price_factor = history_item._price_factor
                         
         
-        # Find the drink with the longest history
-        max_length = 0
-        oldest_drink = None
+        # Find whether we need to extend the history
+        max_length = int(max_sales_age / self._round_time)
+        min_length = max_length
         for drink, history in self._normalized_sales_history.items():
-            if len(history) > max_length:
-                max_length = len(history)
-                oldest_drink = drink
+            if len(history) < min_length:
+                min_length = len(history)
         
         # Normalize all drinks to match the longest history (discard everything after max age)
+        # Expect the normalized history is kept in sync, so each round has an entry
+        if min_length < max_length:
+            history_to_extend = {}
+            for age in range(min_length + 1, max_length + 1):
+                average = 0.0
+                count = 0
+                timestamp = 0
+                for drink, history in self._normalized_sales_history.items():
+                    if len(history) >= age:
+                        average += history[-age].amount
+                        count += 1
+                        timestamp = history[-age].timestamp
+                    else:
+                        history_to_extend[drink] = history
+                
+                if count == 0:
+                    # End of history
+                    break
+                
+                average /= count
+                for drink, history in history_to_extend.items():
+                    history.insert(0, History(average, timestamp, drink.unit_price, 1.0))
         
         # Output for debug purposes
         if debug_mode:
