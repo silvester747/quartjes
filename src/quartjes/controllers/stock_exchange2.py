@@ -211,6 +211,13 @@ class StockExchange2(Thread):
         if len(drinks) == 0:
             return # Nothing to do here
         
+        # Prepare for demand calculation
+        for drink in drinks:
+            if isinstance(drink, Mix):
+                drink.update_components_sale()
+        
+        self._normalize_sales(drinks)
+        
         # Determine demand values
         average_demand, demand_std, demand_per_drink = self._calculate_demands(drinks)
         
@@ -301,12 +308,6 @@ class StockExchange2(Thread):
         
         """
         
-        for drink in drinks:
-            if isinstance(drink, Mix):
-                drink.update_components_sale()
-        
-        self._normalize_sales(drinks)
-        
         total_demand = 0.0
         demand_per_drink = [] # Will contain tuples of (drink, demand)
         demand_values = [] # Only the demand values for standard deviation calculation
@@ -360,6 +361,11 @@ class StockExchange2(Thread):
         demand = 0.0
         
         sales_history = self._normalized_sales_history.get(drink)
+        if sales_history is None:
+            if debug_mode:
+                print(drink)
+                assert False, "Not present in normalized history!"
+            sales_history = drink.sales_history
         
         for sales_item in sales_history:
             age = current_time - sales_item.timestamp
@@ -528,7 +534,8 @@ if __name__ == "__main__":
     # Do a self test
     import random
     
-    debug_mode = True
+    #debug_mode = True
+    unit_test_mode = True
     install_time_mock()
     
     exchange = StockExchange2()
@@ -552,7 +559,8 @@ if __name__ == "__main__":
         # run for 12 hours
         run_time = 12 * 60 * 60
         runs = run_time / exchange.get_round_time()
-        for _ in range(0, runs):
+        for r in range(0, runs):
+            print("Run %d of %d" % (r + 1, runs))
             for _ in range(0, exchange.get_round_time()):
                 if rng.randint(0, 5) < 2:
                     exchange.sell(randomizer.get_random_drink(), rng.randint(1, 3) * (1 + drink.alc_perc / 10))
