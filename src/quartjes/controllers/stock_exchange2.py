@@ -8,7 +8,9 @@ Now uses the sales history to determine price fluctuations.
 Todo
 ----
 * What to do if there is no demand yet 
+ * Extend normalized history to max_sales_age
 * Trigger updates to clients
+* Extend simulator with add/remove drinks
 
 Current issues
 --------------
