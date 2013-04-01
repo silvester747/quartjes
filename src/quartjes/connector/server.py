@@ -18,7 +18,7 @@ default_port = 1234
 Default port number the server runs on.
 """
 
-stock_exchange_version = 1
+stock_exchange_version = 2
 """
 Version of the stock exchange to use.
 Both version of the stock exchange should work fine. But it might be necessary

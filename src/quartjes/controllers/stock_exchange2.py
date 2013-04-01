@@ -7,7 +7,6 @@ Now uses the sales history to determine price fluctuations.
 
 Todo
 ----
-* Trigger updates to clients
 * Extend simulator with add/remove drinks
 
 Current issues
