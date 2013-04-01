@@ -44,8 +44,11 @@ class TitleLayer(cocos.layer.Layer):
     def __init__(self):
         super(TitleLayer, self).__init__()
         
-        logo = Sprite("cnocbs_logo.png", position=(930,730), scale=0.5)
+        logo = Sprite("cnocbs_logo.png", position=(930,715), scale=0.5, opacity=200)
         self.add(logo)
+        
+        title = Sprite("title.png", position=(0, 680), anchor=(0,0), opacity=200)
+        self.add(title)
         
     def next_round(self):
         pass
