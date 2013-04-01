@@ -1,6 +1,6 @@
 # ----------------------------------------------------------------------------
 # cocos2d
-# Copyright (c) 2008-2011 Daniel Moisset, Ricardo Quesada, Rayentray Tappa,
+# Copyright (c) 2008-2012 Daniel Moisset, Ricardo Quesada, Rayentray Tappa,
 # Lucio Torre
 # All rights reserved.
 #
@@ -56,7 +56,7 @@ http://cocos2d.org
 
 __docformat__ = 'restructuredtext'
 
-__version__ = "0.5.0"
+__version__ = "0.5.5"
 __author__ = "cocos2d team"
 version = __version__
 

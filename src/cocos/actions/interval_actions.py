@@ -1,6 +1,6 @@
 # ----------------------------------------------------------------------------
 # cocos2d
-# Copyright (c) 2008-2011 Daniel Moisset, Ricardo Quesada, Rayentray Tappa,
+# Copyright (c) 2008-2012 Daniel Moisset, Ricardo Quesada, Rayentray Tappa,
 # Lucio Torre
 # All rights reserved.
 #
@@ -321,11 +321,10 @@ class AccelDeccel( IntervalAction ):
         self.other.start()
 
     def update(self, t):
-        ft = (t-0.5) * 12
-        nt = 1./( 1. + math.exp(-ft) )
-
-        self.other.update( nt )
-
+        if t != 1.0:
+            ft = (t - 0.5) * 12
+            t = 1./( 1. + math.exp(-ft) )
+        self.other.update( t )
 
     def __reversed__(self):
         return AccelDeccel( Reverse(self.other) )
@@ -510,7 +509,9 @@ class ScaleBy(ScaleTo):
 
 class Blink( IntervalAction ):
     """Blinks a `CocosNode` object by modifying it's visible attribute
-    
+
+    The action ends with the same visible state than at the start time.
+
     Example::
 
         # Blinks 10 times in 2 seconds
@@ -531,10 +532,13 @@ class Blink( IntervalAction ):
         self.times = times
         self.duration = duration
 
+    def start(self):
+        self.end_invisible = not self.target.visible 
+
     def update(self, t):
         slice = 1 / float( self.times )
         m =  t % slice
-        self.target.visible = (m  >  slice / 2.0)
+        self.target.visible = self.end_invisible ^ (m  <  slice / 2.0)
 
     def __reversed__(self):
         return self

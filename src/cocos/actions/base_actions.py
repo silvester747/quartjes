@@ -1,6 +1,6 @@
 # ----------------------------------------------------------------------------
 # cocos2d
-# Copyright (c) 2008-2011 Daniel Moisset, Ricardo Quesada, Rayentray Tappa,
+# Copyright (c) 2008-2012 Daniel Moisset, Ricardo Quesada, Rayentray Tappa,
 # Lucio Torre
 # All rights reserved.
 #
@@ -914,7 +914,6 @@ class Spawn_Action(Action):
 
     def stop(self):
         for e in self.actions:
-            print 'en el loop, name:', e.name
             e.stop()
 
     def __reversed__(self):

@@ -1,6 +1,6 @@
 # ----------------------------------------------------------------------------
 # cocos2d
-# Copyright (c) 2008-2011 Daniel Moisset, Ricardo Quesada, Rayentray Tappa,
+# Copyright (c) 2008-2012 Daniel Moisset, Ricardo Quesada, Rayentray Tappa,
 # Lucio Torre
 # All rights reserved.
 #
@@ -42,6 +42,7 @@ __version__ = '$Id: resource.py 1078 2007-08-01 03:43:38Z r1chardj0n3s $'
 
 import os
 import math
+import struct
 import weakref
 try:
     from xml.etree import ElementTree
@@ -85,6 +86,7 @@ class Resource(object):
     '''Load some tile mapping resources from an XML file.
     '''
     cache = {}
+
     def __init__(self, filename):
         self.filename = filename
 
@@ -94,14 +96,7 @@ class Resource(object):
         # list of (namespace, Resource) from <requires> tags
         self.requires = []
 
-        filename = self.find_file(filename)
-
-        tree = ElementTree.parse(filename)
-        root = tree.getroot()
-        if root.tag != 'resource':
-            raise ResourceError('document is <%s> instead of <resource>'%
-                root.name)
-        self.handle(root)
+        self.path = self.find_file(filename)
 
     def find_file(self, filename):
         if os.path.isabs(filename):
@@ -111,18 +106,6 @@ class Resource(object):
         path = pyglet.resource.location(filename).path
         return os.path.join(path, filename)
 
-    def resource_factory(self, tag):
-        for child in tag:
-            self.handle(child)
-
-    def requires_factory(self, tag):
-        resource = load(tag.get('file'))
-        self.requires.append((tag.get('namespace', ''), resource))
-
-    factories = {
-        'resource': resource_factory,
-        'requires': requires_factory,
-    }
     @classmethod
     def register_factory(cls, name):
         def decorate(func):
@@ -193,6 +176,20 @@ class Resource(object):
         tree = ElementTree.ElementTree(root)
         tree.write(filename)
 
+    def resource_factory(self, tag):
+        for child in tag:
+            self.handle(child)
+
+    def requires_factory(self, tag):
+        resource = load(tag.get('file'))
+        self.requires.append((tag.get('namespace', ''), resource))
+
+    factories = {
+        'resource': resource_factory,
+        'requires': requires_factory,
+    }
+
+
 _cache = weakref.WeakValueDictionary()
 class _NOT_LOADED(object): pass
 def load(filename):
@@ -206,13 +203,117 @@ def load(filename):
 
     if filename in _cache:
         if _cache[filename] is _NOT_LOADED:
-            raise ResourceError('Loop in XML files loading "%s"'%filename)
+            raise ResourceError('Loop in tile map files loading "%s"'%filename)
         return _cache[filename]
 
     _cache[filename] = _NOT_LOADED
-    obj = Resource(filename)
+    if filename.endswith('.tmx'):
+        obj = load_tmx(filename)
+    else:
+        obj = load_tiles(filename)
     _cache[filename] = obj
     return obj
+
+def load_tiles(filename):
+    '''Load some tile mapping resources from an XML file.
+    '''
+    resource = Resource(filename)
+    tree = ElementTree.parse(resource.path)
+    root = tree.getroot()
+    if root.tag != 'resource':
+        raise ResourceError('document is <%s> instead of <resource>'%
+            root.name)
+    resource.handle(root)
+    return resource
+
+def load_tmx(filename):
+    '''Load some tile mapping resources from a TMX file.
+    '''
+    resource = Resource(filename)
+
+    tree = ElementTree.parse(resource.path)
+    map = tree.getroot()
+    if map.tag != 'map':
+        raise ResourceError('document is <%s> instead of <map>'%
+            map.name)
+
+    width = int(map.attrib['width'])
+    height  = int(map.attrib['height'])
+
+    # XXX this is ASSUMED to be consistent
+    tile_width = int(map.attrib['tilewidth'])
+    tile_height = int(map.attrib['tileheight'])
+
+    # load all the tilesets
+    tilesets = []
+    for tag in map.findall('tileset'):
+        if 'source' in tag.attrib:
+            firstgid = int(tag.attrib['firstgid'])
+            path = resource.find_file(tag.attrib['source'])
+            with open(path) as f:
+                tag = ElementTree.fromstring(f.read())
+        else:
+            firstgid = int(tag.attrib['firstgid'])
+
+        name = tag.attrib['name']
+
+        for c in tag.getchildren():
+            if c.tag == "image":
+                # create a tileset from the image atlas
+                path = resource.find_file(c.attrib['source'])
+                tileset = TileSet.from_atlas(name, firstgid, path, tile_width, tile_height)
+                # TODO consider adding the individual tiles to the resource?
+                tilesets.append(tileset)
+                resource.add_resource(name, tileset)
+            elif c.tag == 'tile':
+                # add properties to tiles in the tileset
+                gid = tileset.firstgid + int(c.attrib['id'])
+                tile = tileset[gid]
+                props = c.find('properties')
+                if props is None:
+                    continue
+                for p in props.findall('property'):
+                    # store additional properties.
+                    name = p.attrib['name']
+                    value = p.attrib['value']
+                    # TODO consider more type conversions?
+                    if value.isdigit():
+                        value = int(value)
+                    tile.properties[name] = value
+
+    # now load all the layers
+    for layer in map.findall('layer'):
+        data = layer.find('data')
+        if data is None:
+            raise ValueError('layer %s does not contain <data>' % layer.name)
+
+        data = data.text.strip()
+        data = data.decode('base64').decode('zlib')
+        data = struct.unpack('<%di' % (len(data)/4,), data)
+        assert len(data) == width * height
+
+        cells = [[None] * height for x in range(width)]
+        for n, gid in enumerate(data):
+            if gid < 1:
+                tile = None
+            else:
+                # UGH
+                for ts in tilesets:
+                    if gid in ts:
+                        tile = ts[gid]
+                        break
+            i = n % width
+            j = height - (n // width + 1)
+            cells[i][j] = RectCell(i, j, tile_width, tile_height, {}, tile)
+
+        id = layer.attrib['name']
+
+        m = RectMapLayer(id, tile_width, tile_height, cells, None, {})
+        m.visible = int(layer.attrib.get('visible', 1))
+
+        resource.add_resource(id, m)
+
+    return resource
 
 #
 # XML PROPERTY PARSING
@@ -388,6 +489,21 @@ class TileSet(dict):
         self[id] = Tile(id, properties, image)
         return self[id]
 
+    @classmethod
+    def from_atlas(cls, name, firstgid, file, tile_width, tile_height):
+        image = pyglet.image.load(file)
+        rows = image.height / tile_height
+        columns = image.width / tile_width
+        image_grid = pyglet.image.ImageGrid(image, rows, columns)
+        atlas = pyglet.image.TextureGrid(image_grid)
+        id = firstgid
+        ts = cls(name, {})
+        ts.firstgid = firstgid
+        for j in range(rows-1, -1, -1):
+            for i in range(columns):
+                ts[id] = Tile(id, {}, atlas[j, i])
+                id += 1
+        return ts
 
 #
 # RECT AND HEX MAPS
@@ -585,7 +701,7 @@ class MapLayer(layer.ScrollableLayer):
         for col in self.cells:
             for cell in col:
                 for k in requirements:
-                    if cell.properties.get(k) != requirements[k]:
+                    if cell.get(k) != requirements[k]:
                         break
                 else:
                     r.append(cell)
@@ -755,6 +871,8 @@ class RectMapCollider(object):
     '''This class implements collisions between a moving rect object and a
     tilemap.
     '''
+    resting = False
+
     def collide_bottom(self, dy):
         pass
 
@@ -776,6 +894,7 @@ class RectMapCollider(object):
 
         Returns the (possibly modified) (dx, dy)
         '''
+        self.resting = False
         tested = set()
         for cell in map.get_in_region(*(new.bottomleft + new.topright)):
             if cell is None or cell.tile is None:
@@ -815,8 +934,7 @@ class RectMapCollider(object):
 
         Returns the (possibly modified) (dx, dy)
         '''
-        g = cell.tile.properties.get
-        self.resting = False
+        g = cell.get
         if (g('top') and last.bottom >= cell.top and new.bottom < cell.top):
             dy = last.y - new.y
             new.bottom = cell.top

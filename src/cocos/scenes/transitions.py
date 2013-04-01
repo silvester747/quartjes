@@ -1,6 +1,7 @@
 # ----------------------------------------------------------------------------
 # cocos2d
-# Copyright (c) 2008 Daniel Moisset, Ricardo Quesada, Rayentray Tappa, Lucio Torre
+# Copyright (c) 2008-2012 Daniel Moisset, Ricardo Quesada, Rayentray Tappa,
+# Lucio Torre
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -8,7 +9,7 @@
 #
 #   * Redistributions of source code must retain the above copyright
 #     notice, this list of conditions and the following disclaimer.
-#   * Redistributions in binary form must reproduce the above copyright 
+#   * Redistributions in binary form must reproduce the above copyright
 #     notice, this list of conditions and the following disclaimer in
 #     the documentation and/or other materials provided with the
 #     distribution.
@@ -35,6 +36,7 @@
 __docformat__ = 'restructuredtext'
 
 import pyglet
+from pyglet.gl import *
 
 from cocos.actions import *
 import cocos.scene as scene
@@ -147,6 +149,11 @@ class TransitionScene(scene.Scene):
         self.in_scene.visible = False
         self.out_scene.visible = False
 
+    def visit(self):
+        # preserve modelview matrix
+        glPushMatrix()
+        super(TransitionScene, self).visit()
+        glPopMatrix()
         
 class RotoZoomTransition(TransitionScene):
     '''Rotate and zoom out the outgoing scene, and then rotate and zoom in the incoming 
