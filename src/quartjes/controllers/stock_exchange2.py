@@ -460,7 +460,6 @@ class StockExchange2(Thread):
         
         # Normalize all drinks to match the longest history (discard everything after max age)
         # Expect the normalized history is kept in sync, so each round has an entry
-        age = 0
         if min_length < max_length:
             history_to_extend = {}
             for age in range(min_length + 1, max_length + 1):
@@ -484,7 +483,8 @@ class StockExchange2(Thread):
                     history.insert(0, History(average, timestamp, drink.unit_price, 1.0))
         
         # Extend or trim to max size
-        if age < max_length:
+        current_length = len(self._normalized_sales_history.values()[0])
+        if current_length < max_length:
             # Use timestamp of oldest item in first history
             timestamp = self._normalized_sales_history.values()[0][0].timestamp
             
@@ -493,8 +493,9 @@ class StockExchange2(Thread):
                 for drink, history in self._normalized_sales_history.items():
                     history.insert(0, History(1.0, timestamp, drink.unit_price, 1.0))
                     
-        else:
-            pass
+        elif current_length > max_length:
+            for history in self._normalized_sales_history.values():
+                del history[:-max_length]
         
         # Output for debug purposes
         if debug_mode:
