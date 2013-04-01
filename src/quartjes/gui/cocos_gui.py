@@ -20,7 +20,9 @@ import cocos.director
 import cocos.text
 import cocos.cocosnode
 import cocos.layer.base_layers
-from cocos.actions import Repeat, Waves3D, Delay, CallFunc, MoveTo, ScaleTo, Hide, RotateBy, Shaky3D
+from cocos.actions import Delay, CallFunc, MoveTo, ScaleTo, Hide
+from cocos.sprite import Sprite
+import pyglet.resource
 import pyglet.text
 from pyglet.gl import glPushMatrix, glPopMatrix
 from quartjes.connector.client import ClientConnector
@@ -31,6 +33,9 @@ import random
 
 debug_mode = False
 
+pyglet.resource.path = ["@quartjes.resources"]
+pyglet.resource.reindex()
+
 class TitleLayer(cocos.layer.Layer):
     """
     Simple layer to display a title at the top of the display.
@@ -39,35 +44,14 @@ class TitleLayer(cocos.layer.Layer):
     def __init__(self):
         super(TitleLayer, self).__init__()
         
-        self._title_label = cocos.text.Label("QuartjesAvond",
-                                      font_name='Times New Roman',
-                                      font_size=80,
-                                      anchor_x='center', anchor_y='top')
-        self._title_label.position = (512, 768)
-        self.add(self._title_label)
-        self._title_label.do(Repeat(Waves3D(duration=200, waves=100)))
+        logo = Sprite("cnocbs_logo.png", position=(930,730), scale=0.5)
+        self.add(logo)
         
-        self._next_round_label = cocos.text.Label("Next Round!",
-                                      font_name='Times New Roman',
-                                      font_size=80,
-                                      anchor_x='center', anchor_y='top')
-        self._next_round_label.position = (512, 768)
-        self._next_round_label.scale = 0
-        self.add(self._next_round_label)
-        
-        self._waiting_for_next_round = False
-    
     def next_round(self):
-        self._title_label.do((RotateBy(360, 1) | ScaleTo(0, 1)))
-        self._next_round_label.do((RotateBy(360, 1) | ScaleTo(1, 1)) + Shaky3D(duration=10))
-        self._waiting_for_next_round = True
+        pass
 
     def next_round_started(self):
-        if not self._waiting_for_next_round:
-            return
-        self._title_label.do((RotateBy(360, 1) | ScaleTo(1, 1)))
-        self._next_round_label.do((RotateBy(360, 1) | ScaleTo(0, 1)))
-        self._waiting_for_next_round = False
+        pass
 
 
 class BottomTicker(cocos.layer.Layer):
@@ -90,7 +74,7 @@ class BottomTicker(cocos.layer.Layer):
         self._ticker_y = 0
         
         # Y coordinate of the focus ticker. Measured from the bottom of the text labels.
-        self._focus_y = 40
+        self._focus_y = 45
         
         # Percentage of the path the drink has focus.
         self._focus_length = 0.2
@@ -127,7 +111,15 @@ class BottomTicker(cocos.layer.Layer):
         
         # Current round. Used to suppress old actions.
         self._round_number = 0
-
+        
+        # Add background layers
+        background_layer = cocos.layer.ColorLayer(255, 128, 0, 200, width=screen_width, height=45)
+        self.add(background_layer)
+        
+        background_layer = cocos.layer.ColorLayer(255, 128, 0, 100, width=screen_width, height=90)
+        background_layer.position = (0, 45)
+        self.add(background_layer)
+        
         self._calculate_path()
         self._next_drink()
 
