@@ -48,7 +48,7 @@ from twisted.internet import reactor, threads
 from threading import Thread
 from quartjes.connector.services import ServiceInterface
 import quartjes.controllers.database
-import quartjes.controllers.stock_exchange
+import quartjes.controllers.stock_exchange2
 
 class ClientConnector(object):
     """
@@ -144,7 +144,7 @@ class ClientConnector(object):
         if not self._host:
             print("No host selected, starting local instance.")
             self._database = quartjes.controllers.database.database
-            self._stock_exchange = quartjes.controllers.stock_exchange.StockExchange()
+            self._stock_exchange = quartjes.controllers.stock_exchange2.StockExchange2()
         else:
             reactor.callLater(0, self._connect) #@UndefinedVariable
             if not reactor.running:             #@UndefinedVariable
