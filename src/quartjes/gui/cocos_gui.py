@@ -5,13 +5,24 @@ drink passes the center of the ticker, related information is shown in the
 center of the screen.
 
 TODO
-* Directly update ticker when update is received
 * Create trend overview
 * Make screen look like financial TV show, with nice bar for ticker, channel logo, etc
 """
 from __future__ import print_function
 
 __author__ = "Rob van der Most"
+
+debug_mode = False
+
+# Do pyglet settings
+import pyglet
+
+if debug_mode:
+    pyglet.options["debug_gl"] = True
+    pyglet.options["debug_gl_trace"] = True
+    #pyglet.options["debug_gl_trace_args"] = True
+    #pyglet.options["debug_graphics_batch"] = True
+
 
 import argparse
 from axel import Event
@@ -20,7 +31,7 @@ import cocos.director
 import cocos.text
 import cocos.cocosnode
 import cocos.layer.base_layers
-from cocos.actions import Delay, CallFunc, MoveTo, ScaleTo, Hide
+from cocos.actions import Delay, CallFunc, MoveTo, ScaleTo, FadeOut, FadeIn
 from cocos.sprite import Sprite
 import pyglet.resource
 import pyglet.text
@@ -30,8 +41,6 @@ from quartjes.models.drink import Mix
 import quartjes.gui.mix_drawer as mix_drawer
 import quartjes.gui.history_graph as history_graph
 import random
-
-debug_mode = False
 
 pyglet.resource.path = ["@quartjes.resources"]
 pyglet.resource.reindex()
@@ -50,12 +59,6 @@ class TitleLayer(cocos.layer.Layer):
         title = Sprite("title.png", position=(0, 680), anchor=(0,0), opacity=200)
         self.add(title)
         
-    def next_round(self):
-        pass
-
-    def next_round_started(self):
-        pass
-
 
 class BottomTicker(cocos.layer.Layer):
     """
@@ -123,6 +126,7 @@ class BottomTicker(cocos.layer.Layer):
         background_layer.position = (0, 45)
         self.add(background_layer)
         
+        # Start ticking
         self._calculate_path()
         self._next_drink()
 
@@ -179,13 +183,13 @@ class BottomTicker(cocos.layer.Layer):
         time = distance / self._scroll_speed
         self._path.append(((x, y), time))
         
-    def _add_animation(self, label, drink):
+    def _add_animation(self, node, drink):
         """
         Construct an animation path for the label.
         """
-        label.scale = 0.5
+        node.scale = 0.5
         
-        content_offset = (label.scale * label.element.content_width + self._drink_distance) / 2
+        content_offset = (node.scale * node.label.element.content_width + self._drink_distance) / 2
         
         # Make sure only one item has focus
         minimum_offset = ((self._focus_length + self._focus_ramp) * self._screen_width) / 2
@@ -195,7 +199,7 @@ class BottomTicker(cocos.layer.Layer):
         content_time = float(content_offset) / self._scroll_speed
         
         # Set start position
-        label.position = (self._screen_width + content_offset, self._ticker_y)
+        node.position = (self._screen_width + content_offset, self._ticker_y)
         
         # Construct the path
         # Move to beginning of screen
@@ -232,13 +236,12 @@ class BottomTicker(cocos.layer.Layer):
         self.do(spawn_actions)
         
         # Start animation
-        label.do(move_actions + CallFunc(self._safe_kill, label))
+        node.do(move_actions + CallFunc(self._safe_kill, node))
 
 
     def update_drinks(self, drinks):
         """
-        Replace the current list of drinks to show on the ticker. Will not remove
-        already visible drinks.
+        Update the drinks in the ticker. Visible drinks are directly updated.
         """
         if debug_mode:
             print("Receiving update")
@@ -246,6 +249,23 @@ class BottomTicker(cocos.layer.Layer):
         if cur_drink >= len(drinks):
             cur_drink = 0
         self._drinks, self._current_drink_index = drinks, cur_drink
+        
+        pyglet.clock.schedule_once(self._update_visible_drinks, 0)
+       
+    def _update_visible_drinks(self, dt):
+        nodes = self.get_children()
+    
+        for node in nodes:
+            if isinstance(node, TickerDrinkNode):
+                if node.drink is None:
+                    continue
+                for drink in self._drinks:
+                    if drink.id == node.drink.id:
+                        node.update_drink(drink)
+                        break
+                else:
+                    # No longer present
+                    node.hide()
 
     def _safe_kill(self, child):
         """
@@ -268,7 +288,6 @@ class BottomTicker(cocos.layer.Layer):
         """
         Prepare the next drink on the list to be shown on screen.
         """
-        text = ""
         drink = None
 
         if self._drinks != None and len(self._drinks) > 0:
@@ -276,24 +295,53 @@ class BottomTicker(cocos.layer.Layer):
             if self._current_drink_index >= len(self._drinks):
                 self._current_drink_index = 0
             drink = self._drinks[self._current_drink_index]
-            text = "%s - %d" % (drink.name, drink.current_price_quartjes)
 
-        next_label = cocos.text.Label(text,
-                                 font_name='Times New Roman',
-                                 font_size=64,
-                                 anchor_x='center', anchor_y='bottom')
-        self.add(next_label)
         
-        self._add_animation(next_label, drink)
+        drink_node = TickerDrinkNode(drink)
+        self.add(drink_node)
+        self._add_animation(drink_node, drink)
         
     def next_round(self):
         self._round_number += 1
-        
-        nodes = self.get_children()
-        
-        for node in nodes:
-            node.do(ScaleTo(0, 1) + Hide() + CallFunc(self._safe_kill, node))
 
+class TickerDrinkNode(cocos.cocosnode.CocosNode):
+    """
+    Cocos node representing a drink on the ticker.
+    """
+    
+    def __init__(self, drink):
+        super(TickerDrinkNode, self).__init__()
+        
+        self.drink = drink
+        self._next_z_level = 1
+        self._set_label()
+        
+    def _set_label(self):
+        if self.drink is None:
+            text = ""
+        else:
+            text = "%s - %d" % (self.drink.name, self.drink.current_price_quartjes)
+            
+        self.label = cocos.text.Label(text,
+                             font_name='Times New Roman',
+                             font_size=64,
+                             anchor_x='center', anchor_y='bottom')
+        self.add(self.label, z=self._next_z_level)
+        self._next_z_level += 1
+    
+    def update_drink(self, drink):
+        """
+        Update the drink shown.
+        """
+        self.label.do(FadeOut(1))
+        self.drink = drink
+        self._set_label()
+        self.label.do(FadeIn(1))
+    
+    def hide(self):
+        self.label.do(FadeOut(1))
+            
+            
 
 class DrinkLayer(cocos.layer.base_layers.Layer):
     """
@@ -682,7 +730,6 @@ class CocosGui(object):
         self._ticker_layer.next_round()
         #self._drink_layer.clear_drink()
         self._drink_layer.show_explanation()
-        self._title_layer.next_round()
             
 def parse_command_line():
     """
