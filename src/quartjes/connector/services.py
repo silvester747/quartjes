@@ -17,6 +17,9 @@ During registration a service name is given, which remote clients must use to ga
 the service.
 
 For an example, please see :class:`TestRemoteService`.
+
+FIXME: Need to make proper support for multiple listeners for an event. For now consider
+only one instance of each service interface.
 """
 
 __author__ = "Rob van der Most"
@@ -177,7 +180,7 @@ def subscribe_to_remote_event(service, service_name, event_name, listener, facto
 
 class RemoteEventRegistry(object):
     """
-    Registry for keeping track of remote subscribers to an event.
+    Registry for keeping track of remote subscribers to an event. Server side implementation.
     
     Parameters
     ----------
@@ -305,7 +308,7 @@ class ServiceInterface(object):
     
     """
     
-    __slots__ = ["_client_factory", "_service_name"]
+    __slots__ = ["_client_factory", "_service_name", "_events"]
     
     def __init__(self, client_factory, service_name):
         """
@@ -316,6 +319,7 @@ class ServiceInterface(object):
         """
         self._client_factory = client_factory
         self._service_name = service_name
+        self._events = {}
 
     def __getattr__(self, name):
         """
@@ -387,7 +391,15 @@ class ServiceInterface(object):
         TimeoutError
             A timeout occurred in the request to the server.
         """
-        self._client_factory.subscribe(self._service_name, name, handler)
+        
+        #FIXME: This approach does not work if there is more than one instance
+        # of the service interface. Then one will lose updates
+        event_list = self._events.get(name, None)
+        if event_list is None:
+            event_list = Event()
+            self._events[name] = event_list
+            self._client_factory.subscribe(self._service_name, name, event_list)
+        event_list += handler
 
     def operator_handler(name): #@NoSelf
         def handler(self, *pargs, **kwargs):
