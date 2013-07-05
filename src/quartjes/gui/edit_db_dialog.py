@@ -37,10 +37,11 @@ class edit_db_dialog(Frame):
         master = Tk()
         drink_dialog(master,d)
         master.wait_window()
-                
-        self.drinks.append(d)
+               
+        # Do not modify listbox yet, wait for incoming update 
+        #self.drinks.append(d)
         self.master.conn.database.add(d)
-        self.update_listbox()
+        #self.update_listbox()
 
     def add_mix(self):
         mix = Mix()
@@ -49,7 +50,10 @@ class edit_db_dialog(Frame):
         mix_dialog(master,mix)
         master.wait_window()
 
+        # Do not modify listbox yet, wait for incoming update 
+        #self.drinks.append(mix)
         self.master.conn.database.add(mix)
+        #self.update_listbox()
 
     def edit_drink(self):        
         selection = self.lb_drinks.curselection()
@@ -64,12 +68,16 @@ class edit_db_dialog(Frame):
                 mix_dialog(master,drink)
             master.wait_window()
             self.master.conn.database.update(drink)
+            self.update_listbox()
 
     def remove_drink(self):
         selection = self.lb_drinks.curselection()
         if len(selection) > 0:
             selected = int(selection[0])            
+            
             self.master.conn.database.remove(self.drinks[selected])
+            del self.drinks[selected]
+            self.update_listbox()
             
     def drinks_update_listener(self,drinks):
         self.drinks = drinks
