@@ -18,6 +18,8 @@ class drink_dialog(Frame):
         self.pack(padx = 20, pady = 20)
         self.createWidgets()
         self.reset_object_values()
+        
+        self.master.save_drink = False
 
     def reset_object_values(self):
         self.temp_color = self.drink.color
@@ -35,6 +37,7 @@ class drink_dialog(Frame):
         self.b_color.config(bg = color[1])
 
     def cancel(self):
+        self.master.save_drink = False
         self.master.destroy()
 
     def save(self):
@@ -43,6 +46,7 @@ class drink_dialog(Frame):
         for tag in self.tags[1:]:
             setattr(self.drink, tag, float(self.__dict__["e_" + tag].get()))
 
+        self.master.save_drink = True
         self.master.destroy()
 
     def createWidgets(self):

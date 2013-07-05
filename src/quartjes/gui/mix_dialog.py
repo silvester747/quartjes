@@ -21,6 +21,8 @@ class mix_dialog(Frame):
         self.create_widgets()
         self.reset_values()
         self.pack()
+        
+        self.master.save_drink = False
 
     def reset_values(self):
         for drink in self.master.drinks:
@@ -53,12 +55,14 @@ class mix_dialog(Frame):
             lb.insert(END,d.name)
 
     def cancel(self):
+        self.master.save_drink = False
         self.mix.drinks = self.orig_mix_drinks_list
         self.mix.update_properties()
         self.master.destroy()
 
     def save(self):
         self.mix.name = self.e_mixname.get()
+        self.master.save_drink = True
         self.master.destroy()
 
     def create_widgets(self):
