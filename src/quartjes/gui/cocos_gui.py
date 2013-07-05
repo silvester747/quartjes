@@ -266,6 +266,8 @@ class BottomTicker(cocos.layer.Layer):
                 else:
                     # No longer present
                     node.hide()
+        
+        self.on_focus_changed(self.focussed_drink)
 
     def _safe_kill(self, child):
         """
@@ -592,7 +594,7 @@ class CocosGui(object):
     """
 
     def __init__(self, hostname=None, port=1234, width=1024, height=768,
-                 fullscreen=True):
+                 fullscreen=True, explanation_interval=20):
         """
         Set up all parameters and objects for the GUI.
         """
@@ -602,6 +604,7 @@ class CocosGui(object):
         self._hostname = hostname
         self._port = port
 
+        self._explanation_interval = explanation_interval
         self._refresh_ticker_on_update = True
 
         self._ticker_layer = None
@@ -610,6 +613,7 @@ class CocosGui(object):
         self._mix_layer = None
 
         self._drinks = None
+        self._round_count = 0
 
     def start(self):
         """
@@ -637,8 +641,10 @@ class CocosGui(object):
         self._drinks = self._connector.database.get_drinks()
         random.shuffle(self._drinks)
 
-        self._connector.database.on_drinks_updated += self._update_drinks
-        self._connector.stock_exchange.on_next_round += self._next_round
+        tmp = self._connector.database.on_drinks_updated 
+        tmp += self._update_drinks
+        tmp = self._connector.stock_exchange.on_next_round 
+        tmp += self._next_round
 
         print()
         print("Initializing graphics...")
@@ -727,9 +733,11 @@ class CocosGui(object):
             self._ticker_layer.update_drinks(self._drinks)
 
     def _next_round(self):
-        self._ticker_layer.next_round()
-        #self._drink_layer.clear_drink()
-        self._drink_layer.show_explanation()
+        self._round_count += 1
+        self._round_count %= self._explanation_interval
+        if self._round_count == 0:
+            self._ticker_layer.next_round()
+            self._drink_layer.show_explanation()
             
 def parse_command_line():
     """

@@ -37,7 +37,8 @@ if __name__ == "__main__":
 
     update_drinks(database.get_drinks())
 
-    database.on_drinks_updated += update_drinks
+    tmp = database.on_drinks_updated 
+    tmp += update_drinks
 
     while True:
         rand_pos = random.randint(0, max_position)

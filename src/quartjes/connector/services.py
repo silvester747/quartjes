@@ -304,6 +304,9 @@ class ServiceInterface(object):
         Name of the service to provide an interface to.
     
     """
+    
+    __slots__ = ["_client_factory", "_service_name"]
+    
     def __init__(self, client_factory, service_name):
         """
         Construct a new service interface.

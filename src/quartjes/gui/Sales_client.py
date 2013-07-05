@@ -31,6 +31,8 @@ class Sales_client(Frame):
                 self.conn.host = str(self.e_server_hostname.get())
                 self.conn.port = int(self.e_server_port.get())
             except:
+                import traceback
+                traceback.print_exc()
                 pass                
             
             self.conn.start()
@@ -58,9 +60,11 @@ class Sales_client(Frame):
         self.frame1 = Frame(self)
         
         Label(self.frame1, text="Server hostname/IP:",font = self.f1).pack(side=LEFT,fill=X,expand=1)        
-        self.e_server_hostname = Entry(self.frame1,font = self.f1).pack(side=LEFT,fill=X,expand=1)
+        self.e_server_hostname = Entry(self.frame1,font = self.f1)
+        self.e_server_hostname.pack(side=LEFT,fill=X,expand=1)
         Label(self.frame1, text="Port:",font = self.f1).pack(side=LEFT,fill=X,expand=1)
-        self.e_server_port = Entry(self.frame1, font = self.f1).pack(side=LEFT,fill=X,expand=1)
+        self.e_server_port = Entry(self.frame1, font = self.f1)
+        self.e_server_port.pack(side=LEFT,fill=X,expand=1)
          
         self.b_connect_to_server = Button(self.frame1, text = "Connect to server", bg="#ff0000", activebackground="#ff5555", command =  self.connect_to_server, font = self.f1)
         self.b_connect_to_server.pack(side=LEFT,fill=X,expand=1,padx=10)
