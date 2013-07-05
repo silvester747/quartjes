@@ -267,7 +267,7 @@ class BottomTicker(cocos.layer.Layer):
                     # No longer present
                     node.hide()
         
-        self.on_focus_changed(self.focussed_drink)
+        self._set_focussed_drink(self.focussed_drink, self._round_number)
 
     def _safe_kill(self, child):
         """
@@ -283,6 +283,16 @@ class BottomTicker(cocos.layer.Layer):
         Update the currently focussed drink and notify all listeners.
         """
         if round_nr == self._round_number:
+            
+            # Make sure we have the latest instance
+            if not drink is None:
+                for tmp_drink in self._drinks:
+                    if tmp_drink.id == drink.id:
+                        drink = tmp_drink
+                        break
+                else:
+                    drink = None
+            
             self.focussed_drink = drink
             self.on_focus_changed(drink)
 
