@@ -23,7 +23,7 @@ class edit_db_dialog(Frame):
 
         # FIXME
         tmp = self.master.conn.database.on_drinks_updated 
-        tmp += self.db_update_listener
+        tmp += self.drinks_update_listener
 
         self.createWidgets()
 
@@ -72,6 +72,7 @@ class edit_db_dialog(Frame):
             self.master.conn.database.remove(self.drinks[selected])
             
     def drinks_update_listener(self,drinks):
+        self.drinks = drinks
         self.update_listbox()
 
     def update_listbox(self):
