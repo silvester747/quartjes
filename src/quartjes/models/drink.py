@@ -46,7 +46,7 @@ class Drink(QuartjesBaseClass):
     Default color for drinks.
     """
 
-    def __init__(self, name="Unnamed", alc_perc = 0.0, color = None, unit_price = 0.70, price_factor = 1.0, unit_amount = 200):
+    def __init__(self, name="Unnamed", alc_perc = 0.0, color = DEFAULT_COLOR, unit_price = 0.70, price_factor = 1.0, unit_amount = 200):
         super(Drink, self).__init__()
         self._name = name
         self._alc_perc = alc_perc
