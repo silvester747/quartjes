@@ -25,7 +25,7 @@ class drink_dialog(Frame):
         self.b_color.config(bg = hexcolor)
 
         for tag in self.tags:
-            text = self.drink.__dict__[tag]
+            text = getattr(self.drink, tag)
             self.__dict__["e_" + tag].delete(0,END)
             self.__dict__["e_" + tag].insert(END,text)
 
@@ -41,7 +41,7 @@ class drink_dialog(Frame):
         self.drink.color = self.temp_color
         self.drink.name = self.e_name.get()
         for tag in self.tags[1:]:
-            self.drink.__dict__[tag] = float(self.__dict__["e_" + tag].get())
+            setattr(self.drink, tag, float(self.__dict__["e_" + tag].get()))
 
         self.master.destroy()
 
