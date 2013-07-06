@@ -164,7 +164,7 @@ class Drink(QuartjesBaseClass):
         Historic prices of this drink. Tuple of :class:`History`.
         You should not modify this property directly.
         """
-        return tuple(self._price_history)
+        return tuple((History(data=data) for data in self._price_history))
     
     @property
     def sales_history(self):
@@ -172,7 +172,7 @@ class Drink(QuartjesBaseClass):
         History of sales for this drink. Tuple of :class:`History`.
         You should not modify this property directly.
         """
-        return tuple(self._sales_history)
+        return tuple((History(data=data) for data in self._sales_history))
     
     @property
     def current_price(self):
@@ -216,8 +216,7 @@ class Drink(QuartjesBaseClass):
         if not price:
             price = self.current_price
         
-        History(timestamp=timestamp, price=price)
-        self._price_history.append(History(timestamp=timestamp, price=price))
+        self._price_history.append(History(timestamp=timestamp, price=price).data)
         if len(self._price_history) > self.MAX_PRICE_HISTORY:
             self._price_history = self._price_history[-self.MAX_PRICE_HISTORY:]
 
@@ -241,7 +240,7 @@ class Drink(QuartjesBaseClass):
         if not price_factor:
             price_factor = self.price_factor
         
-        self._sales_history.append(History(amount, timestamp, price, price_factor))
+        self._sales_history.append(History(None, amount, timestamp, price, price_factor).data)
         if len(self._sales_history) > self.MAX_SALES_HISTORY:
             self._sales_history = self._sales_history[-self.MAX_SALES_HISTORY:]
 
@@ -337,7 +336,7 @@ class Mix(Drink):
         """
         new_last_update_time = 0
         parts = len(self._drinks)
-        for history_item in self._sales_history:
+        for history_item in (History(data=data) for data in self._sales_history):
             if history_item.timestamp > self._last_component_sales_update:
                 for component in self._drinks:
                     component.add_sales_history(history_item.amount / parts, history_item.timestamp, history_item.price / parts, history_item.price_factor)
@@ -375,11 +374,14 @@ class History(object):
     price_factor
     """
     
-    def __init__(self, amount=None, timestamp=None, price=None, price_factor=None):
-        self._amount = amount
-        self._timestamp = timestamp
-        self._price = price
-        self._price_factor = price_factor
+    def __init__(self, data=None, amount=None, timestamp=None, price=None, price_factor=None):
+        if not data is None:
+            self._amount, self._timestamp, self._price, self._price_factor = data
+        else:
+            self._amount = amount
+            self._timestamp = timestamp
+            self._price = price
+            self._price_factor = price_factor
     
     @property
     def amount(self):
@@ -408,6 +410,13 @@ class History(object):
         Price factor at the moment.
         """
         return self._price_factor
+    
+    @property
+    def data(self):
+        """
+        Internal short representation of the data as a tuple.
+        """
+        return (self._amount, self._timestamp, self._price, self._price_factor)
 
 if __name__ == "__main__":
     d1 = Drink('cola',color = (0,0,0),alc_perc = 0,unit_price = 0.70, unit_amount = 200)

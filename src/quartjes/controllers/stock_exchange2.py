@@ -479,7 +479,7 @@ class StockExchange2(Thread):
                 
                 average /= count
                 for drink, history in history_to_extend.items():
-                    history.insert(0, History(average, timestamp, drink.unit_price, 1.0))
+                    history.insert(0, History(None, average, timestamp, drink.unit_price, 1.0))
         
         # Extend or trim to max size
         current_length = len(self._normalized_sales_history.values()[0])
@@ -490,7 +490,7 @@ class StockExchange2(Thread):
             for _ in range(age, max_length):
                 timestamp -= self._round_time
                 for drink, history in self._normalized_sales_history.items():
-                    history.insert(0, History(1.0, timestamp, drink.unit_price, 1.0))
+                    history.insert(0, History(None, 1.0, timestamp, drink.unit_price, 1.0))
                     
         elif current_length > max_length:
             for history in self._normalized_sales_history.values():
