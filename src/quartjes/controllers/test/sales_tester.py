@@ -4,6 +4,8 @@ from quartjes.connector.client import ClientConnector
 from quartjes.models.drink import Mix
 
 
+from meliae import scanner
+
 __author__="rob"
 __date__ ="$Jul 3, 2011 10:45:28 AM$"
 
@@ -18,6 +20,8 @@ if __name__ == "__main__":
 
     current_drinks = {}
     max_position = 0
+    
+    mem_counter = 0
 
     def update_drinks(drinks):
         global current_drinks
@@ -32,7 +36,10 @@ if __name__ == "__main__":
         
         current_drinks, max_position = new_drinks, position
         
-        #print(current_drinks)
+        # Dump memory map at this point
+        global mem_counter
+        mem_counter += 1
+        scanner.dump_all_objects('memory%04d.json' % mem_counter)
             
 
     update_drinks(database.get_drinks())
