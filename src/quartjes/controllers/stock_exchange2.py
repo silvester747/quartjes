@@ -108,7 +108,7 @@ class StockExchange2(Thread):
         self._round_time = 20
         
         # Reference to the database
-        self._db = quartjes.controllers.database.database
+        self._db = quartjes.controllers.database.default_database()
         
         # Function used to change weight of demand over time.
         self._demand_time_correction = default_demand_time_correction

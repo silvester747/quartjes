@@ -143,7 +143,7 @@ class ClientConnector(object):
         """
         if not self._host:
             print("No host selected, starting local instance.")
-            self._database = quartjes.controllers.database.database
+            self._database = quartjes.controllers.database.default_database()
             self._stock_exchange = quartjes.controllers.stock_exchange2.StockExchange2()
         else:
             reactor.callLater(0, self._connect) #@UndefinedVariable

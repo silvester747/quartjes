@@ -401,16 +401,25 @@ class Database:
                 if self.db._drink_dirty:
                     self.db._store()
 
-database = Database()
+_database = Database()
 '''
 Singleton reference to the database.
 '''
+
+def default_database():
+    """
+    Get a reference to the active database.
+    """
+    global _database
+    if _database is None:
+        _database = Database()
+    return _database
 
 if __name__ == "__main__":
     print "Running self test"
      
     
-    for drink in database.get_drinks():
+    for drink in default_database().get_drinks():
         print drink
 
     print "Selling price = " + str(drink.sellprice()) + " euro"

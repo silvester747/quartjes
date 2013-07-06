@@ -99,7 +99,7 @@ def run_server():
     """
     from quartjes.controllers.stock_exchange import StockExchange
     from quartjes.controllers.stock_exchange2 import StockExchange2
-    from quartjes.controllers.database import database
+    from quartjes.controllers.database import default_database
     from quartjes.controllers.random_mixer import run_random_mixer
     
     server = ServerConnector(default_port)
@@ -110,7 +110,7 @@ def run_server():
     else:
         exchange = StockExchange2()
         server.register_service(exchange, "stock_exchange")
-    server.register_service(database, "database")
+    server.register_service(default_database(), "database")
     run_random_mixer()
     server.start()
     print("Server started on port %i" % default_port)

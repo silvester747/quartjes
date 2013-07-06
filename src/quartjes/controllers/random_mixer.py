@@ -2,7 +2,7 @@
 Server component adding random mixes at random moments
 """
 
-from quartjes.controllers.database import database
+from quartjes.controllers.database import default_database
 from quartjes.models.drink import Mix
 import random
 import time
@@ -21,7 +21,7 @@ def create_random_mix():
     Generate a random mix
     """
     
-    available_drinks = database.get_drinks()
+    available_drinks = default_database().get_drinks()
     available_components = []
     for drink in available_drinks:
         if not isinstance(drink, Mix):
@@ -56,12 +56,12 @@ def add_new_mix():
     if len(random_mixes) > max_random_mixes:
         remove = random_mixes.pop(0)
         try:
-            database.remove(remove)
+            default_database().remove(remove)
         except KeyError:
             pass # Drink might have been removed by admin
     
     random_mixes.append(mix)
-    database.add(mix)
+    default_database().add(mix)
     
 def find_existing_mixes():
     """
@@ -70,7 +70,7 @@ def find_existing_mixes():
     """
     global random_mixes
     
-    current_drinks = database.get_drinks()
+    current_drinks = default_database().get_drinks()
     for drink in current_drinks:
         if isinstance(drink, Mix):
             if drink.name.startswith(mix_name_prefix):
@@ -79,7 +79,7 @@ def find_existing_mixes():
     while len(random_mixes) > max_random_mixes:
         remove = random_mixes.pop(0)
         try:
-            database.remove(remove)
+            default_database().remove(remove)
         except KeyError:
             pass # Drink might have been removed by admin
         
