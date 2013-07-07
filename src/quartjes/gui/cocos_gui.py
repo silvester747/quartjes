@@ -381,6 +381,7 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
         self._points.append((0 - (graph_width / 2), top))
 
         self._current_node = None
+        self._current_drink = None
 
         self._next_drink = None
         self._clear_drink = False
@@ -421,21 +422,32 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
 
     def _show_drink(self, drink):
         """
-        Replace the current drink with the next drink to display.
+        Replace the current drink with the next drink to display or update the
+        details of the current drink if it is the same.
         """
 
-        new_node = None
-
         if drink:
+            
             if isinstance(drink, Mix):
                 new_node = self._get_mix(drink)
             else:
                 new_node = self._get_drink_history(drink)
-        
-        self._replace_node(new_node)
+            
+            if self._current_drink and self._current_drink.id == drink.id:
+                self._update_node(new_node)
+            else:
+                self._replace_node(new_node)
+            
+            self._current_drink = drink
+            
+        else:
+            self._replace_node(None)
 
 
     def _replace_node(self, new_node):
+        """
+        Move a new node into display, slow animation.
+        """
         if not self.is_running:
             if debug_mode:
                 print("Not running")
@@ -449,7 +461,7 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
             self._current_node.do(MoveTo(self._points[2], 0.5 * self._move_time) +
                                  CallFunc(self._current_node.kill))
 
-        self._current_node = new_node
+        self._current_node = UpdatableNode(new_node, self._points[0])
 
         if not self._current_node:
             return
@@ -458,6 +470,13 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
                               MoveTo(self._points[1], 0.5 * self._move_time))
         self.add(self._current_node)
         
+    def _update_node(self, new_contents):
+        """
+        Replace the contents of the current displayed node.
+        """
+        if self._current_node:
+            self._current_node.update(new_contents)
+    
     def _get_explanation(self):
         """
         Construct a node with an explanation of the game.
@@ -476,7 +495,7 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
         max_y = self._graph_height
         y = max_y - 50
 
-        labels = LabelBatch(position=self._points[0])
+        labels = LabelBatch()
 
         for line in text:
             labels.add_text(line,
@@ -498,7 +517,6 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
         graph = history_graph.create_pyglet_image(drink, self._graph_width, self._graph_height)
 
         node = cocos.sprite.Sprite(image = graph,
-                                   position=self._points[0],
                                    anchor=(self._graph_width / 2, 0))
 
         return node
@@ -512,7 +530,7 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
         center_x = 0
         max_y = self._graph_height
 
-        labels = LabelBatch(position=self._points[0])
+        labels = LabelBatch()
 
         labels.add_text(mix.name,
                         font_name=font,
@@ -550,6 +568,33 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
         labels.add(mix_drawing)
 
         return labels
+
+class UpdatableNode(cocos.cocosnode.CocosNode):
+    """
+    Cocos node with easy updatable content.
+    """
+    
+    def __init__(self, inner_node, position=(0,0)):
+        super(UpdatableNode, self).__init__()
+    
+        self.position = position    
+        self._inner_node = inner_node
+        self.add(inner_node, 0)
+        self._next_z_level = 1
+    
+    def update(self, new_node):
+        """
+        Update the drink shown.
+        """
+        #self._inner_node.do(FadeOut(1))
+        self._inner_node.kill()
+        self._inner_node = new_node
+        self.add(new_node, z=self._next_z_level)
+        self._next_z_level += 1
+        #self._inner_node.do(FadeIn(1))
+    
+    def hide(self):
+        self._inner_node.do(FadeOut(1))
 
 class LabelBatch(cocos.cocosnode.CocosNode):
     """
