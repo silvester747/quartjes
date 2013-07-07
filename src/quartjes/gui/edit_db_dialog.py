@@ -21,9 +21,7 @@ class edit_db_dialog(Frame):
         self.drinks = self.master.conn.database.get_drinks()        
         tk_prepare_instance_for_events(self)
 
-        # FIXME
-        tmp = self.master.conn.database.on_drinks_updated 
-        tmp += self.drinks_update_listener
+        self.master.conn.database.on_drinks_updated += self.drinks_update_listener
 
         self.createWidgets()
 

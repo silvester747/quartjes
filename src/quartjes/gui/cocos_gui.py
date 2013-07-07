@@ -651,10 +651,8 @@ class CocosGui(object):
         self._drinks = self._connector.database.get_drinks()
         random.shuffle(self._drinks)
 
-        tmp = self._connector.database.on_drinks_updated 
-        tmp += self._update_drinks
-        tmp = self._connector.stock_exchange.on_next_round 
-        tmp += self._next_round
+        self._connector.database.on_drinks_updated += self._update_drinks
+        self._connector.stock_exchange.on_next_round += self._next_round
 
         print()
         print("Initializing graphics...")

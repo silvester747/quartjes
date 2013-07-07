@@ -308,8 +308,6 @@ class ServiceInterface(object):
     
     """
     
-    __slots__ = ["_client_factory", "_service_name", "_events"]
-    
     def __init__(self, client_factory, service_name):
         """
         Construct a new service interface.
@@ -495,6 +493,7 @@ class ServiceInterfaceAttribute(object):
             A timeout occurred in the request to the server.
         """
         self._interface._do_subscribe(self._name, handler)
+        return self
     
     def __isub__(self, handler):
         """
@@ -505,7 +504,7 @@ class ServiceInterfaceAttribute(object):
         handler : method
             Method that handles event notifications.
         """
-        # Not supported yet
+        # TODO: Not supported yet
 
 
 @remote_service

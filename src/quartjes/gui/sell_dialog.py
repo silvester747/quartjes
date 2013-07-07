@@ -16,8 +16,7 @@ class sell_dialog(Frame):
         # keep local drinks db in sync
         self.drinks = self.master.conn.database.get_drinks()        
         tk_prepare_instance_for_events(self)
-        tmp = self.master.conn.database.on_drinks_updated 
-        tmp += self.sell_update_listener
+        self.master.conn.database.on_drinks_updated += self.sell_update_listener
 
         self.createWidgets()
 
