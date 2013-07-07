@@ -326,6 +326,16 @@ class ServiceInterface(object):
         """
         return ServiceInterfaceAttribute(self, name)
     
+    def __setattr__(self, name, value):
+        """
+        Only allow "private" attributes and ServiceInterfaceAttributes to prevent
+        remote method from being overwritten by mistake.
+        """
+        if name.startswith("_") or isinstance(value, ServiceInterfaceAttribute):
+            self.__dict__[name] = value
+        else:
+            raise AttributeError("Do not assign values to ServiceInterface objects.")
+    
     def _do_remote_call(self, name, *pargs, **kwargs):
         """
         Perform the remote method call
