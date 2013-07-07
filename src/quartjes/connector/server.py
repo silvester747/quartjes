@@ -101,6 +101,7 @@ def run_server():
     from quartjes.controllers.stock_exchange2 import StockExchange2
     from quartjes.controllers.database import default_database
     from quartjes.controllers.random_mixer import run_random_mixer
+    from quartjes.controllers.mix_discounter import run_mix_discounter
     
     server = ServerConnector(default_port)
     print("Using stock exchange version %i" % stock_exchange_version)
@@ -112,6 +113,7 @@ def run_server():
         server.register_service(exchange, "stock_exchange")
     server.register_service(default_database(), "database")
     run_random_mixer()
+    run_mix_discounter()
     server.start()
     print("Server started on port %i" % default_port)
     print("Press enter to stop")
