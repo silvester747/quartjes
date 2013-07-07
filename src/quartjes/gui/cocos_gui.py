@@ -41,6 +41,7 @@ from quartjes.models.drink import Mix
 import quartjes.gui.mix_drawer as mix_drawer
 import quartjes.gui.history_graph as history_graph
 import random
+import time
 
 pyglet.resource.path = ["@quartjes.resources"]
 pyglet.resource.reindex()
@@ -360,10 +361,22 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
     Layer to display details on the currently focussed drink.
     In case a normal drink is focussed, the price graph is displayed.
     In case a mix drink is focussed, the details of the mix are displayed.
+    
+    Parameters
+    ----------
+    move_time : float
+        Time in seconds to move an object in and out of the screen.
+    explanation_time : float
+        Minimum time in seconds to display the explanation.
     """
 
-    def __init__(self, top=150, graph_width=940, graph_height=500,
-                 screen_width=1024, move_time=1.0):
+    def __init__(self, 
+                 top=150, 
+                 graph_width=940, 
+                 graph_height=500,
+                 screen_width=1024, 
+                 move_time=1.0, 
+                 explanation_time=10.0):
         """
         Initialize the drink layer.
         """
@@ -374,6 +387,7 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
         self._graph_height = graph_height
         self._screen_width = screen_width
         self._move_time = move_time
+        self._explanation_time = explanation_time
 
         self._points = []
         self._points.append((screen_width + (graph_width / 2), top))
@@ -382,6 +396,9 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
 
         self._current_node = None
         self._current_drink = None
+        
+        self._explanation_active = False
+        self._explanation_expires = 0
 
         self._next_drink = None
         self._clear_drink = False
@@ -406,17 +423,24 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
         """
         Called by Cocos2D. Performs actions on next render loop.
         """
+        
         if self._next_drink:
-            self._show_drink(self._next_drink)
+            if time.time() > self._explanation_expires:
+                self._show_drink(self._next_drink)
             self._next_drink = None
+            
         if self._clear_drink:
-            self._clear_drink = False
-            self._replace_node(None)
-            self._next_drink = None
+            if time.time() > self._explanation_expires:
+                self._clear_drink = False
+                self._replace_node(None)
+                self._next_drink = None
+                
         if self._show_explanation:
             self._clear_drink = False
             self._next_drink = None
             self._show_explanation = False
+            
+            self._explanation_expires = time.time() + self._explanation_time
             self._replace_node(self._get_explanation())
             
 
@@ -648,8 +672,13 @@ class CocosGui(object):
     Initialize and start this object to start a show.
     """
 
-    def __init__(self, hostname=None, port=1234, width=1024, height=768,
-                 fullscreen=True, explanation_interval=20):
+    def __init__(self, 
+                 hostname=None, 
+                 port=1234, 
+                 width=1024, 
+                 height=768,
+                 fullscreen=True, 
+                 explanation_interval=9):
         """
         Set up all parameters and objects for the GUI.
         """
