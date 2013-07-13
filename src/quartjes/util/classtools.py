@@ -31,15 +31,15 @@ class QuartjesBaseClass(AttrDisplay):
     least a unique id is present.
     """
 
-    def __init__(self, id=None):
+    def __init__(self, id_=None):
         """
         Default constructor. Accepts an id to store. If no id is given, a new
         unique id is created.
         """
-        if id == None:
+        if id_ == None:
             self.id = uuid.uuid4()
         else:
-            self.id = id
+            self.id = id_
 
     def __hash__(self):
         return hash(self.id)

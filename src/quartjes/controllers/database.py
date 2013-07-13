@@ -193,13 +193,13 @@ class Database:
             raise KeyError
 
     @remote_method
-    def get(self, id):
+    def get(self, id_):
         """
         Get a drink from the database by id.
         
         Parameters
         ----------
-        id : UUID
+        id_ : UUID
             Id of the drink to get.
             
         Returns
@@ -207,7 +207,7 @@ class Database:
         drink : :class:`quartjes.models.drink.Drink`
             The drink with the given id. None if it does not exist.
         """
-        return self._drink_index.get(id)
+        return self._drink_index.get(id_)
 
     @remote_method
     def get_drinks(self):
