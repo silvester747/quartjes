@@ -3,11 +3,12 @@ The 'database' used by the Quartjesavond server.
 Just a simple memory store of drinks that uses shelve to constantly write
 a copy to disk.
 """
-
+import os
+import shelve
 import time
 import threading
-import shelve
-from quartjes.models.drink import Drink,Mix
+
+from quartjes.models.drink import Drink, Mix, __version__
 from quartjes.connector.services import remote_event, remote_method, remote_service
 
 debug_mode = False
@@ -268,14 +269,30 @@ class Database:
         Load the current database from disk.
         If no database exists on disk, create a new one.
         """
-        db = shelve.open(self._db_file)
-        if not db.has_key('drinks'):
-            db.close()
-            self.reset()
-
+        if not os.path.exists(self._db_file):
+            print("No database available yet, creating one")
+            db_valid = False
         else:
+            db_valid = True
+            
+        db = shelve.open(self._db_file)
+        
+        if db_valid:
+            if not db.has_key('version'):
+                print("Invalid database, creating new")
+                db_valid = False
+            elif db['version'] != __version__:
+                print("Database version mismatch, creating new")
+                db_valid = False
+            elif not db.has_key('drinks'):
+                db_valid = False
+                print("Invalid database, creating new")
+
+        if db_valid:
             self._internal_replace_drinks(db['drinks'])
-            db.close()
+        else:
+            self.reset()
+        db.close()
 
         self._monitor.start()
 
@@ -296,6 +313,7 @@ class Database:
         if debug_mode:
             print("Storing db")
         db = shelve.open(self._db_file)
+        db['version'] = __version__
         db['drinks'] = self._drinks
         db.close()
 

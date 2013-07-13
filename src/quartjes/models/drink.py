@@ -2,7 +2,12 @@
 To do:
 """
 __author__="piet"
-__date__ ="$5-jun-2011 12:34:35$"
+
+__version__ = 1
+"""
+Version of the Drink models. Increase this version number each time you make a change
+that requires the database to be reset.
+"""
 
 from quartjes.util.classtools import QuartjesBaseClass
 from numpy import array
