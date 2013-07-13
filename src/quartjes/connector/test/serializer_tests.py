@@ -42,27 +42,27 @@ class ValueSerializerTestCase(unittest.TestCase):
         """
         Test serializing each value type.
         """
-        for (type, input, output) in self.test_cases:
-            result = get_serialized_value(input)
-            self.assertEqual(result, (output, type), "Type %s failed serializing." % type)
+        for (type_, input_, output) in self.test_cases:
+            result = get_serialized_value(input_)
+            self.assertEqual(result, (output, type_), "Type %s failed serializing." % type_)
 
     def test_deserializing(self):
         """
         Test deserializing each value type.
         """
-        for (type, input, output) in self.test_cases:
-            (string, t) = get_serialized_value(input)
-            ser = serializer.value_serializers_by_klass_name[type]
+        for (type_, input_, _) in self.test_cases:
+            (string, _) = get_serialized_value(input_)
+            ser = serializer.value_serializers_by_klass_name[type_]
             result = ser.deserialize(string)
-            self.assertEqual(input, result, "Type %s failed deserializing." % type)
+            self.assertEqual(input_, result, "Type %s failed deserializing." % type_)
 
     def test_none(self):
         """
         Test None
         """
-        (value, type) = get_serialized_value(None)
+        (value, type_) = get_serialized_value(None)
         self.assertEqual(value, None)
-        self.assertEqual(type, None)
+        self.assertEqual(type_, None)
 
     def test_unknown(self):
         """
@@ -70,13 +70,14 @@ class ValueSerializerTestCase(unittest.TestCase):
         """
 
         class Unknown:
-            pass
+            def __init__(self):
+                pass
 
         u = Unknown()
 
-        (value, type) = get_serialized_value(u)
+        (value, type_) = get_serialized_value(u)
         self.assertEqual(value, None)
-        self.assertEqual(type, None)
+        self.assertEqual(type_, None)
 
 class SerializerTestCase(unittest.TestCase):
     """
@@ -97,9 +98,9 @@ class SerializerTestCase(unittest.TestCase):
     shortDescription
     """
     
-    def __init__(self, name, input, output,):
+    def __init__(self, name, input_, output,):
         super(SerializerTestCase, self).__init__(methodName="run_test")
-        self.input = input
+        self.input = input_
         self.output = output
         self.name = name
 
@@ -118,8 +119,6 @@ class SerializerTestCase(unittest.TestCase):
 
         node = serializer.et.fromstring(string)
         val = deserialize(node)
-        #print(val)
-        #print(self.input)
         self.assertEquals(val, self.input, "Deserialized value should equal original object.")
 
     def shortDescription(self):
@@ -189,63 +188,63 @@ class TestKlassOverride(object):
 
 serializer_test_cases = [SerializerTestCase(
                              name="int",
-                             input=12,
+                             input_=12,
                              output="<test type=\"int\">12</test>"
                              ),
                          SerializerTestCase(
                              name="float",
-                             input=1234.23,
+                             input_=1234.23,
                              output="<test type=\"float\">1234.23</test>"
                              ),
                          SerializerTestCase(
                              name="string",
-                             input="testsdfda@#nfasnalsk32",
+                             input_="testsdfda@#nfasnalsk32",
                              output="<test type=\"str\">testsdfda@#nfasnalsk32</test>"
                              ),
                          SerializerTestCase(
                              name="uuid",
-                             input=uuid.UUID('urn:uuid:3f22b1ff-424d-468c-aa47-b399a6fd1795'),
+                             input_=uuid.UUID('urn:uuid:3f22b1ff-424d-468c-aa47-b399a6fd1795'),
                              output="<test type=\"uuid\">urn:uuid:3f22b1ff-424d-468c-aa47-b399a6fd1795</test>"
                              ),
                          SerializerTestCase(
                              name="list",
-                             input=[12, 1234.23, "bladfsd"],
+                             input_=[12, 1234.23, "bladfsd"],
                              output="<test type=\"list\"><value type=\"int\">12</value><value type=\"float\">1234.23</value><value type=\"str\">bladfsd</value></test>"
                              ),
                          SerializerTestCase(
                              name="tuple",
-                             input=(12, 1234.23, "bladfsd"),
+                             input_=(12, 1234.23, "bladfsd"),
                              output="<test type=\"tuple\"><value type=\"int\">12</value><value type=\"float\">1234.23</value><value type=\"str\">bladfsd</value></test>"
                              ),
                          SerializerTestCase(
                              name="old style class",
-                             input=TestKlassOld(),
-                             output="<test class=\"quartjes.connector.serializer_tests.TestKlassOld\" id=\"urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\" type=\"instance\"><f type=\"float\">454343.1233</f><i type=\"int\">43432</i><l type=\"list\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></l><s type=\"str\">teststring</s><t type=\"tuple\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></t></test>"
+                             input_=TestKlassOld(),
+                             output="<test class=\"quartjes.connector.test.serializer_tests.TestKlassOld\" id=\"urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\" type=\"instance\"><f type=\"float\">454343.1233</f><i type=\"int\">43432</i><l type=\"list\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></l><s type=\"str\">teststring</s><t type=\"tuple\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></t></test>"
                              ),
                          SerializerTestCase(
                              name="new style class",
-                             input=TestKlassNew(),
-                             output="<test class=\"quartjes.connector.serializer_tests.TestKlassNew\" id=\"urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\" type=\"instance\"><f type=\"float\">454343.1233</f><i type=\"int\">43432</i><l type=\"list\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></l><s type=\"str\">teststring</s><t type=\"tuple\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></t></test>"
+                             input_=TestKlassNew(),
+                             output="<test class=\"quartjes.connector.test.serializer_tests.TestKlassNew\" id=\"urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\" type=\"instance\"><f type=\"float\">454343.1233</f><i type=\"int\">43432</i><l type=\"list\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></l><s type=\"str\">teststring</s><t type=\"tuple\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></t></test>"
                              ),
                          SerializerTestCase(
                              name="quartjes class",
-                             input=TestQuartjesKlass(),
-                             output="<test class=\"quartjes.connector.serializer_tests.TestQuartjesKlass\" id=\"urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\" type=\"instance\"><f type=\"float\">454343.1233</f><i type=\"int\">43432</i><l type=\"list\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></l><s type=\"str\">teststring</s><t type=\"tuple\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></t></test>"
+                             input_=TestQuartjesKlass(),
+                             output="<test class=\"quartjes.connector.test.serializer_tests.TestQuartjesKlass\" id=\"urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\" type=\"instance\"><f type=\"float\">454343.1233</f><i type=\"int\">43432</i><l type=\"list\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></l><s type=\"str\">teststring</s><t type=\"tuple\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></t></test>"
                              ),
                          SerializerTestCase(
                              name="class with override",
-                             input=TestKlassOverride(),
-                             output="<test class=\"quartjes.connector.serializer_tests.TestKlassOverride\" id=\"urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\" type=\"instance\"><i type=\"int\">43432</i><l type=\"list\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></l></test>"
+                             input_=TestKlassOverride(),
+                             output="<test class=\"quartjes.connector.test.serializer_tests.TestKlassOverride\" id=\"urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\" type=\"instance\"><i type=\"int\">43432</i><l type=\"list\"><value type=\"int\">23</value><value type=\"int\">543</value><value type=\"str\">sds</value></l></test>"
                              ),
                          SerializerTestCase(
                              name="None",
-                             input=None,
+                             input_=None,
                              output="<test />"
                              )
                         ]
 
 
-def load_tests(loader, tests, pattern):
+def load_tests(loader, *_):
     """
     Load the test cases in this module.
     Some test cases are added a little different than usual.
