@@ -7,7 +7,7 @@ Need to improve algorithms for both exchange and test cases.
 import unittest
 import quartjes
 from quartjes.controllers.stock_exchange import StockExchange
-from quartjes.models.drink import Drink, Mix
+from quartjes.models.drink import Mix
 import random
 
 class Test(unittest.TestCase):
