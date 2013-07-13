@@ -20,8 +20,8 @@ class Message(QuartjesBaseClass):
         Optional unique identifier for the message.
     """
 
-    def __init__(self, id=None):
-        super(Message, self).__init__(id)
+    def __init__(self, id_=None):
+        super(Message, self).__init__(id_)
 
 
 class MethodCallMessage(Message):

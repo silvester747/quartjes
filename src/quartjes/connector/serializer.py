@@ -43,17 +43,19 @@ __docformat__ = "restructuredtext en"
 
 # In other modules using ElementTree always import the version from this file.
 # That makes it easy to switch between py and c version.
-import xml.etree.cElementTree as et
+try:
+    import xml.etree.cElementTree as et
+except ImportError:
+    import xml.etree.ElementTree as et
 import uuid
 import types
 
+
+# For these internal types, serialization is not supported. They will be ignored
+# when encountered.
 ignored_types = (types.FunctionType, types.BuiltinFunctionType, types.BuiltinMethodType,
                  types.FileType, types.GeneratorType, types.LambdaType, types.MemberDescriptorType,
                  types.MethodType, types.ModuleType, types.TypeType, types.UnboundMethodType)
-"""
-For these internal types, serialization is not supported. They will be ignored
-when encountered.
-"""
 
 def serialize(obj, parent=None, tag_name="unknown", cache=None):
     """
@@ -461,14 +463,11 @@ def parse_value_element(node, cache=None):
 
 
 value_serializers_by_klass = {}
-"""
-Dictionary of registered value serializers by class. Key is the corresponding class object.
-"""
+# Dictionary of registered value serializers by class. Key is the corresponding class object.
 
 value_serializers_by_klass_name = {}
-"""
-Dictionary of registered value serializers by class name.
-"""
+# Dictionary of registered value serializers by class name.
+
 
 def get_serialized_value(value):
     """
