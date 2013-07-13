@@ -17,17 +17,17 @@ During registration a service name is given, which remote clients must use to ga
 the service.
 
 For an example, please see :class:`TestRemoteService`.
-
-FIXME: Need to make proper support for multiple listeners for an event. For now consider
-only one instance of each service interface.
 """
 
 __author__ = "Rob van der Most"
 __docformat__ = "restructuredtext en"
 
 import traceback
-from quartjes.connector.exceptions import MessageHandleError
+
 from axel import Event
+
+from quartjes.connector.exceptions import MessageHandleError
+from quartjes.util.classtools import cached_class
 
 def remote_service(C):
     """
@@ -287,6 +287,7 @@ class RemoteEventRegistry(object):
         return listener
 
 
+@cached_class
 class ServiceInterface(object):
     """
     Client side interface to interact with services defined as Service objects
