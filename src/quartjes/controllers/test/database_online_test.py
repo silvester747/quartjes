@@ -53,10 +53,10 @@ def stop_test_server():
 
 def _run_test_server():
     from quartjes.connector.server import ServerConnector
-    from quartjes.controllers.database import database
+    from quartjes.controllers.database import default_database
     
     server = ServerConnector(test_port)
-    server.register_service(database, "database")
+    server.register_service(default_database(), "database")
     server.start()
     
     import time

@@ -37,7 +37,7 @@ class StockExchange(object):
     def __init__(self, start_thread=True, damp_sales=2, max_price_factor=3,
                  min_price_factor=0.4, round_time=None):
         self._transactions = []
-        self._db = quartjes.controllers.database.database
+        self._db = quartjes.controllers.database.default_database()
         self._max_history = 120
 
         if round_time:

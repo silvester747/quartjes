@@ -13,14 +13,14 @@ Limitations
 @author Rob
 """
 
-from quartjes.controllers.database import database
+from quartjes.controllers.database import default_database
 
 def calculate_absolute_factor_difference_data():
     """
     Get all drink history from the database. Calculate for each history item
     the difference with the current price.
     """
-    drinks = database.get_drinks()
+    drinks = default_database().get_drinks()
     
     data = {}
     
