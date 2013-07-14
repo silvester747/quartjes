@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Startup file for the server.
 """
