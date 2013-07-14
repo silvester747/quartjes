@@ -31,7 +31,6 @@ import cocos.director
 from cocos.sprite import Sprite
 import pyglet.resource
 import random
-import re
 
 from quartjes.connector.client import ClientConnector
 from quartjes.gui.cocos.center_display import DrinkLayer
@@ -39,33 +38,6 @@ from quartjes.gui.cocos.ticker import BottomTicker
 
 pyglet.resource.path = ["@quartjes.resources"]
 pyglet.resource.reindex()
-
-# Do some version checks
-pyglet_version = re.match(r"(\d+)\.(\d+)", pyglet.version)
-if not pyglet_version:
-    raise ImportError("Cannot determine Pyglet version!")
-else:
-    pyglet_major = int(pyglet_version.group(1))
-    pyglet_minor = int(pyglet_version.group(2))
-    
-    if pyglet_major < 1 or (pyglet_major == 1 and pyglet_minor < 2):
-        raise ImportError("Require Pyglet 1.2alpha or greater")
-del pyglet_version
-
-cocos_version = re.match(r"(\d+)\.(\d+)\.(\d+)", cocos.version)
-if not cocos_version:
-    raise ImportError("Cannot determine Cocos2d version!")
-else:
-    cocos_major = int(cocos_version.group(1))
-    cocos_minor = int(cocos_version.group(2))
-    cocos_build = int(cocos_version.group(3))
-    
-    if cocos_major == 0:
-        if cocos_minor < 5:
-            raise ImportError("Require Cocos2d 0.5.5 or greater")
-        elif cocos_minor == 5 and cocos_build < 5:
-            raise ImportError("Require Cocos2d 0.5.5 or greater")
-del cocos_version
 
 class TitleLayer(cocos.layer.Layer):
     """
@@ -113,6 +85,7 @@ class CocosGui(object):
         self._drink_layer = None
         self._title_layer = None
         self._mix_layer = None
+        self._connector = None
 
         self._drinks = None
         self._round_count = 0
@@ -256,7 +229,10 @@ def run_cocos_gui():
     Parses the command line and starts the gui.
     """
     args = parse_command_line()
-    gui = CocosGui(hostname=args.hostname, port = args.port, width=args.width, height=args.height,
+    gui = CocosGui(hostname=args.hostname, 
+                   port=args.port, 
+                   width=args.width, 
+                   height=args.height,
                    fullscreen=args.fullscreen)
     gui.start()
 
