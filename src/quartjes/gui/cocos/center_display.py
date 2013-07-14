@@ -133,7 +133,7 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
             if debug_mode:
                 print("Not running")
             if self._current_node:
-                self._current_node.kill
+                self._current_node.kill()
                 self._current_node = None
 
             return
