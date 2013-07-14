@@ -5,6 +5,5 @@ Created on Apr 8, 2012
 @author: rob
 '''
 
-import quartjes.gui.cocos_gui as gui
-
-gui.run_cocos_gui()
+from quartjes.gui.cocos.cocos_gui import run_cocos_gui
+run_cocos_gui()

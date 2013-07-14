@@ -10,7 +10,7 @@ import datetime
 import math
 
 from quartjes.models.drink import Drink, to_quartjes
-from quartjes.gui.mix_drawer import get_image_data
+from quartjes.gui.cocos.mix_drawer import get_image_data
 
 grid_color = (127, 127, 127, 255)
 axis_color = (255, 255, 255, 255)
