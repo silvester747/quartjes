@@ -21,6 +21,8 @@ class CenterLayer(cocos.layer.base_layers.Layer):
     - Display the drink or mix currently centered on the bottom ticker;
     - Display instructions on demand;
     
+    TODO: Currently anchoring of content is bottom-left, change to center.
+    
     Parameters
     ----------
     move_time : float
@@ -53,78 +55,128 @@ class CenterLayer(cocos.layer.base_layers.Layer):
         self._points.append((screen_width / 2, top))
         self._points.append((0 - (content_width / 2), top))
 
+        # Current node on display
         self._current_node = None
+        
+        # Last drink for which a display was instantiated.
         self._current_drink = None
         
-        self._explanation_active = False
-        self._explanation_expires = 0
+        # Contains details to construct a new node. None when nothing scheduled.
+        self._next_node = None
+        
+        # Has a clear request been issued?
+        self._clear = False
+        
+        self._lock_expires = 0
 
-        self._next_drink = None
-        self._clear_drink = False
-        self._show_explanation = False
+    def schedule_next_node(self, node_type, pargs=(), kwargs={}, min_display_time=None, in_place=False, drink=None):
+        '''
+        Schedule a node for display. The node will be instantiated in the render thread. 
+        
+        No queueing!
+        If display is still locked due to another element with `min_display_time` the request is ignored.
+        Also multiple calls without a render pass in between, will result in only the last request being honored.
+        
+        Parameters
+        ----------
+        node_type
+            Callable that returns the node to display (usually the class).
+        pargs : list
+            Positional arguments to pass to `node_type`.
+        kwargs : dict
+            Keyword arguments to pass to `node_type`.
+        min_display_time
+            Minimum time in seconds to display the node.
+        in_place
+            True if node should be replaced on current node location. False if it should be
+            brought in as a new node.
+        
+        Returns
+        -------
+        scheduled
+            True if the node is scheduled. False if display is still locked.
+        '''
+        if time.time() < self._lock_expires:
+            if debug_mode:
+                print('Display still locked, ignoring next node')
+            return False
+        
+        self._next_node = (node_type, pargs, kwargs, min_display_time, in_place, drink)
 
     def show_drink(self, drink):
         """
         Change the drink currently being shown.
         """
-        self._next_drink = drink
+        if not drink:
+            if self._current_drink:
+                self.clear()
+                self._current_drink = None
+            return
         
-    def clear_drink(self):
-        """
-        Clear the current selection
-        """
-        self._clear_drink = True
+        if isinstance(drink, Mix):
+            node_type = MixDisplay
+        else:
+            node_type = DrinkHistoryDisplay
+        
+        if self._current_drink and self._current_drink.id == drink.id:
+            self.schedule_next_node(node_type, pargs=(drink, self._content_width, self._content_height), in_place=True, drink=drink)
+        else:
+            self.schedule_next_node(node_type, pargs=(drink, self._content_width, self._content_height), in_place=False, drink=drink)
+        
+    def show_explanation(self, display_time=None):
+        '''
+        Show an explanation of the game.
+        '''
+        if not display_time:
+            display_time = self._explanation_time
+        self.schedule_next_node(Explanation, (self._content_height,), min_display_time=display_time)
     
-    def show_explanation(self):
-        self._show_explanation = True
+    def clear(self):
+        '''
+        Clear the display, removes the current content, even if it is locked
+        '''
+        self._clear = True
 
     def draw(self, *args, **kwargs):
         """
         Called by Cocos2D. Performs actions on next render loop.
         """
+        locked = time.time() < self._lock_expires
         
-        if self._next_drink:
-            if time.time() > self._explanation_expires:
-                self._show_drink(self._next_drink)
-            self._next_drink = None
-            
-        if self._clear_drink:
-            if time.time() > self._explanation_expires:
-                self._clear_drink = False
-                self._replace_node(None)
-                self._next_drink = None
-                
-        if self._show_explanation:
-            self._clear_drink = False
-            self._next_drink = None
-            self._show_explanation = False
-            
-            self._explanation_expires = time.time() + self._explanation_time
-            self._replace_node(Explanation(self._content_height))
-            
-
-    def _show_drink(self, drink):
-        """
-        Replace the current drink with the next drink to display or update the
-        details of the current drink if it is the same.
-        """
-
-        if drink:
-            
-            if isinstance(drink, Mix):
-                new_node = MixDisplay(drink, self._content_width, self._content_height)
-            else:
-                new_node = DrinkHistoryDisplay(drink, self._content_width, self._content_height)
-            
-            if self._current_drink and self._current_drink.id == drink.id:
-                self._update_node(new_node)
-            else:
-                self._replace_node(new_node)
-            
-            self._current_drink = drink
-            
-        else:
+        if self._clear:
             self._replace_node(None)
+            self._clear = False
+            self._lock_expires = 0
+        
+        if self._next_node and not locked:
+            node_type, pargs, kwargs, min_display_time, in_place, drink = self._next_node
+            self._next_node = None
+            
+            try:
+                next_node = node_type(*pargs, **kwargs)
+            except:
+                print('Failed to instantiate next node')
+                print('\tNode type: %s' % node_type)
+                print('\tPargs:     %s' % pargs)
+                print('\tKwargs:    %s' % kwargs)
+                print('Stacktrace:')
+                import traceback
+                traceback.print_exc()
+            else:
+                if min_display_time:
+                    self._lock_expires = time.time() + min_display_time
+
+                if in_place:
+                    if debug_mode:
+                        print('Doing in place update')
+                    self._update_node(next_node)
+                else:
+                    if debug_mode:
+                        print('Doing full update')
+                    self._replace_node(next_node)
+                
+                if drink:
+                    self._current_drink = drink
 
 
     def _replace_node(self, new_node):
@@ -145,9 +197,6 @@ class CenterLayer(cocos.layer.base_layers.Layer):
                                  CallFunc(self._current_node.kill))
 
         self._current_node = UpdatableNode(new_node, self._points[0])
-
-        if not self._current_node:
-            return
 
         self._current_node.do(Delay(0.5 * self._move_time) +
                               MoveTo(self._points[1], 0.5 * self._move_time))
