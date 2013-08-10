@@ -21,10 +21,19 @@ class CenterLayer(cocos.layer.base_layers.Layer):
     - Display the drink or mix currently centered on the bottom ticker;
     - Display instructions on demand;
     
-    TODO: Currently anchoring of content is bottom-left, change to center.
+    Added nodes are expected to anchor at the bottom-center. Their sizes should
+    respect the passed content sizes.
     
     Parameters
     ----------
+    top_margin : int
+        Margin on top of the screen.
+    bottom_margin : int
+        Margin at the bottom of the screen.
+    left_margin : int
+        Margin at the left side of the screen.
+    right_margin : int
+        Margin at the right side of the screen.
     move_time : float
         Time in seconds to move an object in and out of the screen.
     explanation_time : float
@@ -32,10 +41,10 @@ class CenterLayer(cocos.layer.base_layers.Layer):
     """
 
     def __init__(self, 
-                 top=150, 
-                 content_width=940, 
-                 content_height=500,
-                 screen_width=1024, 
+                 top_margin=100,
+                 bottom_margin=150,
+                 left_margin=50,
+                 right_margin=50,
                  move_time=1.0, 
                  explanation_time=10.0):
         """
@@ -43,17 +52,22 @@ class CenterLayer(cocos.layer.base_layers.Layer):
         """
         super(CenterLayer, self).__init__()
 
-        self._top = top
-        self._content_width = content_width
-        self._content_height = content_height
-        self._screen_width = screen_width
+        self._top_margin = top_margin
+        self._bottom_margin = bottom_margin
+        self._left_margin = left_margin
+        self._right_margin = right_margin
+        
+        self._screen_width, self._screen_height = cocos.director.director.get_window_size()
+
+        self._content_width = self._screen_width - self._left_margin - self._right_margin
+        self._content_height = self._screen_height - self._top_margin - self._bottom_margin
+        
+        self._point_offscreen_right = (self._screen_width + (self._content_width / 2), self._bottom_margin)
+        self._point_offscreen_left = (0 - (self._content_width / 2), self._bottom_margin)
+        self._point_onscreen = (self._screen_width / 2, self._bottom_margin)
+        
         self._move_time = move_time
         self._explanation_time = explanation_time
-
-        self._points = []
-        self._points.append((screen_width + (content_width / 2), top))
-        self._points.append((screen_width / 2, top))
-        self._points.append((0 - (content_width / 2), top))
 
         # Current node on display
         self._current_node = None
@@ -193,13 +207,13 @@ class CenterLayer(cocos.layer.base_layers.Layer):
             return
 
         if self._current_node:
-            self._current_node.do(MoveTo(self._points[2], 0.5 * self._move_time) +
+            self._current_node.do(MoveTo(self._point_offscreen_left, 0.5 * self._move_time) +
                                  CallFunc(self._current_node.kill))
 
-        self._current_node = UpdatableNode(new_node, self._points[0])
+        self._current_node = UpdatableNode(new_node, self._point_offscreen_right)
 
         self._current_node.do(Delay(0.5 * self._move_time) +
-                              MoveTo(self._points[1], 0.5 * self._move_time))
+                              MoveTo(self._point_onscreen, 0.5 * self._move_time))
         self.add(self._current_node)
         
     def _update_node(self, new_contents):

@@ -169,7 +169,7 @@ class CocosGui(object):
         if not self._ticker_layer or new_ticker:
             self._ticker_layer = BottomTicker(screen_width=self._width)
         if not self._center_layer:
-            self._center_layer = CenterLayer(screen_width=self._width)
+            self._center_layer = CenterLayer()
         if not self._title_layer:
             self._title_layer = TitleLayer()
 
