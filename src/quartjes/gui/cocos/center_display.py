@@ -13,11 +13,13 @@ from quartjes.models.drink import Mix
 
 debug_mode = False
 
-class DrinkLayer(cocos.layer.base_layers.Layer):
+class CenterLayer(cocos.layer.base_layers.Layer):
     """
-    Layer to display details on the currently focussed drink.
-    In case a normal drink is focussed, the price graph is displayed.
-    In case a mix drink is focussed, the details of the mix are displayed.
+    Center part of the screen, handling display of the main content.
+    
+    Current content:
+    - Display the drink or mix currently centered on the bottom ticker;
+    - Display instructions on demand;
     
     Parameters
     ----------
@@ -29,27 +31,27 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
 
     def __init__(self, 
                  top=150, 
-                 graph_width=940, 
-                 graph_height=500,
+                 content_width=940, 
+                 content_height=500,
                  screen_width=1024, 
                  move_time=1.0, 
                  explanation_time=10.0):
         """
         Initialize the drink layer.
         """
-        super(DrinkLayer, self).__init__()
+        super(CenterLayer, self).__init__()
 
         self._top = top
-        self._graph_width = graph_width
-        self._graph_height = graph_height
+        self._content_width = content_width
+        self._content_height = content_height
         self._screen_width = screen_width
         self._move_time = move_time
         self._explanation_time = explanation_time
 
         self._points = []
-        self._points.append((screen_width + (graph_width / 2), top))
+        self._points.append((screen_width + (content_width / 2), top))
         self._points.append((screen_width / 2, top))
-        self._points.append((0 - (graph_width / 2), top))
+        self._points.append((0 - (content_width / 2), top))
 
         self._current_node = None
         self._current_drink = None
@@ -98,7 +100,7 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
             self._show_explanation = False
             
             self._explanation_expires = time.time() + self._explanation_time
-            self._replace_node(self._get_explanation())
+            self._replace_node(Explanation(self._content_height))
             
 
     def _show_drink(self, drink):
@@ -110,9 +112,9 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
         if drink:
             
             if isinstance(drink, Mix):
-                new_node = self._get_mix(drink)
+                new_node = MixDisplay(drink, self._content_width, self._content_height)
             else:
-                new_node = self._get_drink_history(drink)
+                new_node = DrinkHistoryDisplay(drink, self._content_width, self._content_height)
             
             if self._current_drink and self._current_drink.id == drink.id:
                 self._update_node(new_node)
@@ -158,95 +160,87 @@ class DrinkLayer(cocos.layer.base_layers.Layer):
         if self._current_node:
             self._current_node.update(new_contents)
     
-    def _get_explanation(self):
-        """
-        Construct a node with an explanation of the game.
+
+
+class Explanation(LabelBatch):
+    '''
+    Display an explanation of the game.
+    '''
+    
+    text = ("Let op!",
+            "",
+            "Op Quartjesavond kan alleen met",
+            "10 eurocent munten betaald worden.",
+            "Alle prijzen zijn zoals het systeem",
+            "weergeeft in eenheden van 10 eurocent.")
+    font = 'Times New Roman'
+    
+    def __init__(self, height):
+        LabelBatch.__init__(self)
         
-        """
-        
-        text = ("Let op!",
-                "",
-                "Op Quartjesavond kan alleen met",
-                "10 eurocent munten betaald worden.",
-                "Alle prijzen zijn zoals het systeem",
-                "weergeeft in eenheden van 10 eurocent.")
-        
-        font = 'Times New Roman'
         center_x = 0
-        max_y = self._graph_height
+        max_y = height
         y = max_y - 50
 
-        labels = LabelBatch()
-
-        for line in text:
-            labels.add_text(line,
-                            font_name=font,
-                            font_size=40,
-                            anchor_x='center', anchor_y='top',
-                            position = (center_x, y))
+        for line in Explanation.text:
+            self.add_text(line,
+                          font_name=Explanation.font,
+                          font_size=40,
+                          anchor_x='center', anchor_y='top',
+                          position = (center_x, y))
             
             y -= 70
 
-        return labels
-
-
-    def _get_drink_history(self, drink):
-        """
-        Construct a node to display the historic price graph for a drink.
-        """
-
-        graph = history_graph.create_pyglet_image(drink, self._graph_width, self._graph_height)
-
-        node = cocos.sprite.Sprite(image = graph,
-                                   anchor=(self._graph_width / 2, 0))
-
-        return node
-
-    def _get_mix(self, mix):
-        """
-        Construct a node to show a mix drink.
-        """
-
+class MixDisplay(LabelBatch):
+    '''
+    Display the contents of a mix drink.
+    '''
+    def __init__(self, mix, width, height):
+        LabelBatch.__init__(self)
+        
         font = 'Times New Roman'
         center_x = 0
-        max_y = self._graph_height
+        max_y = height
 
-        labels = LabelBatch()
+        self.add_text(mix.name,
+                      font_name=font,
+                      font_size=64,
+                      anchor_x='center', anchor_y='top',
+                      position = (center_x, max_y))
 
-        labels.add_text(mix.name,
-                        font_name=font,
-                        font_size=64,
-                        anchor_x='center', anchor_y='top',
-                        position = (center_x, max_y))
-
-        labels.add_text("Alcohol: %2.1f %%" % mix.alc_perc,
-                        font_name=font,
-                        font_size=20,
-                        anchor_x='center', anchor_y='top',
-                        position = (center_x, max_y - 100))
+        self.add_text("Alcohol: %2.1f %%" % mix.alc_perc,
+                      font_name=font,
+                      font_size=20,
+                      anchor_x='center', anchor_y='top',
+                      position = (center_x, max_y - 100))
 
         y = max_y - 150
         y_spacing = y / len(mix.drinks)
         y -= y_spacing / 2
         for d in mix.drinks:
-            labels.add_text(d.name,
-                            font_name=font,
-                            font_size=20,
-                            anchor_x='center', anchor_y='top',
-                            position = (center_x, y))
+            self.add_text(d.name,
+                          font_name=font,
+                          font_size=20,
+                          anchor_x='center', anchor_y='top',
+                          position = (center_x, y))
             y -= y_spacing
 
-        labels.add_text("%d" % mix.current_price_quartjes,
-                        font_name=font,
-                        font_size=150,
-                        anchor_x='center', anchor_y='center',
-                        position = (center_x + 300, (max_y - 150) / 2))
+        self.add_text("%d" % mix.current_price_quartjes,
+                      font_name=font,
+                      font_size=150,
+                      anchor_x='center', anchor_y='center',
+                      position = (center_x + 300, (max_y - 150) / 2))
 
         image=mix_drawer.create_mix_drawing(height=max_y-150, width=200, mix=mix)
         mix_drawing = cocos.sprite.Sprite(image=image,
                                           position=(center_x - 300, (max_y - 150) / 2),
                                           anchor=(100, (max_y - 150) / 2))
-        labels.add(mix_drawing)
+        self.add(mix_drawing)
 
-        return labels
-
+class DrinkHistoryDisplay(cocos.sprite.Sprite):
+    '''
+    Display the historic prices for a drink.
+    '''
+    def __init__(self, drink, width, height):
+        graph = history_graph.create_pyglet_image(drink, width, height)
+        cocos.sprite.Sprite.__init__(self, image=graph, anchor=(width / 2, 0))

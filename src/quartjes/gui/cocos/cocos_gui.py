@@ -33,7 +33,7 @@ import pyglet.resource
 import random
 
 from quartjes.connector.client import ClientConnector
-from quartjes.gui.cocos.center_display import DrinkLayer
+from quartjes.gui.cocos.center_display import CenterLayer
 from quartjes.gui.cocos.ticker import BottomTicker
 
 pyglet.resource.path = ["@quartjes.resources"]
@@ -82,7 +82,7 @@ class CocosGui(object):
         self._refresh_ticker_on_update = True
 
         self._ticker_layer = None
-        self._drink_layer = None
+        self._center_layer = None
         self._title_layer = None
         self._mix_layer = None
         self._connector = None
@@ -102,7 +102,7 @@ class CocosGui(object):
         print("\tGraphics: (%d, %d) fullscreen=%s" %(self._width, self._height, self._fullscreen))
         
         print()
-        print("Included libraries:")
+        print("Loaded libraries:")
         print("\tPyglet:\t%s" % pyglet.version)
         print("\tCocos:\t%s" % cocos.version)
         import twisted
@@ -168,18 +168,18 @@ class CocosGui(object):
         """
         if not self._ticker_layer or new_ticker:
             self._ticker_layer = BottomTicker(screen_width=self._width)
-        if not self._drink_layer:
-            self._drink_layer = DrinkLayer(screen_width=self._width)
+        if not self._center_layer:
+            self._center_layer = CenterLayer(screen_width=self._width)
         if not self._title_layer:
             self._title_layer = TitleLayer()
 
         self._ticker_layer.update_drinks(self._drinks)
 
-        scene = cocos.scene.Scene(self._ticker_layer, self._drink_layer, self._title_layer)
+        scene = cocos.scene.Scene(self._ticker_layer, self._center_layer, self._title_layer)
 
-        self._ticker_layer.on_focus_changed += lambda sender, drink: self._drink_layer.show_drink(drink)
+        self._ticker_layer.on_focus_changed += lambda sender, drink: self._center_layer.show_drink(drink)
 
-        self._drink_layer.show_explanation()
+        self._center_layer.show_explanation()
 
         self._display_scene(scene)
 
@@ -206,7 +206,7 @@ class CocosGui(object):
         self._round_count %= self._explanation_interval
         if self._round_count == 0:
             self._ticker_layer.next_round()
-            self._drink_layer.show_explanation()
+            self._center_layer.show_explanation()
             
 def parse_command_line():
     """
