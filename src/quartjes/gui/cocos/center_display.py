@@ -5,13 +5,116 @@ Main display area of the screen.
 from cocos.actions import CallFunc, Delay, MoveTo
 import cocos.layer
 import time
+from threading import Timer
 
 from quartjes.gui.cocos.basenodes import LabelBatch, UpdatableNode
 import quartjes.gui.cocos.history_graph as history_graph
 import quartjes.gui.cocos.mix_drawer as mix_drawer
 from quartjes.models.drink import Mix
 
-debug_mode = False
+debug_mode = True
+
+class CenterDisplayController(object):
+    '''
+    Control the content displayed on the center layer.
+    
+    Parameters
+    ----------
+    explanation_interval : int
+        Time after which an explanation should be shown.
+    '''
+    def __init__(self, explanation_interval=300):
+        
+        self._explanation_interval = explanation_interval
+        
+        # Time to back off if the display is locked while explanation should be shown
+        self._explanation_locked_backoff = 10
+        
+        # Timer for showing the explanation
+        self._explanation_timer = None
+        
+        # Currently displayed drink
+        self._current_drink = None
+        
+        # Layer used for display
+        self._layer = None
+        
+        # If the display is locked, time the lock expires
+        self._lock_expires = 0
+    
+    def __del__(self):
+        if self._explanation_timer:
+            self._explanation_timer.cancel()
+    
+    @property
+    def locked(self):
+        '''
+        Is the display currently locked by a node with minimum display time?
+        '''
+        return time.time() < self._lock_expires
+    
+    def _set_lock(self, lock_time):
+        '''
+        Lock the screen on the current node for `lock_time` seconds.
+        '''
+        self._lock_expires = time.time() + lock_time
+        
+        if debug_mode:
+            print("Lock set for %f seconds" % lock_time)
+    
+    def drink_focussed(self, drink):
+        '''
+        Handle new drink in focus.
+        '''
+        if not self.locked and self._layer:
+            if not drink and self._current_drink:
+                self._layer.clear()
+                self._current_drink = None
+                if debug_mode:
+                    print("drink_focussed: Drink cleared")
+            elif drink:
+                in_place = False
+                if self._current_drink:
+                    in_place = self._current_drink.id == drink.id
+                self._layer.show_drink(drink, in_place)
+                self._current_drink = drink
+                if debug_mode:
+                    print("drink_focussed: Display drink %s" % repr(drink))
+        elif debug_mode:
+            print("drink_focussed: Display locked or not active")
+                
+    
+    def show_explanation(self, display_time=10.0):
+        '''
+        Show the explanation.
+        '''
+        if not self.locked and self._layer:
+            self._layer.show_explanation()
+            self._set_lock(display_time)
+            self._current_drink = None
+            self._explanation_timer = Timer(self._explanation_interval, self.show_explanation)
+            print('show_explanation: Explanation activated')
+        elif self._layer:
+            if debug_mode:
+                print('show_explanation: Display locked, start backoff timer')
+            self._explanation_timer = Timer(self._explanation_locked_backoff, self.show_explanation)
+        else:
+            if debug_mode:
+                print('show_explanation: Display not active')
+            
+    
+    def get_layer(self):
+        '''
+        Get the layer for display.
+        '''
+        if not self._layer:
+            self._layer = CenterLayer()
+            if debug_mode:
+                print('get_layer: Layer activated')
+            self.show_explanation()
+        return self._layer
+    
+
 
 class CenterLayer(cocos.layer.base_layers.Layer):
     """
@@ -67,13 +170,9 @@ class CenterLayer(cocos.layer.base_layers.Layer):
         self._point_onscreen = (self._screen_width / 2, self._bottom_margin)
         
         self._move_time = move_time
-        self._explanation_time = explanation_time
 
         # Current node on display
         self._current_node = None
-        
-        # Last drink for which a display was instantiated.
-        self._current_drink = None
         
         # Contains details to construct a new node. None when nothing scheduled.
         self._next_node = None
@@ -81,15 +180,12 @@ class CenterLayer(cocos.layer.base_layers.Layer):
         # Has a clear request been issued?
         self._clear = False
         
-        self._lock_expires = 0
-
-    def schedule_next_node(self, node_type, pargs=(), kwargs={}, min_display_time=None, in_place=False, drink=None):
+    def schedule_next_node(self, node_type, pargs=(), kwargs={}, in_place=False):
         '''
         Schedule a node for display. The node will be instantiated in the render thread. 
         
         No queueing!
-        If display is still locked due to another element with `min_display_time` the request is ignored.
-        Also multiple calls without a render pass in between, will result in only the last request being honored.
+        Multiple calls without a render pass in between, will result in only the last request being honored.
         
         Parameters
         ----------
@@ -104,46 +200,27 @@ class CenterLayer(cocos.layer.base_layers.Layer):
         in_place
             True if node should be replaced on current node location. False if it should be
             brought in as a new node.
-        
-        Returns
-        -------
-        scheduled
-            True if the node is scheduled. False if display is still locked.
         '''
-        if time.time() < self._lock_expires:
-            if debug_mode:
-                print('Display still locked, ignoring next node')
-            return False
-        
-        self._next_node = (node_type, pargs, kwargs, min_display_time, in_place, drink)
+        self._next_node = (node_type, pargs, kwargs, in_place)
 
-    def show_drink(self, drink):
+    def show_drink(self, drink, in_place=False):
         """
         Change the drink currently being shown.
         """
-        if not drink:
-            if self._current_drink:
-                self.clear()
-                self._current_drink = None
-            return
-        
         if isinstance(drink, Mix):
             node_type = MixDisplay
         else:
             node_type = DrinkHistoryDisplay
         
-        if self._current_drink and self._current_drink.id == drink.id:
-            self.schedule_next_node(node_type, pargs=(drink, self._content_width, self._content_height), in_place=True, drink=drink)
-        else:
-            self.schedule_next_node(node_type, pargs=(drink, self._content_width, self._content_height), in_place=False, drink=drink)
+        self.schedule_next_node(node_type, 
+                                pargs=(drink, self._content_width, self._content_height), 
+                                in_place=in_place)
         
-    def show_explanation(self, display_time=None):
+    def show_explanation(self):
         '''
         Show an explanation of the game.
         '''
-        if not display_time:
-            display_time = self._explanation_time
-        self.schedule_next_node(Explanation, (self._content_height,), min_display_time=display_time)
+        self.schedule_next_node(Explanation, (self._content_height,))
     
     def clear(self):
         '''
@@ -155,15 +232,12 @@ class CenterLayer(cocos.layer.base_layers.Layer):
         """
         Called by Cocos2D. Performs actions on next render loop.
         """
-        locked = time.time() < self._lock_expires
-        
         if self._clear:
             self._replace_node(None)
             self._clear = False
-            self._lock_expires = 0
         
-        if self._next_node and not locked:
-            node_type, pargs, kwargs, min_display_time, in_place, drink = self._next_node
+        if self._next_node:
+            node_type, pargs, kwargs, in_place = self._next_node
             self._next_node = None
             
             try:
@@ -177,9 +251,6 @@ class CenterLayer(cocos.layer.base_layers.Layer):
                 import traceback
                 traceback.print_exc()
             else:
-                if min_display_time:
-                    self._lock_expires = time.time() + min_display_time
-
                 if in_place:
                     if debug_mode:
                         print('Doing in place update')
@@ -188,9 +259,6 @@ class CenterLayer(cocos.layer.base_layers.Layer):
                     if debug_mode:
                         print('Doing full update')
                     self._replace_node(next_node)
-                
-                if drink:
-                    self._current_drink = drink
 
 
     def _replace_node(self, new_node):
