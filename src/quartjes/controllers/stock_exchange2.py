@@ -27,6 +27,7 @@ Possible todos
 
 import math
 import numpy
+import random
 from threading import Thread, Event
 import time
 
@@ -563,11 +564,17 @@ class PriceAgnosticDrinkRandomizer(object):
         
         return self._prioritized_drinks[pos]
 
-if __name__ == "__main__":
-    # Do a self test
-    import random
+def simulate(run_time, store_results=True):
+    '''
+    Simulate running the stock exchange. Uses a time mock to fast forward and
+    simulates a client doing several buys.
     
-    #debug_mode = True
+    Parameters
+    ----------
+    run_time : int
+        Time in seconds to run.
+    '''
+    global unit_test_mode
     unit_test_mode = True
     install_time_mock()
     
@@ -577,20 +584,20 @@ if __name__ == "__main__":
     rng = random.Random()
     randomizer = PriceAgnosticDrinkRandomizer(drinks)
     
-    price_csv = open("stock_exchange2_prices.csv", "w")
-    demand_csv = open("stock_exchange2_demands.csv", "w")
-    
-    names = ["time"]
-    for drink in drinks:
-        names.append(drink.name)
-    print(";".join(names), file=price_csv)
-    print(";".join(names), file=demand_csv)
+    if store_results:
+        price_csv = open("stock_exchange2_prices.csv", "w")
+        demand_csv = open("stock_exchange2_demands.csv", "w")
+        
+        names = ["time"]
+        for drink in drinks:
+            names.append(drink.name)
+        print(";".join(names), file=price_csv)
+        print(";".join(names), file=demand_csv)
     
     start_time = time.time()
     
     try:
         # run for 12 hours
-        run_time = 12 * 60 * 60
         runs = run_time / exchange.get_round_time()
         for r in range(0, runs):
             print("Run %d of %d" % (r + 1, runs))
@@ -601,16 +608,23 @@ if __name__ == "__main__":
             exchange._recalculate_prices()
             randomizer.update()
             
-            prices = [str(time.time() - start_time)]
-            demands = [str(time.time() - start_time)]
-            for drink in drinks:
-                prices.append(str(drink.price_factor))
-                demands.append(str(exchange._calculate_demand(drink)))
-            print(";".join(prices), file=price_csv)
-            print(";".join(demands), file=demand_csv)
+            if store_results:
+                prices = [str(time.time() - start_time)]
+                demands = [str(time.time() - start_time)]
+                for drink in drinks:
+                    prices.append(str(drink.price_factor))
+                    demands.append(str(exchange._calculate_demand(drink)))
+                print(";".join(prices), file=price_csv)
+                print(";".join(demands), file=demand_csv)
     finally:
-        price_csv.close()
-        demand_csv.close()
+        if store_results:
+            price_csv.close()
+            demand_csv.close()
+
+if __name__ == "__main__":
+    # Do a self test
+    
+    simulate(12 * 60 * 60)
     
     
     
