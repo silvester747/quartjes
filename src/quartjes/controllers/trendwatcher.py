@@ -14,22 +14,54 @@ Limitations
 """
 
 from quartjes.controllers.database import default_database
+from quartjes.controllers.stock_exchange2 import simulate
 
-def calculate_absolute_factor_difference_data():
+def calculate_price_difference(drinks):
     """
-    Get all drink history from the database. Calculate for each history item
-    the difference with the current price.
+    For each drink calculate the absolute and relative difference for each historic price
+    against the current price. 
+    
+    Returns
+    -------
+    data
+        A dictionary of drink: differences. The differences are a list of tuples (absolute, relative) going
+        back in time (first pair is latest history). Relative is indexed at 1.0 for current price.
     """
-    drinks = default_database().get_drinks()
     
     data = {}
     
     # Fill history data for each drink
     for drink in drinks:
-        current_price_factor = drink.price_factor
-        factor_diffs = []
-        for history_item in reversed(drink.price_history):
-            factor_diffs.append(current_price_factor / history_item.price_factor)
-        data[drink] = factor_diffs
+        current_price = drink.current_price
+        data[drink] = [(history_item.price-current_price, history_item.price/current_price)
+                       for history_item
+                       in reversed(drink.price_history)]
     
-    return data      
+    return data
+
+def order_by_relative_price_change(drinks, time_window):
+    '''
+    Create a list of drinks ordered by their relative price change.
+    
+    Parameters
+    ----------
+    drinks
+        Drinks to analyze.
+    time_window
+        Number of history samples to go back.
+    '''
+    diff_data = calculate_price_difference(drinks)
+    price_data = [(drink, price_data[time_window][1])
+                  for drink, price_data
+                  in diff_data.items()]
+    price_data.sort(cmp=lambda x, y: cmp(x[1], y[1]))
+    return price_data
+    
+
+if __name__ == '__main__':
+    simulate(60*60)
+    #default_database()._dump_drinks()
+    data = order_by_relative_price_change(default_database().get_drinks(), 10)
+    
+    import pprint
+    pprint.pprint(data)

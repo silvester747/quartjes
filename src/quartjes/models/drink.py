@@ -267,6 +267,9 @@ class Drink(QuartjesBaseClass):
         if other == None:
             return True
         return vars(self)!=vars(other)
+    
+    def __repr__(self):
+        return "Drink<%s>" % self._name
 
 class Mix(Drink):
     """
@@ -366,6 +369,9 @@ class Mix(Drink):
                 self._price_factor = self._price_factor + float(d.price_factor)/parts
             self.color = tuple(color)
             self.price_factor *= self.discount
+
+    def __repr__(self):
+        return "Mix<%s>" % self._name
 
 class History(object):
     """
