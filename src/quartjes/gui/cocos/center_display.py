@@ -93,11 +93,13 @@ class CenterDisplayController(object):
             self._set_lock(display_time)
             self._current_drink = None
             self._explanation_timer = Timer(self._explanation_interval, self.show_explanation)
+            self._explanation_timer.start()
             print('show_explanation: Explanation activated')
         elif self._layer:
             if debug_mode:
                 print('show_explanation: Display locked, start backoff timer')
             self._explanation_timer = Timer(self._explanation_locked_backoff, self.show_explanation)
+            self._explanation_timer.start()
         else:
             if debug_mode:
                 print('show_explanation: Display not active')
