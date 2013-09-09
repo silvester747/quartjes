@@ -32,8 +32,8 @@ class Test(unittest.TestCase):
         self.exchange._recalculate_factors()
         prices_after = self._get_drink_prices()
         
-        for id in prices_before:
-            self.assertAlmostEqual(prices_before[id], prices_after[id], delta=0.01)
+        for id_ in prices_before:
+            self.assertAlmostEqual(prices_before[id_], prices_after[id_], delta=0.01)
 
     def test_single_sale(self):
         """
@@ -58,14 +58,14 @@ class Test(unittest.TestCase):
         total_before = 0
         total_after = 0
         
-        for id in prices_before:
-            total_before += prices_before[id]
-            total_after += prices_after[id]
-            if id == drink.id:
-                self.assertGreaterEqual(prices_after[id], prices_before[id], "Expected sold drink price to rise.")
+        for id_ in prices_before:
+            total_before += prices_before[id_]
+            total_after += prices_after[id_]
+            if id_ == drink.id:
+                self.assertGreaterEqual(prices_after[id_], prices_before[id_], "Expected sold drink price to rise.")
             else:
-                self.assertLessEqual(prices_after[id], prices_before[id], 
-                                     "Expected other drink prices to fall: %s" % id)
+                self.assertLessEqual(prices_after[id_], prices_before[id_], 
+                                     "Expected other drink prices to fall: %s" % id_)
         
         self.assertAlmostEqual(total_before, total_after, 
                                msg="Expect total price level to remain equal (before=%f, after=%f)" % (total_before, total_after), 
@@ -98,11 +98,11 @@ class Test(unittest.TestCase):
         
         self.exchange._db._dump_drinks()
         
-        for id in prices_before:
-            if id == drink1.id or id == drink2.id:
-                self.assertGreaterEqual(prices_after[id], prices_before[id], "Expected sold drink price to rise.")
+        for id_ in prices_before:
+            if id_ == drink1.id or id_ == drink2.id:
+                self.assertGreaterEqual(prices_after[id_], prices_before[id_], "Expected sold drink price to rise.")
             else:
-                self.assertLessEqual(prices_after[id], prices_before[id], "Expected other drink prices to fall")
+                self.assertLessEqual(prices_after[id_], prices_before[id_], "Expected other drink prices to fall")
         
         diff1 = prices_after[drink1.id] - prices_before[drink1.id]
         diff2 = prices_after[drink2.id] - prices_before[drink2.id]
@@ -119,9 +119,9 @@ class Test(unittest.TestCase):
 
         total_before = 0
         total_after = 0
-        for id in prices_before:
-            total_before += prices_before[id]
-            total_after += prices_after[id]
+        for id_ in prices_before:
+            total_before += prices_before[id_]
+            total_after += prices_after[id_]
         
         self.assertAlmostEqual(total_before, total_after, 
                                msg="Expect total price level to remain equal (before=%f, after=%f)" % (total_before, total_after), 
