@@ -10,6 +10,7 @@ from quartjes.util.classtools import QuartjesBaseClass
 import quartjes.connector.serializer as serializer
 from quartjes.connector.serializer import et
 
+
 class Message(QuartjesBaseClass):
     """
     Base class all messages are derived from.
@@ -48,6 +49,7 @@ class MethodCallMessage(Message):
         self.pargs = pargs
         self.kwargs = kwargs
 
+
 class ResponseMessage(Message):
     """
     Message used to respond to server request messages.
@@ -70,6 +72,7 @@ class ResponseMessage(Message):
         self.result = result
         self.response_to = response_to
 
+
 class SubscribeMessage(Message):
     """
     Message used to subscribe to events.
@@ -87,6 +90,7 @@ class SubscribeMessage(Message):
 
         self.service_name = service_name
         self.event_name = event_name
+
 
 class EventMessage(Message):
     """
@@ -112,6 +116,7 @@ class EventMessage(Message):
         self.pargs = pargs
         self.kwargs = kwargs
 
+
 class ServerMotdMessage(Message):
     """
     MOTD message received from the server upon connection. Part of the initial handshake.
@@ -129,7 +134,39 @@ class ServerMotdMessage(Message):
 
         self.motd = motd
         self.client_id = client_id
-        
+
+
+class FindServerMessage(Message):
+    """
+    Request message to find available servers. Needs to be broadcasted so every
+    server can respond.
+    """
+
+    def __init__(self):
+        Message.__init__(self)
+
+
+class ServerFoundMessage(Message):
+    """
+    Response to FindServerMessage as a server. Return the address and port to connect to.
+
+    Parameters
+    ----------
+    name : str
+        Identifying name of the server.
+    host_address : str
+        Host address the server is reachable at.
+    port : int
+        Port number to connect to.
+    """
+
+    def __init__(self, name, host_address, port):
+        Message.__init__(self)
+
+        self.name = name
+        self.port = port
+        self.host_address = host_address
+
 
 def parse_message_string(string):
     """
