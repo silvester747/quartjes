@@ -32,6 +32,7 @@ default_timeout = 10
 Default value for the timeout in seconds.
 """
 
+
 class QuartjesProtocol(NetstringReceiver):
     """
     Protocol implementation for the Quartjes application. For now we are using a basic
@@ -266,7 +267,8 @@ class QuartjesServerFactory(ServerFactory):
         """
         if isinstance(result.original_message, SubscribeMessage):
             self._r_subscribe_to_event(result.original_message.service_name,
-                result.original_message.event_name, protocol)
+                                       result.original_message.event_name,
+                                       protocol)
         
         return result.response
 
@@ -292,7 +294,7 @@ class QuartjesServerFactory(ServerFactory):
         """
         #print("Performing service: %s, method_name: %s" % (msg.service_name, msg.method_name))
         service = self._services.get(msg.service_name)
-        if service == None:
+        if service is None:
             raise MessageHandleError(MessageHandleError.RESULT_UNKNOWN_SERVICE, msg)
 
         try:
@@ -322,7 +324,7 @@ class QuartjesServerFactory(ServerFactory):
             If any error occurs while handling the message.
         """
         service = self._services.get(service_name)
-        if service == None:
+        if service is None:
             raise MessageHandleError(MessageHandleError.RESULT_UNKNOWN_SERVICE)
         
         subscribe_to_remote_event(service, service_name, event_name, protocol, self)
@@ -370,7 +372,7 @@ class QuartjesServerFactory(ServerFactory):
             raise error
         print("Error occurred: %s" % result)
         msgid = None
-        if error.original_message != None:
+        if error.original_message is not None:
             msgid = error.original_message.id
         msg = ResponseMessage(result_code=error.error_code, response_to=msgid, result=error.error_details)
         protocol.send_message(create_message_string(msg))
@@ -543,14 +545,14 @@ class QuartjesClientFactory(ReconnectingClientFactory):
         """
         if isinstance(msg, ResponseMessage):
             d = self._waiting_messages.pop(msg.response_to, None)
-            if d != None:
+            if d is not None:
                 d.callback(msg)
         elif isinstance(msg, ServerMotdMessage):
             print("Connected: %s" % msg.motd)
             self._r_successful_connection()
         elif isinstance(msg, EventMessage):
             callback = self._event_callbacks.get((msg.service_name, msg.event_name))
-            if callback != None:
+            if callback is not None:
                 threads.deferToThread(callback, *msg.pargs, **msg.kwargs)
             
     def _r_successful_connection(self):
@@ -618,7 +620,7 @@ class QuartjesClientFactory(ReconnectingClientFactory):
             Deferred object that is triggered when a response is received or a
             timeout occurs.
         """
-        if self._current_protocol == None:
+        if self._current_protocol is None:
             raise ConnectionError("Not connected.")
         d = self._r_create_timeout_deferred()
         self._waiting_messages[message_id] = d
@@ -763,7 +765,7 @@ class QuartjesClientFactory(ReconnectingClientFactory):
         -------
         True if currently connected, False if not.
         """
-        return self._current_protocol != None
+        return self._current_protocol is not None
 
 
 class MessageResult(object):
