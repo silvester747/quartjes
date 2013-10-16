@@ -406,7 +406,7 @@ class Database:
             The database to monitor.
         """
         def __init__(self, db):
-            super(Database._DatabaseMonitor, self).__init__()
+            super(Database._DatabaseMonitor, self).__init__(name='DatabaseMonitor')
             self.daemon = True
             self.db = db
             

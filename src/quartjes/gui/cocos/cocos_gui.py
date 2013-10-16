@@ -130,7 +130,8 @@ class CocosGui(object):
         print()
         print("Shut down in progress...")
         print()
-        
+
+        self._center_display_controller.stop()
         self._connector.stop()
 
     def show_gl_info(self):

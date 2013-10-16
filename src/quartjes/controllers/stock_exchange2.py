@@ -102,7 +102,7 @@ class StockExchange2(Thread):
     """
     
     def __init__(self):
-        Thread.__init__(self)
+        Thread.__init__(self, name='StockExchange2')
         
         # Time between recalculations (seconds)
         # For now let's not support changing this value while running, limiting complexity of calculations.

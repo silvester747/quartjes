@@ -146,8 +146,9 @@ class ThreadedNodeConstructor(Thread, NodeConstructor):
     __metaclass__ = ABCMeta
 
     def __init__(self):
-        Thread.__init__(self)
+        Thread.__init__(self, name=self.__class__.__name__)
         NodeConstructor.__init__(self)
+        self.daemon = True
 
         self.__ready = Event()
 

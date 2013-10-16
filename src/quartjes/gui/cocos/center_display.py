@@ -44,7 +44,10 @@ class CenterDisplayController(object):
         # If the display is locked, time the lock expires
         self._lock_expires = 0
     
-    def __del__(self):
+    def stop(self):
+        """
+        Stop the controller.
+        """
         if self._explanation_timer:
             self._explanation_timer.cancel()
     
