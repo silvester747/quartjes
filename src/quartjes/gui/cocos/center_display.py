@@ -7,22 +7,24 @@ import cocos.layer
 import time
 from threading import Timer
 
-from quartjes.gui.cocos.basenodes import LabelBatch, UpdatableNode
+from quartjes.gui.cocos.basenodes import LabelBatch, UpdatableNode, SimpleNodeConstructor
+from quartjes.gui.cocos.basenodes import ThreadedNodeConstructor
 import quartjes.gui.cocos.history_graph as history_graph
 import quartjes.gui.cocos.mix_drawer as mix_drawer
 from quartjes.models.drink import Mix
 
 debug_mode = True
 
+
 class CenterDisplayController(object):
-    '''
+    """
     Control the content displayed on the center layer.
     
     Parameters
     ----------
     explanation_interval : int
         Time after which an explanation should be shown.
-    '''
+    """
     def __init__(self, explanation_interval=300):
         
         self._explanation_interval = explanation_interval
@@ -48,24 +50,24 @@ class CenterDisplayController(object):
     
     @property
     def locked(self):
-        '''
+        """
         Is the display currently locked by a node with minimum display time?
-        '''
+        """
         return time.time() < self._lock_expires
     
     def _set_lock(self, lock_time):
-        '''
+        """
         Lock the screen on the current node for `lock_time` seconds.
-        '''
+        """
         self._lock_expires = time.time() + lock_time
         
         if debug_mode:
             print("Lock set for %f seconds" % lock_time)
     
     def drink_focussed(self, drink):
-        '''
+        """
         Handle new drink in focus.
-        '''
+        """
         if not self.locked and self._layer:
             if not drink and self._current_drink:
                 self._layer.clear()
@@ -82,12 +84,11 @@ class CenterDisplayController(object):
                     print("drink_focussed: Display drink %s" % repr(drink))
         elif debug_mode:
             print("drink_focussed: Display locked or not active")
-                
-    
+
     def show_explanation(self, display_time=10.0):
-        '''
+        """
         Show the explanation.
-        '''
+        """
         if not self.locked and self._layer:
             self._layer.show_explanation()
             self._set_lock(display_time)
@@ -104,18 +105,16 @@ class CenterDisplayController(object):
             if debug_mode:
                 print('show_explanation: Display not active')
             
-    
     def get_layer(self):
-        '''
+        """
         Get the layer for display.
-        '''
+        """
         if not self._layer:
             self._layer = CenterLayer()
             if debug_mode:
                 print('get_layer: Layer activated')
             self.show_explanation()
         return self._layer
-    
 
 
 class CenterLayer(cocos.layer.base_layers.Layer):
@@ -141,8 +140,6 @@ class CenterLayer(cocos.layer.base_layers.Layer):
         Margin at the right side of the screen.
     move_time : float
         Time in seconds to move an object in and out of the screen.
-    explanation_time : float
-        Minimum time in seconds to display the explanation.
     """
 
     def __init__(self, 
@@ -150,8 +147,7 @@ class CenterLayer(cocos.layer.base_layers.Layer):
                  bottom_margin=150,
                  left_margin=50,
                  right_margin=50,
-                 move_time=1.0, 
-                 explanation_time=10.0):
+                 move_time=1.0):
         """
         Initialize the drink layer.
         """
@@ -182,8 +178,8 @@ class CenterLayer(cocos.layer.base_layers.Layer):
         # Has a clear request been issued?
         self._clear = False
         
-    def schedule_next_node(self, node_type, pargs=(), kwargs={}, in_place=False):
-        '''
+    def schedule_next_node(self, node_constructor, in_place=False):
+        """
         Schedule a node for display. The node will be instantiated in the render thread. 
         
         No queueing!
@@ -191,43 +187,38 @@ class CenterLayer(cocos.layer.base_layers.Layer):
         
         Parameters
         ----------
-        node_type
-            Callable that returns the node to display (usually the class).
-        pargs : list
-            Positional arguments to pass to `node_type`.
-        kwargs : dict
-            Keyword arguments to pass to `node_type`.
-        min_display_time
-            Minimum time in seconds to display the node.
+        node_constructor
+            Constructor for the next node.
         in_place
             True if node should be replaced on current node location. False if it should be
             brought in as a new node.
-        '''
-        self._next_node = (node_type, pargs, kwargs, in_place)
+        """
+        self._next_node = (node_constructor, in_place)
 
     def show_drink(self, drink, in_place=False):
         """
         Change the drink currently being shown.
         """
         if isinstance(drink, Mix):
-            node_type = MixDisplay
+            node_type = MixDisplayConstructor
         else:
-            node_type = DrinkHistoryDisplay
-        
-        self.schedule_next_node(node_type, 
-                                pargs=(drink, self._content_width, self._content_height), 
+            node_type = DrinkHistoryDisplayConstructor
+
+        node_constructor = node_type(drink, self._content_width, self._content_height)
+
+        self.schedule_next_node(node_constructor,
                                 in_place=in_place)
         
     def show_explanation(self):
-        '''
+        """
         Show an explanation of the game.
-        '''
-        self.schedule_next_node(Explanation, (self._content_height,))
+        """
+        self.schedule_next_node(ExplanationConstructor(self._content_height))
     
     def clear(self):
-        '''
+        """
         Clear the display, removes the current content, even if it is locked
-        '''
+        """
         self._clear = True
 
     def draw(self, *args, **kwargs):
@@ -239,29 +230,18 @@ class CenterLayer(cocos.layer.base_layers.Layer):
             self._clear = False
         
         if self._next_node:
-            node_type, pargs, kwargs, in_place = self._next_node
-            self._next_node = None
-            
-            try:
-                next_node = node_type(*pargs, **kwargs)
-            except:
-                print('Failed to instantiate next node')
-                print('\tNode type: %s' % node_type)
-                print('\tPargs:     %s' % pargs)
-                print('\tKwargs:    %s' % kwargs)
-                print('Stacktrace:')
-                import traceback
-                traceback.print_exc()
-            else:
+            node_constructor, in_place = self._next_node
+            if node_constructor.ready:
+                self._next_node = None
+
                 if in_place:
                     if debug_mode:
                         print('Doing in place update')
-                    self._update_node(next_node)
+                    self._update_node(node_constructor.get_node())
                 else:
                     if debug_mode:
                         print('Doing full update')
-                    self._replace_node(next_node)
-
+                    self._replace_node(node_constructor.get_node())
 
     def _replace_node(self, new_node):
         """
@@ -278,7 +258,7 @@ class CenterLayer(cocos.layer.base_layers.Layer):
 
         if self._current_node:
             self._current_node.do(MoveTo(self._point_offscreen_left, 0.5 * self._move_time) +
-                                 CallFunc(self._current_node.kill))
+                                  CallFunc(self._current_node.kill))
 
         self._current_node = UpdatableNode(new_node, self._point_offscreen_right)
 
@@ -294,11 +274,10 @@ class CenterLayer(cocos.layer.base_layers.Layer):
             self._current_node.update(new_contents)
     
 
-
 class Explanation(LabelBatch):
-    '''
+    """
     Display an explanation of the game.
-    '''
+    """
     
     text = ("Let op!",
             "",
@@ -320,60 +299,104 @@ class Explanation(LabelBatch):
                           font_name=Explanation.font,
                           font_size=40,
                           anchor_x='center', anchor_y='top',
-                          position = (center_x, y))
+                          position=(center_x, y))
             
             y -= 70
 
-class MixDisplay(LabelBatch):
-    '''
-    Display the contents of a mix drink.
-    '''
-    def __init__(self, mix, width, height):
-        LabelBatch.__init__(self)
-        
+
+class ExplanationConstructor(SimpleNodeConstructor):
+    """
+    Constructor for the explanation node.
+    """
+    node_type = Explanation
+
+
+class MixDisplayConstructor(ThreadedNodeConstructor):
+    """
+    Construct the node to display a mix.
+    """
+    def __init__(self, drink, width, height):
+        self.__drink = drink
+        self.__width = width
+        self.__height = height
+
+        self.__mix_image = None
+
+        ThreadedNodeConstructor.__init__(self)
+
+    def _construct_node(self):
+        node = LabelBatch()
+
         font = 'Times New Roman'
         center_x = 0
-        max_y = height
+        max_y = self.__height
 
-        self.add_text(mix.name,
+        node.add_text(self.__drink.name,
                       font_name=font,
                       font_size=64,
                       anchor_x='center', anchor_y='top',
-                      position = (center_x, max_y))
+                      position=(center_x, max_y))
 
-        self.add_text("Alcohol: %2.1f %%" % mix.alc_perc,
+        node.add_text("Alcohol: %2.1f %%" % self.__drink.alc_perc,
                       font_name=font,
                       font_size=20,
                       anchor_x='center', anchor_y='top',
-                      position = (center_x, max_y - 100))
+                      position=(center_x, max_y - 100))
 
         y = max_y - 150
-        y_spacing = y / len(mix.drinks)
+        y_spacing = y / len(self.__drink.drinks)
         y -= y_spacing / 2
-        for d in mix.drinks:
-            self.add_text(d.name,
+        for d in self.__drink.drinks:
+            node.add_text(d.name,
                           font_name=font,
                           font_size=20,
                           anchor_x='center', anchor_y='top',
-                          position = (center_x, y))
+                          position=(center_x, y))
             y -= y_spacing
 
-        self.add_text("%d" % mix.current_price_quartjes,
+        node.add_text("%d" % self.__drink.current_price_quartjes,
                       font_name=font,
                       font_size=150,
                       anchor_x='center', anchor_y='center',
-                      position = (center_x + 300, (max_y - 150) / 2))
+                      position=(center_x + 300, (max_y - 150) / 2))
 
-        image=mix_drawer.create_mix_drawing(height=max_y-150, width=200, mix=mix)
-        mix_drawing = cocos.sprite.Sprite(image=image,
+        mix_drawing = cocos.sprite.Sprite(image=self.__mix_image,
                                           position=(center_x - 300, (max_y - 150) / 2),
                                           anchor=(100, (max_y - 150) / 2))
-        self.add(mix_drawing)
+        node.add(mix_drawing)
 
-class DrinkHistoryDisplay(cocos.sprite.Sprite):
-    '''
-    Display the historic prices for a drink.
-    '''
+        return node
+
+    def _pre_construct(self):
+        """
+        Construct the mix drink image.
+        """
+        self.__mix_image = mix_drawer.create_mix_drawing(height=self.__height-150,
+                                                         width=200,
+                                                         mix=self.__drink)
+
+class DrinkHistoryDisplayConstructor(ThreadedNodeConstructor):
+    """
+    Construct the node to display historic prices for a drink.
+    """
     def __init__(self, drink, width, height):
-        graph = history_graph.create_pyglet_image(drink, width, height)
-        cocos.sprite.Sprite.__init__(self, image=graph, anchor=(width / 2, 0))
+        self.__drink = drink
+        self.__width = width
+        self.__height = height
+
+        self.__graph = None
+
+        ThreadedNodeConstructor.__init__(self)
+
+    def _construct_node(self):
+        return cocos.sprite.Sprite(image=self.__graph,
+                                   anchor=(self.__width / 2, 0))
+
+    def _pre_construct(self):
+        """
+        Construct the graph to display.
+        """
+        self.__graph = history_graph.create_pyglet_image(self.__drink,
+                                                         self.__width,
+                                                         self.__height)
+

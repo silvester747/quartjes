@@ -2,10 +2,13 @@
 Basic nodes used in different parts of the Cocos GUI.
 """
 
+from abc import ABCMeta, abstractmethod, abstractproperty
 import cocos
 from cocos.actions import FadeIn, FadeOut
 import pyglet
 from pyglet.gl import glPushMatrix, glPopMatrix
+from threading import Event, Thread
+
 
 class LabelBatch(cocos.cocosnode.CocosNode):
     """
@@ -32,10 +35,10 @@ class LabelBatch(cocos.cocosnode.CocosNode):
 
     @property
     def opacity(self):
-        '''
+        """
         Opacity of all elements contained. Returns None if not set explicitly.
         Note: if you directly set opacity on any of the contained objects, this will ignore that.
-        '''
+        """
         return self._opacity
     
     @opacity.setter
@@ -87,7 +90,6 @@ class UpdatableNode(cocos.cocosnode.CocosNode):
         Update the drink shown.
         """
         self._inner_node.do(FadeOut(0.5))
-        #self._inner_node.kill()
         self._inner_node = new_node
         new_node.opacity = 0
         self.add(new_node, z=self._next_z_level)
@@ -97,3 +99,121 @@ class UpdatableNode(cocos.cocosnode.CocosNode):
     def hide(self):
         self._inner_node.do(FadeOut(1))
 
+
+class NodeConstructor(object):
+    """
+    Base class for node constructors. Prepares and returns a CocosNode
+    for display. Might take time to prepare the node, so check the
+    `ready` attribute first.
+
+    Attributes
+    ----------
+    ready
+    """
+
+    __metaclass__ = ABCMeta
+
+    def __init__(self):
+        pass
+
+    @abstractproperty
+    def ready(self):
+        """
+        Is the node ready for construction.
+        """
+
+    @abstractmethod
+    def get_node(self):
+        """
+        Get the constructed node.
+
+        Returns
+        -------
+        node
+            The constructed CocosNode.
+        """
+
+
+class ThreadedNodeConstructor(Thread, NodeConstructor):
+    """
+    Constructs a node that requires more processing than should be
+    performed in between render loops. First everything that can be
+    constructed outside the renderer is constructed in a separate
+    thread. When ready, the actual node can be constructed inside
+    the render thread.
+    """
+
+    __metaclass__ = ABCMeta
+
+    def __init__(self):
+        Thread.__init__(self)
+        NodeConstructor.__init__(self)
+
+        self.__ready = Event()
+
+        self.start()
+
+    def run(self):
+        self._pre_construct()
+        self.__ready.set()
+
+    @property
+    def ready(self):
+        return self.__ready.is_set()
+
+    @abstractmethod
+    def _pre_construct(self):
+        """
+        Perform construction steps in a separate thread outside the render loop.
+        """
+
+    @abstractmethod
+    def _construct_node(self):
+        """
+        Construct the CocosNode. Must run inside the render loop after the pre
+        construct has finished.
+        """
+
+    def get_node(self):
+        """
+        Get the constructed node.
+        Requires the pre construction to be finished. If not it will block until ready.
+
+        Returns
+        -------
+        node
+            The constructed CocosNode.
+        """
+        self.__ready.wait()
+        return self._construct_node()
+
+
+class SimpleNodeConstructor(NodeConstructor):
+    """
+    Most basic node constructor. Needs no pre construction, so always ready
+    to go. Constructs node type given in class attribute using all arguments
+    from the constructor.
+    """
+
+    node_type = None
+
+    def __init__(self, *pargs, **kwargs):
+        NodeConstructor.__init__(self)
+        self.__pargs = pargs
+        self.__kwargs = kwargs
+
+    @property
+    def ready(self):
+        return True
+
+    def get_node(self):
+        try:
+            return self.node_type(*self.__pargs, **self.__kwargs)
+        except:
+            print('Failed to instantiate next node')
+            print('\tNode type: %s' % SimpleNodeConstructor.node_type)
+            print('\tPargs:     %s' % self.__pargs)
+            print('\tKwargs:    %s' % self.__kwargs)
+            print('Stack trace:')
+            import traceback
+            traceback.print_exc()
