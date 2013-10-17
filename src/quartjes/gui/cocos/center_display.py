@@ -3,15 +3,19 @@ Main display area of the screen.
 """
 
 from cocos.actions import CallFunc, Delay, MoveTo
+import cocos.director
 import cocos.layer
+import cocos.sprite
 import time
 from threading import Timer
 
+from quartjes.controllers.database import default_database
 from quartjes.gui.cocos.basenodes import LabelBatch, UpdatableNode, SimpleNodeConstructor
 from quartjes.gui.cocos.basenodes import ThreadedNodeConstructor
-import quartjes.gui.cocos.history_graph as history_graph
-import quartjes.gui.cocos.mix_drawer as mix_drawer
+from quartjes.gui.cocos import history_graph
+from quartjes.gui.cocos import mix_drawer
 from quartjes.models.drink import Mix
+from quartjes.models.trendwatcher import order_by_relative_price_change
 
 debug_mode = True
 
@@ -217,7 +221,13 @@ class CenterLayer(cocos.layer.base_layers.Layer):
         Show an explanation of the game.
         """
         self.schedule_next_node(ExplanationConstructor(self._content_height))
-    
+
+    def show_trends(self):
+        """
+        Show trends in prices.
+        """
+        self.schedule_next_node(TrendDisplayConstructor(self._content_width, self._content_height))
+
     def clear(self):
         """
         Clear the display, removes the current content, even if it is locked
@@ -378,6 +388,7 @@ class MixDisplayConstructor(ThreadedNodeConstructor):
                                                          width=200,
                                                          mix=self.__drink)
 
+
 class DrinkHistoryDisplayConstructor(ThreadedNodeConstructor):
     """
     Construct the node to display historic prices for a drink.
@@ -403,3 +414,87 @@ class DrinkHistoryDisplayConstructor(ThreadedNodeConstructor):
                                                          self.__width,
                                                          self.__height)
 
+
+class TrendDisplayConstructor(ThreadedNodeConstructor):
+    """
+    Construct a node to display trends in prices.
+    """
+    def __init__(self, width, height, time_window=10):
+        self.__width = width
+        self.__height = height
+        self.__time_window = time_window
+
+        self.__trend_data = None
+
+        ThreadedNodeConstructor.__init__(self)
+
+    def _construct_node(self):
+        """
+        Construct a view of current trends.
+        """
+        node = LabelBatch()
+
+        font = 'Times New Roman'
+        center_x = 0
+        max_y = self.__height
+
+        # Title
+        node.add_text('Stijgers en dalers',
+                      font_name=font,
+                      font_size=40,
+                      anchor_x='center', anchor_y='top',
+                      position=(center_x, max_y))
+        max_y -= 150
+
+        # Divide rest into two sections: risers and fallers
+        margin_center = 50
+        risers_left = 0 - self.__width/2
+        risers_right = 0 - margin_center
+        fallers_left = margin_center
+        fallers_right = self.__width/2
+
+        y_spacing = max_y/4
+
+        risers = self.__trend_data[:5]
+        fallers = list(reversed(self.__trend_data[-5:]))
+
+        for index, data in enumerate(risers):
+            percentage = ((1/data[1]) - 1) * 100
+
+            node.add_text(data[0].name,
+                          font_name=font,
+                          font_size=30,
+                          anchor_x='left',
+                          anchor_y='bottom',
+                          position=(risers_left, max_y-index*y_spacing))
+            node.add_text('+%d %%' % percentage,
+                          font_name=font,
+                          font_size=30,
+                          anchor_x='right',
+                          anchor_y='bottom',
+                          position=(risers_right, max_y-index*y_spacing))
+
+        for index, data in enumerate(fallers):
+            percentage = (1 - (1/data[1])) * 100
+
+            node.add_text(data[0].name,
+                          font_name=font,
+                          font_size=30,
+                          anchor_x='left',
+                          anchor_y='bottom',
+                          position=(fallers_left, max_y-index*y_spacing))
+            node.add_text('-%d %%' % percentage,
+                          font_name=font,
+                          font_size=30,
+                          anchor_x='right',
+                          anchor_y='bottom',
+                          position=(fallers_right, max_y-index*y_spacing))
+
+        return node
+
+    def _pre_construct(self):
+        """
+        Get current trend data.
+        """
+        self.__trend_data = order_by_relative_price_change(default_database().get_drinks(),
+                                                           self.__time_window)

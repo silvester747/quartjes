@@ -16,6 +16,7 @@ Limitations
 from quartjes.controllers.database import default_database
 from quartjes.controllers.stock_exchange2 import simulate
 
+
 def calculate_price_difference(drinks):
     """
     For each drink calculate the absolute and relative difference for each historic price
@@ -27,7 +28,7 @@ def calculate_price_difference(drinks):
         A dictionary of drink: differences. The differences are a list of tuples (absolute, relative) going
         back in time (first pair is latest history). Relative is indexed at 1.0 for current price.
     """
-    
+
     data = {}
     
     # Fill history data for each drink
@@ -39,8 +40,9 @@ def calculate_price_difference(drinks):
     
     return data
 
+
 def order_by_relative_price_change(drinks, time_window):
-    '''
+    """
     Create a list of drinks ordered by their relative price change.
     
     Parameters
@@ -49,9 +51,9 @@ def order_by_relative_price_change(drinks, time_window):
         Drinks to analyze.
     time_window
         Number of history samples to go back.
-    '''
+    """
     diff_data = calculate_price_difference(drinks)
-    price_data = [(drink, price_data[time_window][1])
+    price_data = [(drink, price_data[time_window if len(price_data) > time_window else len(price_data)-1][1])
                   for drink, price_data
                   in diff_data.items()]
     price_data.sort(cmp=lambda x, y: cmp(x[1], y[1]))
@@ -61,7 +63,7 @@ def order_by_relative_price_change(drinks, time_window):
 if __name__ == '__main__':
     simulate(60*60)
     #default_database()._dump_drinks()
-    data = order_by_relative_price_change(default_database().get_drinks(), 10)
+    test_data = order_by_relative_price_change(default_database().get_drinks(), 10)
     
     import pprint
-    pprint.pprint(data)
+    pprint.pprint(test_data)
