@@ -1,13 +1,14 @@
 """
 Main display area of the screen.
 """
+from __future__ import print_function
 
 from cocos.actions import CallFunc, Delay, MoveTo
 import cocos.director
 import cocos.layer
 import cocos.sprite
 import time
-from threading import Timer
+from threading import Event, Thread
 
 from quartjes.controllers.database import default_database
 from quartjes.gui.cocos.basenodes import LabelBatch, UpdatableNode, SimpleNodeConstructor
@@ -20,24 +21,20 @@ from quartjes.models.trendwatcher import order_by_relative_price_change
 debug_mode = True
 
 
-class CenterDisplayController(object):
+class CenterDisplayController(Thread):
     """
     Control the content displayed on the center layer.
     
     Parameters
     ----------
-    explanation_interval : int
-        Time after which an explanation should be shown.
+    event_interval : int
+        Time between special events (explanation, trend overview)
     """
-    def __init__(self, explanation_interval=300):
-        
-        self._explanation_interval = explanation_interval
-        
-        # Time to back off if the display is locked while explanation should be shown
-        self._explanation_locked_backoff = 10
-        
-        # Timer for showing the explanation
-        self._explanation_timer = None
+    def __init__(self, event_interval=150):
+        Thread.__init__(self, name='CenterDisplayController')
+        self.daemon = True
+
+        self._event_interval = event_interval
         
         # Currently displayed drink
         self._current_drink = None
@@ -47,13 +44,39 @@ class CenterDisplayController(object):
         
         # If the display is locked, time the lock expires
         self._lock_expires = 0
-    
+
+        # Event to interrupt wait times.
+        self._wait_interrupt = Event()
+
+        # Event to trigger shut down of the controller
+        self._cancel = Event()
+
+    def run(self):
+        """
+        The actual controller loop. Mostly lots of waiting.
+
+        Todo:
+        * Synchronize with drink focused
+        """
+        while True:
+            self.show_explanation()
+
+            if self._wait_interrupt.wait(self._event_interval):
+                if self._cancel.is_set():
+                    break
+
+            self.show_trends()
+
+            if self._wait_interrupt.wait(self._event_interval):
+                if self._cancel.is_set():
+                    break
+
     def stop(self):
         """
         Stop the controller.
         """
-        if self._explanation_timer:
-            self._explanation_timer.cancel()
+        self._cancel.set()
+        self._wait_interrupt.set()
     
     @property
     def locked(self):
@@ -70,8 +93,14 @@ class CenterDisplayController(object):
         
         if debug_mode:
             print("Lock set for %f seconds" % lock_time)
+
+    def _release_lock(self):
+        """
+        Release the display lock immediately.
+        """
+        self._lock_expires = 0
     
-    def drink_focussed(self, drink):
+    def drink_focused(self, drink):
         """
         Handle new drink in focus.
         """
@@ -80,7 +109,7 @@ class CenterDisplayController(object):
                 self._layer.clear()
                 self._current_drink = None
                 if debug_mode:
-                    print("drink_focussed: Drink cleared")
+                    print("drink_focused: Drink cleared")
             elif drink:
                 in_place = False
                 if self._current_drink:
@@ -88,9 +117,9 @@ class CenterDisplayController(object):
                 self._layer.show_drink(drink, in_place)
                 self._current_drink = drink
                 if debug_mode:
-                    print("drink_focussed: Display drink %s" % repr(drink))
+                    print("drink_focused: Display drink %s" % repr(drink))
         elif debug_mode:
-            print("drink_focussed: Display locked or not active")
+            print("drink_focused: Display locked or not active")
 
     def show_explanation(self, display_time=10.0):
         """
@@ -100,27 +129,33 @@ class CenterDisplayController(object):
             self._layer.show_explanation()
             self._set_lock(display_time)
             self._current_drink = None
-            self._explanation_timer = Timer(self._explanation_interval, self.show_explanation)
-            self._explanation_timer.start()
             print('show_explanation: Explanation activated')
-        elif self._layer:
-            if debug_mode:
-                print('show_explanation: Display locked, start backoff timer')
-            self._explanation_timer = Timer(self._explanation_locked_backoff, self.show_explanation)
-            self._explanation_timer.start()
         else:
             if debug_mode:
                 print('show_explanation: Display not active')
             
+    def show_trends(self, display_time=10.0):
+        """
+        Show the trends.
+        """
+        if not self.locked and self._layer:
+            self._layer.show_trends()
+            self._set_lock(display_time)
+            self._current_drink = None
+            print('show_trends: Trends activated')
+        else:
+            if debug_mode:
+                print('show_trends: Display not active')
+
     def get_layer(self):
         """
         Get the layer for display.
         """
         if not self._layer:
             self._layer = CenterLayer()
+            self.start()
             if debug_mode:
                 print('get_layer: Layer activated')
-            self.show_explanation()
         return self._layer
 
 

@@ -174,7 +174,7 @@ class CocosGui(object):
 
         # Glue everything together
         self._ticker_layer.update_drinks(self._drinks)
-        self._ticker_layer.on_focus_changed += lambda sender, drink: self._center_display_controller.drink_focussed(drink)
+        self._ticker_layer.on_focus_changed += lambda sender, drink: self._center_display_controller.drink_focused(drink)
 
         # Show the scene
         scene = cocos.scene.Scene(self._ticker_layer, 
