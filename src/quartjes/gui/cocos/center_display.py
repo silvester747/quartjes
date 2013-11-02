@@ -18,7 +18,7 @@ from quartjes.gui.cocos import mix_drawer
 from quartjes.models.drink import Mix
 from quartjes.models.trendwatcher import order_by_relative_price_change
 
-debug_mode = True
+debug_mode = False
 
 
 class CenterDisplayController(Thread):
@@ -29,12 +29,18 @@ class CenterDisplayController(Thread):
     ----------
     event_interval : int
         Time between special events (explanation, trend overview)
+    sync_time : int
+        Time to wait for incoming drink updates to synchronize to.
     """
-    def __init__(self, event_interval=150):
+    def __init__(self, event_interval=150, sync_time=10.0):
         Thread.__init__(self, name='CenterDisplayController')
         self.daemon = True
 
         self._event_interval = event_interval
+        self._sync_time = sync_time
+
+        if debug_mode:
+            self._event_interval = 30
         
         # Currently displayed drink
         self._current_drink = None
@@ -48,6 +54,10 @@ class CenterDisplayController(Thread):
         # Event to interrupt wait times.
         self._wait_interrupt = Event()
 
+        # Event to sync to incoming updates
+        self._sync = Event()
+        self._waiting_for_sync = Event()
+
         # Event to trigger shut down of the controller
         self._cancel = Event()
 
@@ -56,20 +66,16 @@ class CenterDisplayController(Thread):
         The actual controller loop. Mostly lots of waiting.
 
         Todo:
-        * Synchronize with drink focused
+        * Synchronize with drink focused -> after event not ok yet
         """
         while True:
             self.show_explanation()
-
-            if self._wait_interrupt.wait(self._event_interval):
-                if self._cancel.is_set():
-                    break
+            if self._wait_for_sync(self._event_interval):
+                break
 
             self.show_trends()
-
-            if self._wait_interrupt.wait(self._event_interval):
-                if self._cancel.is_set():
-                    break
+            if self._wait_for_sync(self._event_interval):
+                break
 
     def stop(self):
         """
@@ -106,18 +112,23 @@ class CenterDisplayController(Thread):
         """
         if not self.locked and self._layer:
             if not drink and self._current_drink:
-                self._layer.clear()
+                if not self._waiting_for_sync.is_set():
+                    self._layer.clear()
                 self._current_drink = None
                 if debug_mode:
                     print("drink_focused: Drink cleared")
+                self._sync.set()
             elif drink:
                 in_place = False
                 if self._current_drink:
                     in_place = self._current_drink.id == drink.id
-                self._layer.show_drink(drink, in_place)
+                if not self._waiting_for_sync.is_set():
+                    self._layer.show_drink(drink, in_place)
                 self._current_drink = drink
                 if debug_mode:
                     print("drink_focused: Display drink %s" % repr(drink))
+                if not in_place:
+                    self._sync.set()
         elif debug_mode:
             print("drink_focused: Display locked or not active")
 
@@ -125,11 +136,12 @@ class CenterDisplayController(Thread):
         """
         Show the explanation.
         """
-        if not self.locked and self._layer:
+        if self._layer:
             self._layer.show_explanation()
             self._set_lock(display_time)
             self._current_drink = None
-            print('show_explanation: Explanation activated')
+            if debug_mode:
+                print('show_explanation: Explanation activated')
         else:
             if debug_mode:
                 print('show_explanation: Display not active')
@@ -138,11 +150,12 @@ class CenterDisplayController(Thread):
         """
         Show the trends.
         """
-        if not self.locked and self._layer:
+        if self._layer:
             self._layer.show_trends()
             self._set_lock(display_time)
             self._current_drink = None
-            print('show_trends: Trends activated')
+            if debug_mode:
+                print('show_trends: Trends activated')
         else:
             if debug_mode:
                 print('show_trends: Display not active')
@@ -157,6 +170,55 @@ class CenterDisplayController(Thread):
             if debug_mode:
                 print('get_layer: Layer activated')
         return self._layer
+
+    def _wait(self, timeout):
+        """
+        Wait a given amount of time.
+
+        Parameters
+        ----------
+        timeout
+            Time in seconds to wait.
+
+        Returns
+        -------
+        cancel
+            True if controller is cancelled.
+        """
+        if debug_mode:
+            print('Wait %f seconds until next event' % self._event_interval)
+        if self._wait_interrupt.wait(timeout):
+            if self._cancel.is_set():
+                return True
+        return False
+
+    def _wait_for_sync(self, timeout=None):
+        """
+        First wait for a given time, then wait to synchronize with incoming updates.
+
+        Parameters
+        ----------
+        timeout : str
+            [Optional] Time to wait before waiting for a sync.
+
+        Returns
+        -------
+        cancel
+            True if controller is cancelled.
+        """
+        if timeout and self._wait(timeout):
+            return True
+
+        if debug_mode:
+            print('Wait for sync')
+        self._waiting_for_sync.set()
+        if not self._sync.wait(self._sync_time) and debug_mode:
+            print('Max sync wait time expired')
+        self._waiting_for_sync.clear()
+        if self._cancel.is_set():
+            return True
+        else:
+            return False
 
 
 class CenterLayer(cocos.layer.base_layers.Layer):
