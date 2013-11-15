@@ -9,7 +9,7 @@ import cocos.layer
 import cocos.text
 import pyglet
 
-debug_mode = True
+debug_mode = False
 
 
 class BottomTicker(cocos.layer.Layer):

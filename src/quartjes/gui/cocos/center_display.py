@@ -18,7 +18,7 @@ from quartjes.gui.cocos import mix_drawer
 from quartjes.models.drink import Mix
 from quartjes.models.trendwatcher import order_by_relative_price_change
 
-debug_mode = True
+debug_mode = False
 
 
 class CenterDisplayController(Thread):
@@ -64,9 +64,6 @@ class CenterDisplayController(Thread):
     def run(self):
         """
         The actual controller loop. Mostly lots of waiting.
-
-        Todo:
-        * Synchronize with drink focused -> after event not ok yet
         """
         while True:
             self.show_explanation()
