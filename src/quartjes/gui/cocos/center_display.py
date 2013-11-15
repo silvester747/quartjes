@@ -18,7 +18,7 @@ from quartjes.gui.cocos import mix_drawer
 from quartjes.models.drink import Mix
 from quartjes.models.trendwatcher import order_by_relative_price_change
 
-debug_mode = False
+debug_mode = True
 
 
 class CenterDisplayController(Thread):
@@ -106,7 +106,7 @@ class CenterDisplayController(Thread):
         """
         self._lock_expires = 0
     
-    def drink_focused(self, drink):
+    def drink_focused_changed(self, drink, is_new):
         """
         Handle new drink in focus.
         """
@@ -119,15 +119,12 @@ class CenterDisplayController(Thread):
                     print("drink_focused: Drink cleared")
                 self._sync.set()
             elif drink:
-                in_place = False
-                if self._current_drink:
-                    in_place = self._current_drink.id == drink.id
                 if not self._waiting_for_sync.is_set():
-                    self._layer.show_drink(drink, in_place)
+                    self._layer.show_drink(drink, not is_new)
                 self._current_drink = drink
                 if debug_mode:
                     print("drink_focused: Display drink %s" % repr(drink))
-                if not in_place:
+                if is_new:
                     self._sync.set()
         elif debug_mode:
             print("drink_focused: Display locked or not active")
@@ -211,6 +208,7 @@ class CenterDisplayController(Thread):
 
         if debug_mode:
             print('Wait for sync')
+        self._sync.clear()
         self._waiting_for_sync.set()
         if not self._sync.wait(self._sync_time) and debug_mode:
             print('Max sync wait time expired')
