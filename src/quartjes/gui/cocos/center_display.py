@@ -347,6 +347,8 @@ class CenterLayer(cocos.layer.base_layers.Layer):
                     if debug_mode:
                         print('Doing full update')
                     self._replace_node(node_constructor.get_node())
+            elif debug_mode:
+                print('Node still constructing')
 
     def _replace_node(self, new_node):
         """
