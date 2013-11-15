@@ -10,7 +10,6 @@ import cocos.sprite
 import time
 from threading import Event, Thread
 
-from quartjes.controllers.database import default_database
 from quartjes.gui.cocos.basenodes import LabelBatch, UpdatableNode, SimpleNodeConstructor
 from quartjes.gui.cocos.basenodes import ThreadedNodeConstructor
 from quartjes.gui.cocos import history_graph
@@ -44,6 +43,9 @@ class CenterDisplayController(Thread):
         
         # Currently displayed drink
         self._current_drink = None
+
+        # Active list of drinks
+        self._drinks = None
         
         # Layer used for display
         self._layer = None
@@ -126,6 +128,12 @@ class CenterDisplayController(Thread):
         elif debug_mode:
             print("drink_focused: Display locked or not active")
 
+    def update_drinks(self, drinks):
+        """
+        Store updates to the available drinks.
+        """
+        self._drinks = drinks
+
     def show_explanation(self, display_time=10.0):
         """
         Show the explanation.
@@ -144,15 +152,15 @@ class CenterDisplayController(Thread):
         """
         Show the trends.
         """
-        if self._layer:
-            self._layer.show_trends()
+        if self._layer and self._drinks:
+            self._layer.show_trends(self._drinks)
             self._set_lock(display_time)
             self._current_drink = None
             if debug_mode:
                 print('show_trends: Trends activated')
         else:
             if debug_mode:
-                print('show_trends: Display not active')
+                print('show_trends: Display not active or no drinks yet')
 
     def get_layer(self):
         """
@@ -314,11 +322,13 @@ class CenterLayer(cocos.layer.base_layers.Layer):
         """
         self.schedule_next_node(ExplanationConstructor(self._content_height))
 
-    def show_trends(self):
+    def show_trends(self, drinks):
         """
         Show trends in prices.
         """
-        self.schedule_next_node(TrendDisplayConstructor(self._content_width, self._content_height))
+        self.schedule_next_node(TrendDisplayConstructor(self._content_width,
+                                                        self._content_height,
+                                                        drinks))
 
     def clear(self):
         """
@@ -513,9 +523,10 @@ class TrendDisplayConstructor(ThreadedNodeConstructor):
     """
     Construct a node to display trends in prices.
     """
-    def __init__(self, width, height, time_window=10):
+    def __init__(self, width, height, drinks, time_window=10):
         self.__width = width
         self.__height = height
+        self.__drinks = drinks
         self.__time_window = time_window
 
         self.__trend_data = None
@@ -590,5 +601,5 @@ class TrendDisplayConstructor(ThreadedNodeConstructor):
         """
         Get current trend data.
         """
-        self.__trend_data = order_by_relative_price_change(default_database().get_drinks(),
+        self.__trend_data = order_by_relative_price_change(self.__drinks,
                                                            self.__time_window)

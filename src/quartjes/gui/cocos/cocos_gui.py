@@ -189,10 +189,12 @@ class CocosGui(object):
             cocos.director.director.replace(cocos.scenes.transitions.FadeTransition(scene))
 
     def _update_drinks(self, drinks):
+        random.shuffle(drinks)
         self._drinks = drinks
-        random.shuffle(self._drinks)
         if self._ticker_layer:
-            self._ticker_layer.update_drinks(self._drinks)
+            self._ticker_layer.update_drinks(drinks)
+        if self._center_display_controller:
+            self._center_display_controller.update_drinks(drinks)
 
     def _next_round(self):
         pass
