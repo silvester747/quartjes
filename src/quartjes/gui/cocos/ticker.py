@@ -4,7 +4,9 @@ Ticker modules for displaying current drink prices.
 
 from axel import Event
 from cocos.actions import CallFunc, Delay, FadeIn, FadeOut, MoveTo, ScaleTo
+import cocos.cocosnode
 import cocos.layer
+import cocos.text
 import pyglet
 
 debug_mode = False
@@ -64,9 +66,6 @@ class BottomTicker(cocos.layer.Layer):
         # Event fired when the currently focused drink has changed. Listeners
         # should have two parameters: the sender and the new drink.
         self.on_focus_changed = Event(sender=self)
-        
-        # Current round. Used to suppress old actions.
-        self._round_number = 0
         
         # Add background layers
         background_layer = cocos.layer.ColorLayer(255, 128, 0, 200, width=screen_width, height=45)
@@ -163,7 +162,7 @@ class BottomTicker(cocos.layer.Layer):
         # Do the ramp
         (coordinates, time) = self._path[2]
         move_actions += (MoveTo(coordinates, time) | (Delay(time / 2) + ScaleTo(1, time / 2)) 
-                         | CallFunc(self._set_focused_drink, drink, self._round_number))
+                         | CallFunc(self._set_focused_drink, drink))
 
         # Move in focus
         (coordinates, time) = self._path[3]
@@ -215,7 +214,7 @@ class BottomTicker(cocos.layer.Layer):
                     # No longer present
                     node.hide()
         
-        self._set_focused_drink(self.focused_drink, self._round_number)
+        self._set_focused_drink(self.focused_drink)
 
     @staticmethod
     def _safe_kill(child):
@@ -227,23 +226,21 @@ class BottomTicker(cocos.layer.Layer):
         except:
             pass
 
-    def _set_focused_drink(self, drink, round_nr):
+    def _set_focused_drink(self, drink):
         """
         Update the currently focused drink and notify all listeners.
         """
-        if round_nr == self._round_number:
-            
-            # Make sure we have the latest instance
-            if not drink is None:
-                for tmp_drink in self._drinks:
-                    if tmp_drink.id == drink.id:
-                        drink = tmp_drink
-                        break
-                else:
-                    drink = None
-            
-            self.focused_drink = drink
-            self.on_focus_changed(drink)
+        # Make sure we have the latest instance
+        if not drink is None:
+            for tmp_drink in self._drinks:
+                if tmp_drink.id == drink.id:
+                    drink = tmp_drink
+                    break
+            else:
+                drink = None
+
+        self.focused_drink = drink
+        self.on_focus_changed(drink)
 
     def _next_drink(self):
         """
@@ -260,9 +257,6 @@ class BottomTicker(cocos.layer.Layer):
         drink_node = TickerDrinkNode(drink)
         self.add(drink_node)
         self._add_animation(drink_node, drink)
-        
-    def next_round(self):
-        self._round_number += 1
 
 
 class TickerDrinkNode(cocos.cocosnode.CocosNode):
