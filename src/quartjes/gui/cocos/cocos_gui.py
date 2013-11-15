@@ -3,10 +3,6 @@ Graphical user interface using Cocos2D.
 Displays the current prices of all _drinks in a ticker at the bottom. As each
 drink passes the center of the ticker, related information is shown in the
 center of the screen.
-
-TODO
-* Create trend overview
-* Make screen look like financial TV show, with nice bar for ticker, channel logo, etc
 """
 from __future__ import print_function
 
@@ -29,7 +25,6 @@ import cocos.layer
 import cocos.scenes.transitions
 import cocos.director
 from cocos.sprite import Sprite
-import pyglet.resource
 import random
 
 from quartjes.connector.client import ClientConnector
@@ -38,6 +33,7 @@ from quartjes.gui.cocos.ticker import BottomTicker
 
 pyglet.resource.path = ["@quartjes.resources"]
 pyglet.resource.reindex()
+
 
 class TitleLayer(cocos.layer.Layer):
     """
@@ -52,9 +48,7 @@ class TitleLayer(cocos.layer.Layer):
         
         title = Sprite("title.png", position=(0, 680), anchor=(0,0), opacity=200)
         self.add(title)
-        
 
-            
 
 class CocosGui(object):
     """
@@ -134,7 +128,8 @@ class CocosGui(object):
         self._center_display_controller.stop()
         self._connector.stop()
 
-    def show_gl_info(self):
+    @staticmethod
+    def show_gl_info():
         """
         Display some information about the GL renderer.
         """
@@ -157,7 +152,6 @@ class CocosGui(object):
         print("\tVersion:\t%s" % info.get_version())
         print("\tExtensions:\t%s" % info.get_extensions())
         
-
     def show_ticker_scene(self, new_ticker=False):
         """
         Replace everything on screen with the scene displaying the drink ticker.
@@ -182,14 +176,14 @@ class CocosGui(object):
                                   self._title_layer)
         self._display_scene(scene)
 
-
-    def _display_scene(self, scene):
+    @staticmethod
+    def _display_scene(scene):
         """
         Change the display to show the given scene.
         If no engine is running yet, an engine will be started. In that case this method
         will not return until the engine has stopped again.
         """
-        if cocos.director.director.scene == None:
+        if cocos.director.director.scene is None:
             cocos.director.director.run(scene)
         else:
             cocos.director.director.replace(cocos.scenes.transitions.FadeTransition(scene))
@@ -202,7 +196,8 @@ class CocosGui(object):
 
     def _next_round(self):
         pass
-            
+
+
 def parse_command_line():
     """
     Parse the command line.
@@ -217,6 +212,7 @@ def parse_command_line():
     parser.add_argument("--height", type=int, default=768, help="Height of the display window.")
     args = parser.parse_args()
     return args
+
 
 def run_cocos_gui():
     """
