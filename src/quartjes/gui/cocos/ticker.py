@@ -9,7 +9,7 @@ import cocos.layer
 import cocos.text
 import pyglet
 
-debug_mode = False
+debug_mode = True
 
 
 class BottomTicker(cocos.layer.Layer):
@@ -64,8 +64,12 @@ class BottomTicker(cocos.layer.Layer):
         self.focused_drink = None
 
         # Event fired when the currently focused drink has changed. Listeners
-        # should have two parameters: the sender and the new drink.
-        self.on_focus_changed = Event(sender=self)
+        # should have the following signature:
+        # drink
+        #     The drink that is focused.
+        # is_new
+        #     True if this is a new drink, False if the drink itself was updated.
+        self.on_focused_drink_changed = Event()
         
         # Add background layers
         background_layer = cocos.layer.ColorLayer(255, 128, 0, 200, width=screen_width, height=45)
@@ -230,6 +234,12 @@ class BottomTicker(cocos.layer.Layer):
         """
         Update the currently focused drink and notify all listeners.
         """
+        # Keep track whether this is an update to the current focused drink or a change of focus
+        if not drink or not self.focused_drink:
+            is_new = True
+        else:
+            is_new = drink.id != self.focused_drink.id
+
         # Make sure we have the latest instance
         if not drink is None:
             for tmp_drink in self._drinks:
@@ -239,8 +249,12 @@ class BottomTicker(cocos.layer.Layer):
             else:
                 drink = None
 
+        if debug_mode:
+            print('Set %s drink: %s' % ('new' if is_new else 'updated',
+                                        drink.name if drink else 'None'))
+
         self.focused_drink = drink
-        self.on_focus_changed(drink)
+        self.on_focused_drink_changed(drink, is_new)
 
     def _next_drink(self):
         """
