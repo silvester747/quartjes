@@ -9,6 +9,7 @@ import pyglet
 
 debug_mode = False
 
+
 class BottomTicker(cocos.layer.Layer):
     """
     Layer containing a ticker of drinks.
@@ -47,8 +48,8 @@ class BottomTicker(cocos.layer.Layer):
         # Distance in pixels between drinks
         self._drink_distance = 40
 
-        # Path followed by the ticker elements. Each item is a tuple containing the coordinates and the time required to reach those
-        # coordinates.
+        # Path followed by the ticker elements. Each item is a tuple containing the coordinates and the time required to
+        # reach those coordinates.
         self._path = []
 
         # List of _drinks to show on the ticker
@@ -58,7 +59,7 @@ class BottomTicker(cocos.layer.Layer):
         self._current_drink_index = 0
         
         # Drink currently having focus.
-        self.focussed_drink = None
+        self.focused_drink = None
 
         # Event fired when the currently focused drink has changed. Listeners
         # should have two parameters: the sender and the new drink.
@@ -90,7 +91,7 @@ class BottomTicker(cocos.layer.Layer):
         x = self._screen_width
         y = self._ticker_y
         time = 0
-        self._path.append([(x, y), time]) # this one is a list to be able to change the time
+        self._path.append([(x, y), time])  # this one is a list to be able to change the time
         
         # Just before ramp up
         prev_x = x
@@ -162,7 +163,7 @@ class BottomTicker(cocos.layer.Layer):
         # Do the ramp
         (coordinates, time) = self._path[2]
         move_actions += (MoveTo(coordinates, time) | (Delay(time / 2) + ScaleTo(1, time / 2)) 
-                | CallFunc(self._set_focussed_drink, drink, self._round_number))
+                         | CallFunc(self._set_focused_drink, drink, self._round_number))
 
         # Move in focus
         (coordinates, time) = self._path[3]
@@ -179,14 +180,12 @@ class BottomTicker(cocos.layer.Layer):
         # Move out of sight
         move_actions += MoveTo((0 - content_offset, self._ticker_y), content_time)
         
-        
         # Prepare spawn point
         spawn_actions = Delay(content_time * 2) + CallFunc(self._next_drink)
         self.do(spawn_actions)
         
         # Start animation
         node.do(move_actions + CallFunc(self._safe_kill, node))
-
 
     def update_drinks(self, drinks):
         """
@@ -216,9 +215,10 @@ class BottomTicker(cocos.layer.Layer):
                     # No longer present
                     node.hide()
         
-        self._set_focussed_drink(self.focussed_drink, self._round_number)
+        self._set_focused_drink(self.focused_drink, self._round_number)
 
-    def _safe_kill(self, child):
+    @staticmethod
+    def _safe_kill(child):
         """
         Safely remove a node from the tree.
         """
@@ -227,9 +227,9 @@ class BottomTicker(cocos.layer.Layer):
         except:
             pass
 
-    def _set_focussed_drink(self, drink, round_nr):
+    def _set_focused_drink(self, drink, round_nr):
         """
-        Update the currently focussed drink and notify all listeners.
+        Update the currently focused drink and notify all listeners.
         """
         if round_nr == self._round_number:
             
@@ -242,7 +242,7 @@ class BottomTicker(cocos.layer.Layer):
                 else:
                     drink = None
             
-            self.focussed_drink = drink
+            self.focused_drink = drink
             self.on_focus_changed(drink)
 
     def _next_drink(self):
@@ -251,19 +251,19 @@ class BottomTicker(cocos.layer.Layer):
         """
         drink = None
 
-        if self._drinks != None and len(self._drinks) > 0:
+        if self._drinks:
             self._current_drink_index += 1
             if self._current_drink_index >= len(self._drinks):
                 self._current_drink_index = 0
             drink = self._drinks[self._current_drink_index]
 
-        
         drink_node = TickerDrinkNode(drink)
         self.add(drink_node)
         self._add_animation(drink_node, drink)
         
     def next_round(self):
         self._round_number += 1
+
 
 class TickerDrinkNode(cocos.cocosnode.CocosNode):
     """
@@ -272,7 +272,8 @@ class TickerDrinkNode(cocos.cocosnode.CocosNode):
     
     def __init__(self, drink):
         super(TickerDrinkNode, self).__init__()
-        
+
+        self.label = None
         self.drink = drink
         self._next_z_level = 1
         self._set_label()
@@ -284,9 +285,9 @@ class TickerDrinkNode(cocos.cocosnode.CocosNode):
             text = "%s - %d" % (self.drink.name, self.drink.current_price_quartjes)
             
         self.label = cocos.text.Label(text,
-                             font_name='Times New Roman',
-                             font_size=64,
-                             anchor_x='center', anchor_y='bottom')
+                                      font_name='Times New Roman',
+                                      font_size=64,
+                                      anchor_x='center', anchor_y='bottom')
         self.add(self.label, z=self._next_z_level)
         self._next_z_level += 1
     
@@ -301,4 +302,3 @@ class TickerDrinkNode(cocos.cocosnode.CocosNode):
     
     def hide(self):
         self.label.do(FadeOut(1))
-            
